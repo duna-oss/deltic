@@ -1,5 +1,3 @@
-import {exposedPromise} from '@deltic/exposed-promise';
-
 export type Waiter = () => void;
 
 const resolveWaiter = (w: Waiter) => w();
@@ -30,7 +28,7 @@ export class WaitGroup {
             return Promise.resolve();
         }
 
-        const {resolve, promise, reject} = exposedPromise<void>();
+        const {resolve, promise, reject} = Promise.withResolvers<void>();
         this.waiters.push(resolve);
 
         if (timeout > -1) {
