@@ -1,6 +1,5 @@
 import {type ProcessQueue, ProcessQueueDefaults, ProcessQueueOptions} from './api.js';
 import {type ProcessStackItem} from './internals.js';
-import {exposedPromise} from '@deltic/exposed-promise';
 
 export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
     private nextTick: undefined | (() => void) = undefined;
@@ -61,7 +60,7 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
     }
 
     public push(task: Task): Promise<Task> {
-        const {promise, reject, resolve} = exposedPromise<Task>();
+        const {promise, reject, resolve} = Promise.withResolvers<Task>();
 
         this.tasks.push({task, promise, reject, resolve, tries: 0} );
 

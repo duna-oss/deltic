@@ -11,7 +11,7 @@
     "declaration": true,
     "skipLibCheck": true,
     "lib": [
-      "es2023"
+      "es2024"
     ],
     "module": "node16",
     "target": "es2022",

@@ -1,25 +1,38 @@
 import {DynamicMutex, LockOptions, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 import {maybeAbort, resolveOptions} from './abort-signal-options.js';
-import {exposedPromise, type ExposedPromise} from '@deltic/exposed-promise';
+
+type LockWaiter = {done: boolean, promise: PromiseWithResolvers<void>};
 
 export class MutexUsingMemory<LockID> implements DynamicMutex<LockID> {
     private readonly locks = new Map<LockID, true>();
-    private waiters: ExposedPromise<void>[] = [];
+    private waiters: LockWaiter[] = [];
 
-    async lock(id: LockID, options: LockOptions = {}): Promise<void> {
+    lock(id: LockID, options: LockOptions = {}): Promise<void> {
         const opt = resolveOptions(options);
 
         if (this.tryLockSync(id)) {
-            return;
+            return Promise.resolve();
         }
 
-        const waiter = exposedPromise();
-        this.waiters.push(waiter);
-        opt.abortSignal?.addEventListener('abort', (err) => {
-            waiter.reject(UnableToAcquireLock.becauseOfError(err));
+        const promise = Promise.withResolvers<void>();
+        const lockWaiter: LockWaiter = {
+            done: false,
+            promise: promise,
+        };
+        this.waiters.push(lockWaiter);
+        opt.abortSignal?.addEventListener('abort', (err: Event) => {
+            promise.reject(err);
         });
 
-        await waiter.promise;
+        return promise.promise.then(
+            () => {
+                lockWaiter.done = true;
+            },
+            reason => {
+                lockWaiter.done = true;
+                throw UnableToAcquireLock.becauseOfError(reason);
+            }
+        );
     }
 
     private tryLockSync(id: LockID): boolean {
@@ -45,12 +58,12 @@ export class MutexUsingMemory<LockID> implements DynamicMutex<LockID> {
 
         let waiter = this.waiters.shift();
 
-        while(waiter && waiter.status !== 'pending') {
+        while(waiter && waiter.done) {
             waiter = this.waiters.shift();
         }
 
         if (waiter) {
-            waiter.resolve();
+            waiter.promise.resolve();
         } else {
             this.locks.delete(id);
         }

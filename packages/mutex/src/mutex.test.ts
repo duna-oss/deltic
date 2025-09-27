@@ -64,9 +64,9 @@ describe.each([
     });
 
     test('acquiring a lock after a timeout', async () => {
-        await mutex.tryLock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 100});
 
-        await expect(mutex.lock(lockId1, {timeout: 100})).rejects.toThrow();
+        await expect(mutex.lock(lockId1, {timeout: 100})).rejects.toThrow(UnableToAcquireLock);
 
         await mutex.unlock(lockId1);
 

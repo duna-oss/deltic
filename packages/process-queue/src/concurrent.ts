@@ -1,7 +1,6 @@
 import {type ProcessQueue, ProcessQueueDefaults, ProcessQueueOptions} from './api.js';
 import {type ProcessStackItem} from './internals.js';
 import {WaitGroup} from '@deltic/wait-group';
-import {exposedPromise} from '@deltic/exposed-promise';
 
 export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
     private stack: ProcessStackItem<Task>[] = [];
@@ -68,7 +67,7 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
     }
 
     public push(task: Task): Promise<Task> {
-        const {reject, resolve, promise} = exposedPromise<Task>();
+        const {reject, resolve, promise} = Promise.withResolvers<Task>();
         this.stack.push({task, promise, reject, resolve, tries: 0} );
 
         if (this.stack.length === 1 && this.running) {
