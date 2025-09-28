@@ -74,8 +74,8 @@ export class AsyncPgTransactionContextProvider implements PgTransactionContextPr
 
 export interface PgConnectionPoolOptions {
     shareTransactions: boolean,
-    afterClaim?: (client: PoolClient) => Promise<any> | any,
-    beforeRelease?: (client: PoolClient, err?: unknown) => Promise<any> | any,
+    onClaim?: (client: PoolClient) => Promise<any> | any,
+    onRelease?: (client: PoolClient, err?: unknown) => Promise<any> | any,
 }
 
 export class PgConnectionProviderWithPool implements PgConnectionProvider {
@@ -88,11 +88,11 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
 
     async claim(): Promise<Connection> {
         const client = await this.pool.connect();
-        const afterClaim = this.options.afterClaim;
+        const onClaim = this.options.onClaim;
 
-        if (afterClaim) {
+        if (onClaim) {
             try {
-                await afterClaim(client);
+                await onClaim(client);
             } catch (err) {
                 await this.release(client, err);
 
@@ -158,15 +158,15 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
     }
 
     async release(client: PoolClient, err: unknown = undefined): Promise<void> {
-        const beforeRelease = this.options.beforeRelease;
+        const onRelease = this.options.onRelease;
         let error: unknown | undefined = undefined;
 
-        if (beforeRelease) {
+        if (onRelease) {
             try {
-                await beforeRelease(client, err);
-            } catch (beforeReleaseError) {
-                error = beforeReleaseError;
-                err = beforeReleaseError;
+                await onRelease(client, err);
+            } catch (onReleaseError) {
+                error = onReleaseError;
+                err = onReleaseError;
             }
         }
 

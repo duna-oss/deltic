@@ -115,8 +115,8 @@ describe('PgConnectionProvider', () => {
             pool,
             {
                 shareTransactions: true,
-                beforeRelease: client => client.query('SET app.tenant_id = \'\''),
-                afterClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
+                onRelease: client => client.query('SET app.tenant_id = \'\''),
+                onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
             }
         );
 
@@ -137,7 +137,7 @@ describe('PgConnectionProvider', () => {
             pool,
             {
                 shareTransactions: true,
-                beforeRelease: () => {released = true},
+                onRelease: () => {released = true},
             }
         );
 
