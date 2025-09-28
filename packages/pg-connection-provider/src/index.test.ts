@@ -1,4 +1,4 @@
-import {Pool} from 'pg';
+import {Pool, PoolClient} from 'pg';
 import {
     AsyncPgTransactionContextProvider,
     PgConnectionProvider,
@@ -32,7 +32,7 @@ describe('PgConnectionProvider', () => {
             user: 'duna',
             password: 'duna',
             port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 50,
+            max: 5,
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 2000,
             maxLifetimeSeconds: 60,
@@ -111,11 +111,12 @@ describe('PgConnectionProvider', () => {
 
     test('being able to set a setting for a connection', async () => {
         let index = 0;
+        let usedConnection: PoolClient | undefined = undefined;
         const provider = new PgConnectionProviderWithPool(
             pool,
             {
                 shareTransactions: true,
-                onRelease: client => client.query('SET app.tenant_id = \'\''),
+                onRelease: client => client.query('RESET app.tenant_id'),
                 onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
             }
         );
@@ -123,12 +124,23 @@ describe('PgConnectionProvider', () => {
         async function fetchTenantId() {
             await using connection = await provider.claim();
             const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+            usedConnection = connection;
 
             return Number(result.rows[0].num);
         }
 
         expect(await fetchTenantId()).toEqual(1);
         expect(await fetchTenantId()).toEqual(2);
+
+
+        // Verify the tenant ID does not leak when the connection is
+        const connection = await pool.connect();
+        // Strict equal check to ensure the connection was the same as used before.
+        expect(usedConnection).toStrictEqual(connection);
+        const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+        connection.release();
+
+        expect(result.rows[0].num).toEqual('');
     });
 
     test('using async dispose to close a connection', async () => {
@@ -137,17 +149,9 @@ describe('PgConnectionProvider', () => {
             pool,
             {
                 shareTransactions: true,
-                onRelease: () => {released = true},
+                onRelease: () => {released = true;},
             }
         );
-
-        await (async () => {
-            await using connection = await provider.claim();
-
-            const result = await connection.query('SELECT 1 as num');
-            expect(result.rowCount).toEqual(1);
-            expect(result.rows[0].num).toEqual(1);
-        })();
 
         await (async () => {
             await using connection = await provider.claim();
