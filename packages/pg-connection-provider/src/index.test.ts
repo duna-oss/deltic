@@ -108,4 +108,55 @@ describe('PgConnectionProvider', () => {
             await pool.query(`DROP TABLE ${tableName}`);
         });
     });
+
+    test('being able to set a setting for a connection', async () => {
+        let index = 0;
+        const provider = new PgConnectionProviderWithPool(
+            pool,
+            {
+                shareTransactions: true,
+                beforeRelease: client => client.query('SET app.tenant_id = \'\''),
+                afterClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
+            }
+        );
+
+        async function fetchTenantId() {
+            await using connection = await provider.claim();
+            const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+
+            return Number(result.rows[0].num);
+        }
+
+        expect(await fetchTenantId()).toEqual(1);
+        expect(await fetchTenantId()).toEqual(2);
+    });
+
+    test('using async dispose to close a connection', async () => {
+        let released = false;
+        const provider = new PgConnectionProviderWithPool(
+            pool,
+            {
+                shareTransactions: true,
+                beforeRelease: () => {released = true},
+            }
+        );
+
+        await (async () => {
+            await using connection = await provider.claim();
+
+            const result = await connection.query('SELECT 1 as num');
+            expect(result.rowCount).toEqual(1);
+            expect(result.rows[0].num).toEqual(1);
+        })();
+
+        await (async () => {
+            await using connection = await provider.claim();
+
+            const result = await connection.query('SELECT 1 as num');
+            expect(result.rowCount).toEqual(1);
+            expect(result.rows[0].num).toEqual(1);
+        })();
+
+        expect(released).toEqual(true);
+    });
 });

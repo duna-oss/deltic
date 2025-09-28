@@ -4,7 +4,9 @@ import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
 
-export type Connection = PoolClient | Pool;
+export type Connection = PoolClient & {
+    [Symbol.asyncDispose]: () => Promise<void>
+};
 
 /**
  * Connection providers facilitate the sharing of transactions between infrastructural layers. The
@@ -36,7 +38,7 @@ export interface PgTransactionContextProvider {
 
 export class StaticPgTransactionContextProvider implements PgTransactionContextProvider {
     private exclusiveAccess = new StaticMutexUsingMemory();
-    private sharedTransaction: PoolClient | undefined;
+    private sharedTransaction: Connection | undefined;
 
     resolve(): PgTransactionContext {
         return {
@@ -72,8 +74,8 @@ export class AsyncPgTransactionContextProvider implements PgTransactionContextPr
 
 export interface PgConnectionPoolOptions {
     shareTransactions: boolean,
-    afterClaim?: (client: PoolClient) => Promise<void>,
-    beforeRelease?: (client: PoolClient, err?: unknown) => Promise<void>,
+    afterClaim?: (client: PoolClient) => Promise<any> | any,
+    beforeRelease?: (client: PoolClient, err?: unknown) => Promise<any> | any,
 }
 
 export class PgConnectionProviderWithPool implements PgConnectionProvider {
@@ -84,7 +86,7 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
     ) {
     }
 
-    async claim(): Promise<PoolClient> {
+    async claim(): Promise<Connection> {
         const client = await this.pool.connect();
         const afterClaim = this.options.afterClaim;
 
@@ -98,7 +100,10 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
             }
         }
 
-        return client;
+        return Object.defineProperty(client, Symbol.asyncDispose, {
+            value: () => this.release(client),
+            writable: true,
+        }) as Connection;
     }
 
     async begin(query?: string): Promise<PoolClient> {
