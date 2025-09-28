@@ -26,12 +26,12 @@ describe.each([
 
     test('a lock can be acquired and released', async () => {
         expect.assertions(0);
-        await mutex.lock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 50});
         await mutex.unlock(lockId1);
     });
 
     test('a tried lock can be acquired and released', async () => {
-        const locked = await mutex.tryLock(lockId1, {timeout: 100});
+        const locked = await mutex.tryLock(lockId1, {timeout: 50});
         await mutex.unlock(lockId1);
 
         // assert
@@ -44,7 +44,7 @@ describe.each([
 
         for (let i = 0; i < 5; i++) {
             promises.push((async (index: number) => {
-                await mutex.lock(lockId1, {timeout: 1000});
+                await mutex.lock(lockId1, {timeout: 500});
                 result.push(index);
                 await setTimeout(10 - i);
                 result.push(index);
@@ -64,20 +64,20 @@ describe.each([
     });
 
     test('acquiring a lock after a timeout', async () => {
-        await mutex.lock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 50});
 
-        await expect(mutex.lock(lockId1, {timeout: 100})).rejects.toThrow(UnableToAcquireLock);
+        await expect(mutex.lock(lockId1, {timeout: 50})).rejects.toThrow(UnableToAcquireLock);
 
         await mutex.unlock(lockId1);
 
-        await expect(mutex.lock(lockId1, {timeout: 100})).resolves.toEqual(undefined);
+        await expect(mutex.lock(lockId1, {timeout: 50})).resolves.toEqual(undefined);
 
         await mutex.unlock(lockId1);
     });
 
     test('a lock cannot be acquired twice', async () => {
         // arrange
-        await mutex.lock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 50});
 
         // act
         await expect(async () => {
@@ -90,10 +90,10 @@ describe.each([
 
     test('a locked mutex can try but will not acquire a lock', async () => {
         // arrange
-        await mutex.lock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 50});
 
         // act
-        const locked = await mutex.tryLock(lockId1, {timeout: 100});
+        const locked = await mutex.tryLock(lockId1, {timeout: 50});
 
 
         // assert
@@ -104,13 +104,13 @@ describe.each([
     });
 
     test('released locks can be acquired again', async () => {
-        await mutex.lock(lockId1, {timeout: 100});
+        await mutex.lock(lockId1, {timeout: 50});
 
-        expect(await mutex.tryLock(lockId1, {timeout: 100})).toEqual(false);
+        expect(await mutex.tryLock(lockId1, {timeout: 50})).toEqual(false);
 
         await mutex.unlock(lockId1);
 
-        expect(await mutex.tryLock(lockId1, {timeout: 100})).toEqual(true);
+        expect(await mutex.tryLock(lockId1, {timeout: 50})).toEqual(true);
 
         // cleanup
         await mutex.unlock(lockId1);

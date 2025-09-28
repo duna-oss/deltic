@@ -21,9 +21,14 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
         this.maxProcessing = this.config.maxProcessing;
     }
 
+    isProcessing(): boolean {
+        return this.running;
+    }
+
     public async purge() {
         await this.stop();
         this.stack = [];
+        this.config.onStop(this);
     }
 
     public start(): void {
@@ -54,7 +59,6 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
             this.waitGroup.add();
             next.processing = true;
             this.processing++;
-            next.tries++;
             const promise = this.config.processor.apply(null, [next.task]);
             promise.then(() => {
                 this.handleProcessorResult(undefined, next as ProcessStackItem<Task>);
@@ -68,7 +72,7 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
 
     public push(task: Task): Promise<Task> {
         const {reject, resolve, promise} = Promise.withResolvers<Task>();
-        this.stack.push({task, promise, reject, resolve, tries: 0} );
+        this.stack.push({task, promise, reject, resolve} );
 
         if (this.stack.length === 1 && this.running) {
             this.scheduleNextTask();
@@ -80,11 +84,20 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
     private async handleProcessorResult(err: Error | undefined, item: ProcessStackItem<Task>): Promise<void> {
         this.processing--;
         item.processing = false;
-        const {task, resolve, reject, tries} = item;
+        const {task, resolve, reject} = item;
 
         if (err) {
-            await this.config.onError({error: err, task, tries, queue: this, skipCurrentTask: () => this.skipCurrentTask(item)});
+            let skipped = false;
+
+            await this.config.onError({error: err, task, queue: this, skipCurrentTask: () => {
+                this.skipCurrentTask(item);
+                skipped = true;
+            }});
             reject(err);
+
+            if (skipped === false && this.config.stopOnError) {
+                return this.stop();
+            }
         } else {
             this.stack = this.stack.filter(i => i !== item);
             await this.config.onFinish.apply(null, [task]);

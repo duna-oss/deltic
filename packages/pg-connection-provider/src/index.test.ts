@@ -51,15 +51,6 @@ describe('PgConnectionProvider', () => {
             provider = factory();
         });
 
-        test('smoketest, acquiring a primconnection', async () => {
-            setupContext();
-
-            const connection = provider.primaryConnection();
-            const result = await connection.query('SELECT 1 as num');
-            expect(result.rowCount).toEqual(1);
-            expect(result.rows[0].num).toEqual(1);
-        });
-
         test('smoketest, claiming a client', async () => {
             setupContext();
 
@@ -70,7 +61,7 @@ describe('PgConnectionProvider', () => {
                 expect(result.rowCount).toEqual(1);
                 expect(result.rows[0].num).toEqual(1);
             } finally {
-                provider.release(client);
+                await provider.release(client);
             }
         });
 

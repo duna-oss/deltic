@@ -18,6 +18,10 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
         this.running = this.config.autoStart;
     }
 
+    isProcessing(): boolean {
+        return this.running;
+    }
+
     public async purge() {
         await this.stop();
         this.tasks = [];
@@ -47,7 +51,6 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
     private processNextTask(): void {
         if (this.tasks.length > 0) {
             this.processing = true;
-            this.tasks[0].tries++;
             const promise = this.config.processor.apply(null, [this.tasks[0].task]);
             promise.then(
                 () => {
@@ -62,7 +65,7 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
     public push(task: Task): Promise<Task> {
         const {promise, reject, resolve} = Promise.withResolvers<Task>();
 
-        this.tasks.push({task, promise, reject, resolve, tries: 0} );
+        this.tasks.push({task, promise, reject, resolve} );
 
         if (this.tasks.length === 1 && this.running) {
             this.scheduleNextTask();
@@ -73,10 +76,10 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
 
     private async handleProcessorResult(err: unknown): Promise<void> {
         this.processing = false;
-        const {task, resolve, reject, tries} = this.tasks[0];
+        const {task, resolve, reject} = this.tasks[0];
 
         if (err) {
-            await this.config.onError(({error: err, task, tries, queue: this, skipCurrentTask: this.skipCurrentTask}));
+            await this.config.onError(({error: err, task, queue: this, skipCurrentTask: this.skipCurrentTask}));
             reject(err);
         } else {
             this.tasks.shift();
@@ -96,7 +99,7 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
         }
     }
 
-    public stop(): Promise<void> {
+    public async stop(): Promise<void> {
         this.running = false;
 
         if (this.timer !== false) {
@@ -104,9 +107,13 @@ export class SequentialProcessQueue<Task> implements ProcessQueue<Task>{
         }
 
         if (!this.processing) {
+            this.config.onStop(this);
             return Promise.resolve();
         }
 
-        return new Promise<void>(resolve => this.nextTick = () => resolve());
+        await new Promise<void>(resolve => this.nextTick = () => {
+            resolve();
+        });
+        this.config.onStop(this);
     }
 }

@@ -1,6 +1,9 @@
-export interface Processor<Task> { (task: Task): Promise<any> }
+export interface Processor<Task> {
+    (task: Task): Promise<any>
+}
 
 export interface ProcessQueue<Task> {
+    isProcessing(): boolean;
     purge(): Promise<void>,
     start(): void,
     push(task: Task): Promise<Task>,
@@ -10,7 +13,6 @@ export interface ProcessQueue<Task> {
 export type ErrorContext<Task> = {
     error: unknown,
     task: Task,
-    tries: number,
     skipCurrentTask: () => void,
     queue: ProcessQueue<Task>,
 }
@@ -21,14 +23,16 @@ export interface ProcessQueueOptions<Task> {
     autoStart?: boolean,
     onDrained?: (queue: ProcessQueue<Task>) => Promise<any>,
     onError: (config: ErrorContext<Task>) => Promise<any>,
+    stopOnError?: boolean,
+    onStop?: (queue: ProcessQueue<Task>) => any,
     onFinish?: (task: Task) => Promise<any>,
 }
 
 export const ProcessQueueDefaults = Object.seal({
     maxProcessing: 100,
+    stopOnError: true,
     autoStart: true,
-    onDrained: async () => {
-    },
-    onFinish: async () => {
-    },
+    onDrained: async () => {},
+    onFinish: async () => {},
+    onStop: () => {},
 });

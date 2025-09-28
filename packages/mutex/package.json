@@ -16,7 +16,7 @@
       "import": "dist/memory-mutex.js",
       "types": "dist/memory-mutex.d.ts"
     },
-    "./static-memory-mutex": {
+    "./static-memory": {
       "import": "dist/static-memory-mutex.js",
       "types": "dist/static-memory-mutex.d.ts"
     }
@@ -30,6 +30,5 @@
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
-    "@deltic/exposed-promise": "workspace:^"
   }
 }

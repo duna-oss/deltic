@@ -47,13 +47,7 @@ importers:
 
   packages/error-standard: {}
 
-  packages/exposed-promise: {}
-
-  packages/mutex:
-    dependencies:
-      '@deltic/exposed-promise':
-        specifier: workspace:^
-        version: link:../exposed-promise
+  packages/mutex: {}
 
   packages/pg-connection-provider:
     dependencies:
@@ -70,18 +64,11 @@ importers:
 
   packages/process-queue:
     dependencies:
-      '@deltic/exposed-promise':
-        specifier: workspace:^
-        version: link:../exposed-promise
       '@deltic/wait-group':
         specifier: workspace:^
         version: link:../wait-group
 
-  packages/wait-group:
-    dependencies:
-      '@deltic/exposed-promise':
-        specifier: workspace:^
-        version: link:../exposed-promise
+  packages/wait-group: {}
 
 packages:
 

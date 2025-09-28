@@ -7,7 +7,6 @@ export interface RejectFunc {
 }
 
 export interface ProcessStackItem<Task> {
-    tries: number,
     processing?: boolean,
     partitionKey?: string,
     promise: Promise<Task>,

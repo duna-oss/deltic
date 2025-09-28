@@ -2,6 +2,7 @@ import type {Pool, PoolClient} from 'pg';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory-mutex';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutex} from '@deltic/mutex';
+import {errorToMessage, StandardError} from '@deltic/error-standard';
 
 export type Connection = PoolClient | Pool;
 
@@ -13,13 +14,15 @@ export type Connection = PoolClient | Pool;
  * with and without a database transaction.
  */
 export interface PgConnectionProvider {
-    primaryConnection(): Connection;
-    secondaryConnection(): Connection;
     claim(): Promise<PoolClient>;
-    release(client: PoolClient): void;
+
+    release(client: PoolClient): Promise<void>;
+
     begin(query?: string): Promise<PoolClient>;
+
     commit(client: PoolClient): Promise<void>;
-    rollback(client: PoolClient): Promise<void>;
+
+    rollback(client: PoolClient, error: unknown): Promise<void>;
 }
 
 export interface PgTransactionContext {
@@ -67,20 +70,35 @@ export class AsyncPgTransactionContextProvider implements PgTransactionContextPr
     }
 }
 
+export interface PgConnectionPoolOptions {
+    shareTransactions: boolean,
+    afterClaim?: (client: PoolClient) => Promise<void>,
+    beforeRelease?: (client: PoolClient, err?: unknown) => Promise<void>,
+}
+
 export class PgConnectionProviderWithPool implements PgConnectionProvider {
     constructor(
         private readonly pool: Pool,
-        private readonly options: {
-            shareTransactions: boolean,
-        } = {
-            shareTransactions: true,
-        },
-        private readonly context: PgTransactionContextProvider =  new StaticPgTransactionContextProvider(),
+        private readonly options: PgConnectionPoolOptions = {shareTransactions: true},
+        private readonly context: PgTransactionContextProvider = new StaticPgTransactionContextProvider(),
     ) {
     }
 
     async claim(): Promise<PoolClient> {
-        return this.pool.connect();
+        const client = await this.pool.connect();
+        const afterClaim = this.options.afterClaim;
+
+        if (afterClaim) {
+            try {
+                await afterClaim(client);
+            } catch (err) {
+                await this.release(client, err);
+
+                throw UnableToClaimConnection.because(err);
+            }
+        }
+
+        return client;
     }
 
     async begin(query?: string): Promise<PoolClient> {
@@ -92,7 +110,7 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
 
                 return client;
             } catch (e) {
-                this.release(client);
+                await this.release(client);
 
                 throw e;
             }
@@ -112,7 +130,7 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
 
             return client;
         } finally {
-            context.exclusiveAccess.unlock();
+            await context.exclusiveAccess.unlock();
         }
     }
 
@@ -120,30 +138,62 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
         try {
             await client.query('COMMIT');
         } finally {
-            this.release(client);
+            await this.release(client);
             this.context.resolve().sharedTransaction = undefined;
         }
     }
 
-    async rollback(client: PoolClient): Promise<void> {
+    async rollback(client: PoolClient, error: unknown): Promise<void> {
         try {
             await client.query('ROLLBACK');
         } finally {
-            this.release(client);
+            await this.release(client, error);
             this.context.resolve().sharedTransaction = undefined;
         }
     }
 
-    primaryConnection(): Connection {
-        return this.context.resolve().sharedTransaction ?? this.pool;
-    }
+    async release(client: PoolClient, err: unknown = undefined): Promise<void> {
+        const beforeRelease = this.options.beforeRelease;
+        let error: unknown | undefined = undefined;
 
-    secondaryConnection(): Connection {
-        return this.pool;
-    }
+        if (beforeRelease) {
+            try {
+                await beforeRelease(client, err);
+            } catch (beforeReleaseError) {
+                error = beforeReleaseError;
+                err = beforeReleaseError;
+            }
+        }
 
-    release(client: PoolClient): void {
-        client.release();
+        client.release(
+            err === undefined
+                ? err
+                : err instanceof Error
+                    ? err
+                    : new Error(String(err)),
+        );
+
+        if (error) {
+            throw UnableToReleaseConnection.because(error);
+        }
     }
+}
+
+class UnableToClaimConnection extends StandardError {
+    static because = (err: unknown) => new UnableToClaimConnection(
+        `Unable to claim connection: ${errorToMessage(err)}`,
+        'pg-connection-provider.unable_to_claim_connection',
+        {},
+        err,
+    );
+}
+
+class UnableToReleaseConnection extends StandardError {
+    static because = (err: unknown) => new UnableToReleaseConnection(
+        `Unable to release connection: ${errorToMessage(err)}`,
+        'pg-connection-provider.unable_to_release_connection',
+        {},
+        err,
+    );
 }
 
