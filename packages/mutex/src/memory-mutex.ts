@@ -1,5 +1,5 @@
 import {DynamicMutex, LockOptions, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
-import {maybeAbort, resolveOptions} from './abort-signal-options.js';
+import {maybeAbort, resolveOptions} from '@deltic/abort-signal-options';
 
 type LockWaiter = {done: boolean, promise: PromiseWithResolvers<void>};
 

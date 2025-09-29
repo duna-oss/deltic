@@ -1,15 +1,12 @@
-export type LockOptions = {
+export type AbortSignalOptions = {
     timeout?: number;
     abortSignal?: AbortSignal,
 }
 
-/**
- * @internal
- */
-export function resolveOptions(options: LockOptions = {}): LockOptions {
-    let abortSignal: AbortSignal | undefined = options?.abortSignal;
+export function resolveOptions<Options extends AbortSignalOptions>(options: Options): Options {
+    let abortSignal: AbortSignal | undefined = options.abortSignal;
 
-    if (options.timeout) {
+    if (options.timeout !== undefined) {
         abortSignal = options.abortSignal
             ? AbortSignal.any([
                 options.abortSignal,
@@ -23,9 +20,6 @@ export function resolveOptions(options: LockOptions = {}): LockOptions {
     return {...options, abortSignal};
 }
 
-/**
- * @internal
- */
 export function maybeAbort(signal?: AbortSignal) {
     if (signal?.aborted) {
         throw signal.reason;

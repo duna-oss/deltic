@@ -1,6 +1,7 @@
-import {LockOptions} from './abort-signal-options.js';
-
-export type {LockOptions};
+export type LockOptions = {
+    timeout?: number;
+    abortSignal?: AbortSignal,
+}
 
 export interface StaticMutex {
     tryLock(options?: LockOptions): Promise<boolean>;

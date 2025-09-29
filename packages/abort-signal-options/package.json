@@ -1,0 +1,23 @@
+{
+  "name": "@deltic/abort-signal-options",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Go-like WaitGroup",
+  "exports": {
+    ".": {
+      "import": "dist/index.js",
+      "types": "dist/index.d.ts"
+    }
+  },
+  "files": [
+    "package.json",
+    "dist"
+  ],
+  "scripts": {},
+  "keywords": [],
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+  }
+}
