@@ -34,8 +34,6 @@ await Promise.all(packageDirectories.map(async name => {
 export default [
     ...packageDirectories.map(dirname => {
         return defineConfig({
-            sourcemap: true,
-            // workspace: true,
             dts: true,
             external: [/^@deltic\//],
             alias: aliases,

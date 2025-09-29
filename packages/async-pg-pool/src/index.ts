@@ -187,7 +187,7 @@ export class PgConnectionProviderWithPool implements PgConnectionProvider {
 class UnableToClaimConnection extends StandardError {
     static because = (err: unknown) => new UnableToClaimConnection(
         `Unable to claim connection: ${errorToMessage(err)}`,
-        'pg-connection-provider.unable_to_claim_connection',
+        'async-pg-pool.unable_to_claim_connection',
         {},
         err,
     );
@@ -196,7 +196,7 @@ class UnableToClaimConnection extends StandardError {
 class UnableToReleaseConnection extends StandardError {
     static because = (err: unknown) => new UnableToReleaseConnection(
         `Unable to release connection: ${errorToMessage(err)}`,
-        'pg-connection-provider.unable_to_release_connection',
+        'async-pg-pool.unable_to_release_connection',
         {},
         err,
     );
