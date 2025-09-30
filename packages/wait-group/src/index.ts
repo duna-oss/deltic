@@ -1,6 +1,13 @@
+import {resolveOptions} from '@deltic/abort-signal-options';
+
 export type Waiter = () => void;
 
 const resolveWaiter = (w: Waiter) => w();
+
+export type WaitOptions = {
+    timeout?: number;
+    abortSignal?: AbortSignal,
+}
 
 export class WaitGroup {
     private counter: number = 0;
@@ -23,7 +30,19 @@ export class WaitGroup {
         }
     }
 
-    public async wait(timeout: number = -1): Promise<void> {
+    public async wait(options?: WaitOptions): Promise<void>;
+    public async wait(timeout?: number, defaults?: WaitOptions): Promise<void>;
+    public async wait(options: WaitOptions | number = {}, defaults: WaitOptions = {}): Promise<void> {
+        let opts = typeof options === 'number'
+            ? {...defaults, timeout: options} :
+            {...defaults, ...options};
+
+        if ((opts.timeout ?? -1) < 0) {
+            opts.timeout = undefined;
+        }
+
+        opts = resolveOptions(opts);
+
         if (this.counter === 0) {
             return Promise.resolve();
         }
@@ -31,16 +50,10 @@ export class WaitGroup {
         const {resolve, promise, reject} = Promise.withResolvers<void>();
         this.waiters.push(resolve);
 
-        if (timeout > -1) {
-            setTimeout(() => {
-                this.waiters = this.waiters.filter(w => w !== resolve);
-                reject(new WaitGroupTimeoutExceeded('WaitGroup timeout exceeded'));
-            }, timeout);
-        }
+        opts.abortSignal?.addEventListener('abort', () => {
+            reject(opts.abortSignal!.reason);
+        }, {once: true});
 
         return promise;
     }
-}
-
-export class WaitGroupTimeoutExceeded extends Error{
 }

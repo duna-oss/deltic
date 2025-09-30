@@ -25,5 +25,6 @@
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
+    "@deltic/abort-signal-options": "workspace:^"
   }
 }

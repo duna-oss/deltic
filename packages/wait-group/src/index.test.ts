@@ -42,6 +42,18 @@ describe('WaitGroup', () => {
         await expect(() => wg.done()).toThrow();
     });
 
+    test('cancelling using an abort signal', async () => {
+        const wg = new WaitGroup();
+        wg.add();
+        const controller = new AbortController();
+        const abortSignal = controller.signal;
+
+        const promise = wg.wait(-1, {abortSignal});
+        controller.abort('this is the reason');
+
+        await expect(promise).rejects.toThrow('this is the reason');
+    });
+
     test('the promise is rejected when not done before the timeout', async () => {
         let firstRejected = false;
         let secondRejected = false;
@@ -55,7 +67,7 @@ describe('WaitGroup', () => {
             .then(() => firstResolved = true)
             .catch(() => firstRejected = true);
 
-        await wg.wait(50)
+        await wg.wait({timeout: 50})
             .then(() => secondResolved = true)
             .catch(() => secondRejected = true);
 
@@ -63,6 +75,5 @@ describe('WaitGroup', () => {
         expect(firstResolved).toBe(false);
         expect(secondRejected).toBe(false);
         expect(secondResolved).toBe(true);
-
     });
 });
