@@ -1,21 +1,25 @@
-import {LockOptions, DynamicMutex} from './index.js';
+import type {LockValue, DynamicMutex} from './index.js';
 
-export class MultiMutex<LockID> implements DynamicMutex<LockID> {
+export class MultiMutex<LockID extends LockValue> implements DynamicMutex<LockID> {
     constructor(private readonly mutexes: DynamicMutex<LockID>[]) {
     }
 
 
-    async lock(id: LockID, options: LockOptions = {}): Promise<void> {
+    async lock(id: LockID, timeout?: number): Promise<void> {
         const start = process.hrtime.bigint();
-        let timeLeft = options.timeout;
+        let timeLeft = timeout;
+        const useTimeout = timeLeft !== undefined;
         const lockedMutexes: DynamicMutex<LockID>[] = [];
 
         for (const mutex of this.mutexes) {
             try {
-                await mutex.lock(id, {...options, timeout: timeLeft});
+                await mutex.lock(id, timeLeft);
                 // unshift to unlock in reverse order
                 lockedMutexes.unshift(mutex);
-                timeLeft = options.timeout ? options.timeout - hrTimeToMs(process.hrtime.bigint() - start) : undefined;
+
+                if (useTimeout) {
+                    timeLeft = timeLeft! - hrTimeToMs(process.hrtime.bigint() - start);
+                }
             } catch (error) {
                 for (const lockedMutex of lockedMutexes) {
                     await lockedMutex.unlock(id);
@@ -26,13 +30,13 @@ export class MultiMutex<LockID> implements DynamicMutex<LockID> {
         }
     }
 
-    async tryLock(id: LockID, options: LockOptions = {}): Promise<boolean> {
+    async tryLock(id: LockID): Promise<boolean> {
         let locked: boolean = true;
         const lockedMutexes: DynamicMutex<LockID>[] = [];
 
         for (const mutex of this.mutexes) {
             try {
-                if (await mutex.tryLock(id, options)) {
+                if (await mutex.tryLock(id)) {
                     // unshift to unlock in reverse order
                     lockedMutexes.unshift(mutex);
                     continue;

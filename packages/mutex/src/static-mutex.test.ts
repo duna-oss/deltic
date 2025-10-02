@@ -16,12 +16,12 @@ describe.each([
 
     test('a lock can be acquired and released', async () => {
         expect.assertions(0);
-        await mutex.lock({timeout: 100});
+        await mutex.lock(100);
         await mutex.unlock();
     });
 
     test('a tried lock can be acquired and released', async () => {
-        const locked = await mutex.tryLock({timeout: 100});
+        const locked = await mutex.tryLock();
         await mutex.unlock();
 
         // assert
@@ -30,11 +30,11 @@ describe.each([
 
     test('a lock cannot be acquired twice', async () => {
         // arrange
-        await mutex.lock({timeout: 100});
+        await mutex.lock(100);
 
         // act
         await expect(async () => {
-            await mutex.lock({timeout: 1});
+            await mutex.lock(1);
         }).rejects.toThrow(UnableToAcquireLock);
 
         // cleanup
@@ -43,10 +43,10 @@ describe.each([
 
     test('a locked mutex can try but will not acquire a lock', async () => {
         // arrange
-        await mutex.lock({timeout: 100});
+        await mutex.lock(100);
 
         // act
-        const locked = await mutex.tryLock({timeout: 100});
+        const locked = await mutex.tryLock();
 
 
         // assert
@@ -57,13 +57,13 @@ describe.each([
     });
 
     test('released locks can be acquired again', async () => {
-        await mutex.lock({timeout: 100});
+        await mutex.lock(100);
 
-        expect(await mutex.tryLock({timeout: 100})).toEqual(false);
+        expect(await mutex.tryLock()).toEqual(false);
 
         await mutex.unlock();
 
-        expect(await mutex.tryLock({timeout: 100})).toEqual(true);
+        expect(await mutex.tryLock()).toEqual(true);
 
         // cleanup
         await mutex.unlock();
@@ -72,6 +72,6 @@ describe.each([
     test('locks that are not acquired cannot be released', async () => {
         await expect(async () => {
             await mutex.unlock();
-        }).rejects.toThrow(new UnableToReleaseLock());
+        }).rejects.toThrow(UnableToReleaseLock);
     });
 });

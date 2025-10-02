@@ -1,15 +1,15 @@
-import {DynamicMutex, LockOptions, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
-import {maybeAbort, resolveOptions} from '@deltic/abort-signal-options';
+import {DynamicMutex, LockValue, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 
-type LockWaiter = {done: boolean, promise: PromiseWithResolvers<void>};
+interface LockWaiter {
+    done: boolean;
+    promise: PromiseWithResolvers<void>;
+}
 
-export class MutexUsingMemory<LockID> implements DynamicMutex<LockID> {
+export class MutexUsingMemory<LockID extends LockValue> implements DynamicMutex<LockID> {
     private readonly locks = new Map<LockID, true>();
     private waiters: LockWaiter[] = [];
 
-    lock(id: LockID, options: LockOptions = {}): Promise<void> {
-        const opt = resolveOptions(options);
-
+    lock(id: LockID, timeout?: number): Promise<void> {
         if (this.tryLockSync(id)) {
             return Promise.resolve();
         }
@@ -20,17 +20,22 @@ export class MutexUsingMemory<LockID> implements DynamicMutex<LockID> {
             promise: promise,
         };
         this.waiters.push(lockWaiter);
-        opt.abortSignal?.addEventListener('abort', (err: Event) => {
-            promise.reject(err);
-        });
+        let timer: ReturnType<typeof setTimeout> | undefined = undefined;
+
+        if (timeout !== undefined) {
+            timer = setTimeout(() => {
+                lockWaiter.promise.reject('Time ran out.');
+            }, timeout);
+        }
 
         return promise.promise.then(
             () => {
+                clearTimeout(timer);
                 lockWaiter.done = true;
             },
             reason => {
                 lockWaiter.done = true;
-                throw UnableToAcquireLock.becauseOfError(reason);
+                throw UnableToAcquireLock.becauseOfError(id, reason);
             }
         );
     }
@@ -45,15 +50,13 @@ export class MutexUsingMemory<LockID> implements DynamicMutex<LockID> {
         return true;
     }
 
-    async tryLock(id: LockID, options: LockOptions): Promise<boolean> {
-        maybeAbort(options.abortSignal);
-
+    async tryLock(id: LockID): Promise<boolean> {
         return this.tryLockSync(id);
     }
 
     async unlock(id: LockID): Promise<void> {
         if (!this.locks.get(id)) {
-            throw new UnableToReleaseLock();
+            throw UnableToReleaseLock.becauseOfError(id, 'Lock ID does not exist.');
         }
 
         let waiter = this.waiters.shift();

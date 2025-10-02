@@ -2,7 +2,7 @@
   "name": "@deltic/mutex",
   "type": "module",
   "version": "0.0.0",
-  "description": "A standard error that adds error codes, context, and previous errors.",
+  "description": "Contract based mutex, allowing key-based or global locks.",
   "files": [
     "package.json",
     "dist"

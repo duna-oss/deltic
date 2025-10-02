@@ -1,15 +1,15 @@
-import {LockOptions, StaticMutex} from './index.js';
+import {StaticMutex} from './index.js';
 import {MutexUsingMemory} from './memory-mutex.js';
 
 export class StaticMutexUsingMemory implements StaticMutex {
     private readonly mutex = new MutexUsingMemory<true>();
 
-    tryLock(options: LockOptions = {}): Promise<boolean> {
-        return this.mutex.tryLock(true, options);
+    tryLock(): Promise<boolean> {
+        return this.mutex.tryLock(true);
     }
 
-    lock(options: LockOptions = {}): Promise<void> {
-        return this.mutex.lock(true, options);
+    lock(timeout?: number): Promise<void> {
+        return this.mutex.lock(true, timeout);
     }
 
     unlock(): Promise<void> {
