@@ -31,7 +31,7 @@ describe.each([
     });
 
     test('a tried lock can be acquired and released', async () => {
-        const locked = await mutex.tryLock(lockId1, 50);
+        const locked = await mutex.tryLock(lockId1);
         await mutex.unlock(lockId1);
 
         // assert
@@ -93,7 +93,7 @@ describe.each([
         await mutex.lock(lockId1, 50);
 
         // act
-        const locked = await mutex.tryLock(lockId1, 50);
+        const locked = await mutex.tryLock(lockId1);
 
 
         // assert
