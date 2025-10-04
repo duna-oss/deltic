@@ -1,25 +1,20 @@
-import {Pool, PoolClient} from 'pg';
-import {
-    AsyncPgTransactionContextProvider,
-    PgConnectionProvider,
-    PgConnectionProviderWithPool,
-    PgTransactionContext,
-} from './index.js';
+import {Pool} from 'pg';
+import {AsyncPgPool, AsyncPgTransactionContextProvider, Connection, TransactionContext} from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory-mutex';
 
-const asyncLocalStorage = new AsyncLocalStorage<PgTransactionContext>();
+const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
 
-const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory()});
+const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory(), free: []});
 
-describe('PgConnectionProvider', () => {
+describe('AyncPgPool', () => {
     let pool: Pool;
-    let provider: PgConnectionProvider;
-    const factoryWithStaticPool = () => new PgConnectionProviderWithPool(pool);
+    let provider: AsyncPgPool;
+    const factoryWithStaticPool = () => new AsyncPgPool(pool, {});
     const factoryWithAsyncPool = () => {
-        return new PgConnectionProviderWithPool(
+        return new AsyncPgPool(
             pool,
-            {shareTransactions: true},
+            {},
             new AsyncPgTransactionContextProvider(
                 asyncLocalStorage,
             ),
@@ -80,6 +75,55 @@ describe('PgConnectionProvider', () => {
         });
     });
 
+    describe('primary connections and flushing async context', () => {
+        let provider: AsyncPgPool;
+
+        beforeEach(() => {
+            provider = factoryWithStaticPool();
+        });
+
+        test('primary connections are re-used', async () => {
+            let connection = await provider.primary();
+
+            await connection.query('SET app.custom_value = "something"');
+
+            await provider.release(connection);
+
+            connection = await provider.primary();
+            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+
+            expect(result.rows['0'].value).toEqual('something');
+
+            await provider.flushSharedContext();
+        });
+
+        test('transactions use the primary connection', async () => {
+            const connection = await provider.primary();
+
+            await connection.query('SET app.custom_value = "something"');
+
+            await provider.release(connection);
+
+            const transaction = await provider.begin();
+            const result = await transaction.query('SELECT current_setting(\'app.custom_value\') as value');
+            await provider.rollback(transaction);
+
+            expect(result.rows['0'].value).toEqual('something');
+
+            await provider.flushSharedContext();
+        });
+
+        test('shared context flushing errors when the transaction is still open', async () => {
+            const transaction = await provider.begin();
+
+            await expect(provider.flushSharedContext()).rejects.toThrow();
+
+            await provider.rollback(transaction);
+
+            await provider.flushSharedContext();
+        });
+    });
+
     describe.each([
         ['pool', factoryWithStaticPool],
     ] as const)('transactional behaviour using %s', (name, factory) => {
@@ -88,10 +132,11 @@ describe('PgConnectionProvider', () => {
         beforeAll(async () => {
             provider = factory();
             await pool.query(`
-                CREATE TABLE ${tableName} (
+                CREATE TABLE ${tableName}
+                (
                     identifier TEXT UNIQUE NOT NULL,
-                    name TEXT NOT NULL,
-                    age INTEGER
+                    name       TEXT        NOT NULL,
+                    age        INTEGER
                 );
             `);
         });
@@ -111,14 +156,14 @@ describe('PgConnectionProvider', () => {
 
     test('being able to set a setting for a connection', async () => {
         let index = 0;
-        let usedConnection: PoolClient | undefined = undefined;
-        const provider = new PgConnectionProviderWithPool(
+        let usedConnection: Connection | undefined = undefined;
+        const provider = new AsyncPgPool(
             pool,
             {
-                shareTransactions: true,
+                keepConnections: 0,
                 onRelease: client => client.query('RESET app.tenant_id'),
                 onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
-            }
+            },
         );
 
         async function fetchTenantId() {
@@ -145,16 +190,17 @@ describe('PgConnectionProvider', () => {
 
     test('using async dispose to close a connection', async () => {
         let released = false;
-        const provider = new PgConnectionProviderWithPool(
+        const provider = new AsyncPgPool(
             pool,
             {
-                shareTransactions: true,
-                onRelease: () => {released = true;},
-            }
+                onRelease: () => {
+                    released = true;
+                },
+            },
         );
 
         await (async () => {
-            await using connection = await provider.claim();
+                await using connection = await provider.claim();
 
             const result = await connection.query('SELECT 1 as num');
             expect(result.rowCount).toEqual(1);
