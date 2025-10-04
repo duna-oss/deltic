@@ -8,14 +8,13 @@ const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
 
 export interface Connection extends Omit<PoolClient, 'release'> {
     [Symbol.asyncDispose]: () => Promise<void>;
-    [originalRelease]: PoolClient['release'];
 }
 
 export interface TransactionContext {
     exclusiveAccess: StaticMutex,
     sharedTransaction?: Connection | undefined,
     primaryConnection?: Connection | undefined,
-    free: Array<Connection>,
+    free: Array<[Connection, undefined | ReturnType<typeof setTimeout>]>,
 }
 
 export interface TransactionContextProvider {
@@ -55,20 +54,25 @@ export class AsyncPgTransactionContextProvider implements TransactionContextProv
         return this.store.run({
             exclusiveAccess: new StaticMutexUsingMemory(),
             sharedTransaction: undefined,
+            primaryConnection: undefined,
             free: [],
         }, callback);
     }
 }
 
 export interface AsyncPgPoolOptions {
-    keepConnections?: number
+    keepConnections?: number,
+    maxIdleMs?: number,
     onClaim?: (client: Connection) => Promise<any> | any,
     onRelease?: (client: Connection, err?: unknown) => Promise<any> | any,
     releaseHookOnError?: boolean,
+    freshResetQuery?: string,
 }
 
 export class AsyncPgPool {
     private readonly keepConnections: number;
+    private readonly maxIdleMs: number;
+    private readonly freshResetQuery: string;
 
     constructor(
         private readonly pool: Pool,
@@ -76,6 +80,8 @@ export class AsyncPgPool {
         private readonly context: TransactionContextProvider = new StaticPgTransactionContextProvider(),
     ) {
         this.keepConnections = options.keepConnections ?? 0;
+        this.maxIdleMs = options.maxIdleMs ?? 1000;
+        this.freshResetQuery = options.freshResetQuery ?? 'RESET ALL';
     }
 
     async primary(): Promise<Connection> {
@@ -95,10 +101,7 @@ export class AsyncPgPool {
                 return primaryConnection;
             }
 
-            const connection = context.free.shift()
-                ?? await this.claim();
-
-            return context.primaryConnection = connection;
+            return context.primaryConnection = await this.claim();
         } finally {
             await context.exclusiveAccess.unlock();
         }
@@ -106,27 +109,50 @@ export class AsyncPgPool {
 
     async flushSharedContext(): Promise<void> {
         const context = this.context.resolve();
+        await context.exclusiveAccess.lock();
 
-        await Promise.all(context.free.map(this.doRelease));
+        try {
+            await Promise.all(context.free.map(([connection, timeout]) => {
+                clearTimeout(timeout);
+                this.doRelease(connection);
+            }));
+            context.free.length = 0;
 
-        if (context.primaryConnection) {
-            await this.doRelease(context.primaryConnection);
-        }
+            if (context.primaryConnection) {
+                await this.doRelease(context.primaryConnection);
+                context.primaryConnection = undefined;
+            }
 
-        if (context.sharedTransaction) {
-            throw new Error('Expected not the have a transaction, but one was found. Forgot to call commit or rollback?');
+            if (context.sharedTransaction) {
+                throw new Error('Expected not the have a transaction, but one was found. Forgot to call commit or rollback?');
+            }
+        } finally {
+            await context.exclusiveAccess.unlock();
         }
     }
 
     async claim(): Promise<Connection> {
-        const  client = await this.pool.connect() as unknown as Connection;
+        const context = this.context.resolve();
+        const [freeClient, timeout] = context.free.shift() ?? [];
+
+        if (freeClient) {
+            clearTimeout(timeout);
+
+            return freeClient;
+        }
+
+        return this.claimFromPool();
+    }
+
+    private async claimFromPool(): Promise<Connection> {
+        const client = await this.pool.connect() as unknown as Connection;
         const onClaim = this.options.onClaim;
 
         if (onClaim) {
             try {
                 await onClaim(client);
             } catch (err) {
-                await this.release(client, err);
+                await this.doRelease(client, err);
 
                 throw UnableToClaimConnection.because(err);
             }
@@ -159,11 +185,25 @@ export class AsyncPgPool {
         });
     }
 
+    async claimFresh(): Promise<Connection> {
+        const connection = await this.claimFromPool();
+
+        try {
+            await connection.query(this.freshResetQuery);
+
+            return connection;
+        } catch (err) {
+            throw UnableToClaimConnection.because(err);
+        }
+    }
+
     async begin(query?: string): Promise<Connection> {
         const context = this.context.resolve();
         await context.exclusiveAccess.lock();
 
+
         if (context.sharedTransaction) {
+            await context.exclusiveAccess.unlock();
             throw new Error('Cannot begin transaction when already inside one');
         }
 
@@ -188,21 +228,23 @@ export class AsyncPgPool {
         }
     }
 
-    async commit(client: Connection): Promise<void> {
-        try {
-            await client.query('COMMIT');
-            await this.release(client);
-        } catch (e) {
-            await this.doRelease(client, e);
-            throw e;
-        } finally {
-            this.context.resolve().sharedTransaction = undefined;
-        }
+    commit(client: Connection): Promise<void> {
+        return this.finalizeTransaction('COMMIT', client);
     }
 
-    async rollback(client: Connection, error?: unknown): Promise<void> {
+    rollback(client: Connection, error?: unknown): Promise<void> {
+        return this.finalizeTransaction('ROLLBACK', client, error);
+    }
+
+    private async finalizeTransaction(command: 'ROLLBACK' | 'COMMIT', client: Connection, error?: unknown): Promise<void> {
+        const context = this.context.resolve();
+
+        if (context.sharedTransaction !== client) {
+            throw new Error(`Trying to ${command} a transaction that is NOT the known transaction.`);
+        }
+
         try {
-            await client.query('ROLLBACK');
+            await client.query(command);
             await this.release(client, error);
         } catch (e) {
             await this.doRelease(client, e);
@@ -219,8 +261,18 @@ export class AsyncPgPool {
             return;
         }
 
-        if (err === undefined && this.keepConnections < context.free.length) {
-            context.free.push(connection);
+        if (err === undefined && this.keepConnections > context.free.length) {
+            const timeout = this.maxIdleMs === undefined
+                ? undefined
+                : setTimeout(() => {
+                    const context = this.context.resolve();
+                    const index = context.free.findIndex(([c]) => c === connection);
+
+                    if (index >= 0) {
+                        context.free.splice(index, 1);
+                    }
+                }, this.maxIdleMs);
+            context.free.push([connection, timeout]);
         } else {
             return this.doRelease(connection, err);
         }
@@ -228,29 +280,28 @@ export class AsyncPgPool {
 
     private async doRelease(connection: Connection, err: unknown = undefined): Promise<void> {
         const onRelease = this.options.onRelease;
-        let error: unknown | undefined = err;
-        let throwError: boolean = false;
 
-        if (onRelease && (error === undefined || this.options.releaseHookOnError)) {
+        if (onRelease && (err === undefined || this.options.releaseHookOnError)) {
             try {
                 await onRelease(connection, err);
             } catch (onReleaseError) {
-                throwError = true;
-                error = onReleaseError;
+                ((connection as any)[originalRelease] as PoolClient['release'])(
+                    onReleaseError instanceof Error
+                        ? onReleaseError
+                        : new Error(String(onReleaseError))
+                );
+
+                throw UnableToReleaseConnection.because(onReleaseError);
             }
         }
 
-        connection[originalRelease](
-            error === undefined
-                ? error
-                : error instanceof Error
-                    ? error
-                    : new Error(String(error)),
+        ((connection as any)[originalRelease] as PoolClient['release'])(
+            err === undefined
+                ? err
+                : err instanceof Error
+                    ? err
+                    : new Error(String(err)),
         );
-
-        if (throwError) {
-            throw UnableToReleaseConnection.because(error);
-        }
     }
 }
 

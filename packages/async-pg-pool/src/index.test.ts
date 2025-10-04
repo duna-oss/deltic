@@ -1,5 +1,11 @@
 import {Pool} from 'pg';
-import {AsyncPgPool, AsyncPgTransactionContextProvider, Connection, TransactionContext} from './index.js';
+import {
+    AsyncPgPool,
+    AsyncPgPoolOptions,
+    AsyncPgTransactionContextProvider,
+    Connection,
+    TransactionContext,
+} from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory-mutex';
 
@@ -10,11 +16,11 @@ const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new Sta
 describe('AyncPgPool', () => {
     let pool: Pool;
     let provider: AsyncPgPool;
-    const factoryWithStaticPool = () => new AsyncPgPool(pool, {});
-    const factoryWithAsyncPool = () => {
+    const factoryWithStaticPool = (options: AsyncPgPoolOptions = {}) => new AsyncPgPool(pool, options);
+    const factoryWithAsyncPool = (options: AsyncPgPoolOptions = {}) => {
         return new AsyncPgPool(
             pool,
-            {},
+            options,
             new AsyncPgTransactionContextProvider(
                 asyncLocalStorage,
             ),
@@ -82,6 +88,10 @@ describe('AyncPgPool', () => {
             provider = factoryWithStaticPool();
         });
 
+        afterEach(async () => {
+            await provider.flushSharedContext();
+        });
+
         test('primary connections are re-used', async () => {
             let connection = await provider.primary();
 
@@ -92,9 +102,35 @@ describe('AyncPgPool', () => {
             connection = await provider.primary();
             const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
 
-            expect(result.rows['0'].value).toEqual('something');
+            expect(result.rows[0].value).toEqual('something');
+        });
 
-            await provider.flushSharedContext();
+        test('claimed connections are re-used', async () => {
+            let connection = await provider.claim();
+
+            await connection.query('SET app.custom_value = "something"');
+
+            await provider.release(connection);
+
+            connection = await provider.claim();
+            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            await provider.release(connection);
+
+            expect(result.rows[0].value).toEqual('something');
+        });
+
+        test('fresh connections have reset state', async () => {
+            let connection = await provider.claim();
+
+            await connection.query('SET app.custom_value = "something"');
+
+            await provider.release(connection);
+
+            connection = await provider.claimFresh();
+            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            await provider.release(connection);
+
+            expect(result.rows[0].value).toEqual('');
         });
 
         test('transactions use the primary connection', async () => {
@@ -108,9 +144,7 @@ describe('AyncPgPool', () => {
             const result = await transaction.query('SELECT current_setting(\'app.custom_value\') as value');
             await provider.rollback(transaction);
 
-            expect(result.rows['0'].value).toEqual('something');
-
-            await provider.flushSharedContext();
+            expect(result.rows[0].value).toEqual('something');
         });
 
         test('shared context flushing errors when the transaction is still open', async () => {
@@ -119,8 +153,6 @@ describe('AyncPgPool', () => {
             await expect(provider.flushSharedContext()).rejects.toThrow();
 
             await provider.rollback(transaction);
-
-            await provider.flushSharedContext();
         });
     });
 
