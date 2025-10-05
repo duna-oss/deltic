@@ -1,0 +1,21 @@
+{
+  "name": "@deltic/clock",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Be in control of time.",
+  "files": [
+    "package.json",
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "dist/index.js",
+      "types": "dist/index.d.ts"
+    }
+  },
+  "keywords": ["errors", "error"],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.4"
+}

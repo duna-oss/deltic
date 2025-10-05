@@ -66,6 +66,8 @@ importers:
         specifier: workspace:^
         version: link:../error-standard
 
+  packages/clock: {}
+
   packages/error-standard: {}
 
   packages/mutex: {}
