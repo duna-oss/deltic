@@ -1,8 +1,8 @@
 {
-  "name": "@deltic/async-pg-pool",
+  "name": "@deltic/mutex-using-pg",
   "type": "module",
   "version": "0.0.0",
-  "description": "An opinionated interface to acquire connections from Postgres",
+  "description": "Postgres implementation of @deltic/mutex using PG",
   "files": [
     "package.json",
     "dist"
@@ -22,11 +22,9 @@
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
     "@deltic/mutex": "workspace:^",
-    "@deltic/error-standard": "workspace:^",
-    "pg": "^8.16.3"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.15.5"
+    "pg": "^8.16.3",
+    "crc": "^4.3.2"
   }
 }

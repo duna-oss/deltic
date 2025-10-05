@@ -22,8 +22,8 @@
       "vitest/globals"
     ],
     "paths": {
-      "@deltic/mutex/static-memory-mutex": [
-        "./packages/mutex/src/static-memory-mutex.ts"
+      "@deltic/mutex/*": [
+        "./packages/mutex/src/*-mutex.ts"
       ],
       "@deltic/*": [
         "./packages/*/src/index.ts"

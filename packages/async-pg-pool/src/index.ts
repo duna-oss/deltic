@@ -1,5 +1,5 @@
 import type {Pool, PoolClient} from 'pg';
-import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory-mutex';
+import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
@@ -76,7 +76,7 @@ export class AsyncPgPool {
 
     constructor(
         private readonly pool: Pool,
-        private readonly options: AsyncPgPoolOptions,
+        private readonly options: AsyncPgPoolOptions = {},
         private readonly context: TransactionContextProvider = new StaticPgTransactionContextProvider(),
     ) {
         this.keepConnections = options.keepConnections ?? 0;

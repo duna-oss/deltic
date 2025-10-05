@@ -7,7 +7,7 @@ import {
     TransactionContext,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory-mutex';
+import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 
 const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
 

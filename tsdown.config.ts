@@ -6,6 +6,7 @@ const packageDirectories: string[] = Array.from(
     (await readdir(resolve(import.meta.dirname, 'packages'), {withFileTypes: true}))
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
+        .filter(directory => !directory.endsWith('-tests'))
 );
 
 const aliases: Record<string, string> = {};

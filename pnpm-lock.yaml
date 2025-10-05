@@ -20,6 +20,9 @@ importers:
       eslint:
         specifier: ^9.36.0
         version: 9.36.0(jiti@2.6.0)
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
       tsdown:
         specifier: ^0.15.5
         version: 0.15.5(typescript@5.9.2)
@@ -43,6 +46,9 @@ importers:
 
   packages/async-pg-pool:
     dependencies:
+      '@deltic/error-standard':
+        specifier: workspace:^
+        version: link:../error-standard
       '@deltic/mutex':
         specifier: workspace:^
         version: link:../mutex
@@ -62,11 +68,41 @@ importers:
 
   packages/error-standard: {}
 
-  packages/mutex:
+  packages/mutex: {}
+
+  packages/mutex-tests:
     dependencies:
-      '@deltic/abort-signal-options':
+      '@deltic/async-pg-pool':
         specifier: workspace:^
-        version: link:../abort-signal-options
+        version: link:../async-pg-pool
+      '@deltic/mutex':
+        specifier: workspace:^
+        version: link:../mutex
+      '@deltic/mutex-using-pg':
+        specifier: workspace:^
+        version: link:../mutex-using-pg
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.15.5
+
+  packages/mutex-using-pg:
+    dependencies:
+      '@deltic/async-pg-pool':
+        specifier: workspace:^
+        version: link:../async-pg-pool
+      '@deltic/mutex':
+        specifier: workspace:^
+        version: link:../mutex
+      crc:
+        specifier: ^4.3.2
+        version: 4.3.2
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
 
   packages/process-queue:
     dependencies:
@@ -845,6 +881,15 @@ packages:
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+
+  crc@4.3.2:
+    resolution: {integrity: sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      buffer: '>=6.0.3'
+    peerDependenciesMeta:
+      buffer:
+        optional: true
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -2426,6 +2471,8 @@ snapshots:
   color-name@1.1.4: {}
 
   concat-map@0.0.1: {}
+
+  crc@4.3.2: {}
 
   cross-spawn@7.0.6:
     dependencies:

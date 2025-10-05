@@ -19,17 +19,19 @@
     "./static-memory": {
       "import": "dist/static-memory-mutex.js",
       "types": "dist/static-memory-mutex.d.ts"
+    },
+    "./multi": {
+      "import": "dist/multi-mutex.js",
+      "types": "dist/multi-mutex.d.ts"
     }
   },
   "keywords": [
-    "errors",
-    "error"
+    "mutex",
+    "concurrency"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
-  "dependencies": {
-    "@deltic/abort-signal-options": "workspace:^"
-  }
+  "dependencies": {}
 }

@@ -1,4 +1,4 @@
-export type ErrorContext = { [index: string]: string | number | null };
+export type ErrorContext = { [index: string]: string | number | null | boolean };
 
 export abstract class StandardError extends Error {
     constructor(
