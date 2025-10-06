@@ -1,5 +1,5 @@
 import {setTimeout as wait} from 'node:timers/promises';
-import {createTestClock, daysInMilliseconds, millisecondsBetween, SystemClock} from './index.js';
+import {createTestClock, daysInMilliseconds, millisecondsBetween, SystemClock, DefaultClock} from './index.js';
 
 describe('@deltic/clock', () => {
     describe('clock.SystemClock', () => {
@@ -15,6 +15,16 @@ describe('@deltic/clock', () => {
 
             expect(now).toBeGreaterThan(before);
             expect(now).toBeLessThan(after);
+        });
+    });
+
+    describe('clock.DefaultClock', () => {
+        test('the default clock is a test clock in tests, so time is constant', async () => {
+            const first = DefaultClock.now();
+
+            await wait(5); // ensure diff
+
+            expect(first).toEqual(DefaultClock.now());
         });
     });
 
