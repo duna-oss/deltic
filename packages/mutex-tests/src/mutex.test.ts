@@ -2,7 +2,7 @@ import {setTimeout} from 'node:timers/promises';
 import {DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from '@deltic/mutex';
 import {Pool} from 'pg';
 
-import {Crc32LockIdConverter, MutexUsingPostgres} from '@deltic/mutex-using-pg';
+import {Crc32LockIdConverter, makePostgresMutex, MutexUsingPostgres} from '@deltic/mutex-using-pg';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import {MutexUsingMemory} from '@deltic/mutex/memory';
 import {MultiMutex} from '@deltic/mutex/multi';
@@ -23,19 +23,16 @@ describe.each([
             new MutexUsingMemory<string>(),
         ])
     ],
-    ['MutexUsingPg - primary', () => new MultiMutex<string>([
-        new MutexUsingMemory<string>(),
-        new MutexUsingPostgres(
-            asyncPool,
-            new Crc32LockIdConverter({base: 0, range: 10_000}),
-            'primary'
-        ),
-    ])],
-    ['MutexUsingPg - fresh', () => new MutexUsingPostgres(
-        asyncPool,
-        new Crc32LockIdConverter({base: 10_000, range: 10_000}),
-        'fresh'
-    )]
+    ['MutexUsingPostgres - primary', () => makePostgresMutex({
+        pool: asyncPool,
+        converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
+        mode: 'primary',
+    })],
+    ['MutexUsingPostgres - fresh', () => makePostgresMutex({
+        pool: asyncPool,
+        converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
+        mode: 'fresh',
+    })],
 ] as const)('Mutex using %s', (_name, factory) => {
     let mutex: DynamicMutex<string>;
 
@@ -116,12 +113,10 @@ describe.each([
         for (let i = 0; i < 5; i++) {
             promises.push((async (index: number) => {
                 await mutex.lock(lockId1, 200 + i);
-                console.log(i);
                 result.push([index]);
                 await setTimeout(10 - i);
                 result.at(-1)!.push(index);
                 await mutex.unlock(lockId1);
-                console.log(i);
             })(i));
         }
 
