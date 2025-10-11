@@ -68,6 +68,8 @@ importers:
 
   packages/clock: {}
 
+  packages/dependency-container: {}
+
   packages/error-standard: {}
 
   packages/mutex: {}

@@ -1,0 +1,16 @@
+{
+  "name": "@deltic/dependency-container",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Reliable dependency injection container.",
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "MIT",
+  "packageManager": "pnpm@10.12.4",
+  "exports": {
+    ".": {
+      "import": "dist/index.js",
+      "types": "dist/index.d.ts"
+    }
+  }
+}

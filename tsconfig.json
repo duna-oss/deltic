@@ -7,11 +7,13 @@
     "dist"
   ],
   "compilerOptions": {
+    "moduleResolution": "nodenext",
     "esModuleInterop": false,
     "declaration": true,
     "skipLibCheck": true,
     "lib": [
-      "es2024"
+      "es2024",
+      "esnext.collection"
     ],
     "module": "node16",
     "target": "es2024",
