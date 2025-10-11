@@ -2,7 +2,7 @@ import {DependencyContainer, reflectMethods} from '@deltic/dependency-container'
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
-describe('@deltic/dependency-container', () => {
+describe('@deltic/dependency-injection', () => {
     let container: DependencyContainer;
 
     beforeEach(() => container = new DependencyContainer());
