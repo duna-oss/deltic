@@ -3,6 +3,19 @@ import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
+import {IncomingMessage, ServerResponse} from 'node:http';
+
+export interface NextFunction {
+    (err?: any): void;
+}
+
+interface HttpMiddleware {
+    <Request extends IncomingMessage, Response extends ServerResponse, Next extends NextFunction>(
+        req: Request,
+        res: Response,
+        next: Next,
+    ): unknown;
+}
 
 const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
 
@@ -19,6 +32,7 @@ export interface TransactionContext {
 
 export interface TransactionContextProvider {
     resolve(): TransactionContext;
+    run?: <R>(callback: () => R) => R;
 }
 
 export class StaticPgTransactionContextProvider implements TransactionContextProvider {
@@ -105,6 +119,22 @@ export class AsyncPgPool {
         } finally {
             await context.exclusiveAccess.unlock();
         }
+    }
+
+    httpMiddleware(): HttpMiddleware {
+        const flush = this.flushSharedContext.bind(this);
+
+        return async (_req, res, next) => {
+            res.on('finish', flush);
+
+            if (this.context.run === undefined) {
+                next();
+            } else {
+                await this.context.run?.(async () => {
+                    next();
+                });
+            }
+        };
     }
 
     async flushSharedContext(): Promise<void> {
