@@ -1,4 +1,4 @@
-import {DependencyContainer, reflectMethods} from './index.js';
+import {DependencyContainer, reflectMethods, container as exportedContainer} from './index.js';
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
@@ -6,6 +6,10 @@ describe('@deltic/dependency-injection', () => {
     let container: DependencyContainer;
 
     beforeEach(() => container = new DependencyContainer());
+
+    test('the exported container is a Dependency', () => {
+        expect(exportedContainer).toBeInstanceOf(DependencyContainer);
+    });
 
     describe('lazy dependencies', () => {
         let segments: string[];
@@ -294,6 +298,22 @@ describe('@deltic/dependency-injection', () => {
         const proxy = container.lazyResolve('something');
 
         expect(isProxy(proxy)).toEqual(true);
+    });
+
+    test('shutting down registered instances', async () => {
+        const instance = new Dependency('name');
+        let hasShutDown = false;
+
+        container.registerInstance('something', {
+            instance,
+            shutdown: () => {
+                hasShutDown = true;
+            },
+        });
+
+        await container.shutdown();
+
+        expect(hasShutDown).toEqual(true);
     });
 
     test('cleanups with circular dependencies cause errors', async () => {

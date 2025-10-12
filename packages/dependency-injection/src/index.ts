@@ -1,25 +1,23 @@
-interface ServiceOptions {
-    cache?: boolean;
-}
-
 interface Factory<T = any> {
     (container: DependencyContainer): T;
 }
 
-type ServiceDefinition<T = any> = InstanceDefinition<T> & {
-    factory: Factory<T>;
-};
-
-type InstanceDefinition<T = any> = ServiceOptions & {
+type ServiceDefinition<T = any> = {} & {
     factory: Factory<T>;
     lazy?: T extends object ? true : never;
 } & ({
-    cache?: true,
+    cache?: true;
     shutdown?: (instance: T) => Promise<void> | void;
 } | {
-    cache?: false,
-    shutdown?: never,
+    cache: false;
+    shutdown?: never;
 });
+
+type InstanceDefinition<T = any> = {
+    instance: T;
+    cache?: true;
+    shutdown?: (instance: T) => Promise<void> | void;
+};
 
 /**
  * Represents a resolved service with its shutdown callback and direct dependencies.
@@ -138,15 +136,22 @@ export class DependencyContainer {
         }
     }
 
-    registerInstance<Service extends object>(key: string, instance: Service, definition: InstanceDefinition<Service>): void {
-        if (definition.cache !== false) {
-            this.cache[key] = instance;
-        }
-
+    registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): void {
+        const {shutdown, instance} = definition;
+        this.cache[key] = instance;
         this.definitions[key] = {
             ...definition,
             factory: () => instance,
         };
+
+        if (shutdown) {
+            this.resolved.set(key, {
+                key,
+                shutdown,
+                dependencies: new Set(),
+                instance,
+            });
+        }
     }
 
     private createProxyFor<Service extends object>(key: string, definition: ServiceDefinition<Service>): Service {
@@ -217,14 +222,12 @@ export class DependencyContainer {
         // Register shutdown callback BEFORE executing factory so that child
         // dependencies can record this service as their parent
         if (shutdown || lazy) {
-            if (!this.resolved.has(key)) {
-                this.resolved.set(key, {
-                    key,
-                    shutdown,
-                    dependencies: new Set(),
-                    instance: undefined,
-                });
-            }
+            this.resolved.set(key, {
+                key,
+                shutdown,
+                dependencies: new Set(),
+                instance: undefined,
+            });
 
             this.recordDependency(key);
         }
@@ -245,6 +248,8 @@ export class DependencyContainer {
         return instance;
     }
 }
+
+export const container = new DependencyContainer();
 
 /**
  * @internal
