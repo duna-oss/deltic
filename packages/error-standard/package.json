@@ -5,7 +5,8 @@
   "description": "A standard error that adds error codes, context, and previous errors.",
   "files": [
     "package.json",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {

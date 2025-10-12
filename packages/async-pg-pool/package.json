@@ -5,7 +5,8 @@
   "description": "An opinionated interface to acquire connections from Postgres",
   "files": [
     "package.json",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {

@@ -5,7 +5,8 @@
   "description": "Contract based mutex, allowing key-based or global locks.",
   "files": [
     "package.json",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {

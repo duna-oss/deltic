@@ -11,7 +11,8 @@
   },
   "files": [
     "package.json",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {},
   "keywords": [

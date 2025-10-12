@@ -5,7 +5,8 @@
   "description": "Postgres implementation of @deltic/mutex using PG",
   "files": [
     "package.json",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {
