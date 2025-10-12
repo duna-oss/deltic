@@ -356,7 +356,11 @@ describe('@deltic/dependency-injection', () => {
 
         expect(something.allNames()).toEqual(['main']);
 
-        await expect(() => container.shutdown()).rejects.toThrow(new Error('Circular dependency detected in shutdown routine, could not shut down: something, collection.'))
+        await expect(
+            container.shutdown(),
+        ).rejects.toThrow(
+            new Error('Circular dependency detected in shutdown routine, could not shut down: something, collection.'),
+        );
 
         expect(segments).toHaveLength(0);
     });

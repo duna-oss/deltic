@@ -148,9 +148,9 @@ describe.each([
         await mutex.lock(lockId1, 50);
 
         // act
-        await expect(async () => {
-            await mutex.lock(lockId1, 1);
-        }).rejects.toThrow(UnableToAcquireLock);
+        await expect(
+            mutex.lock(lockId1, 1),
+        ).rejects.toThrow(UnableToAcquireLock);
 
         // cleanup
         await mutex.unlock(lockId1);
@@ -185,8 +185,8 @@ describe.each([
     });
 
     test('locks that are not acquired cannot be released', async () => {
-        await expect(async () => {
-            await mutex.unlock(lockId1);
-        }).rejects.toThrow(UnableToReleaseLock);
+        await expect(
+            mutex.unlock(lockId1),
+        ).rejects.toThrow(UnableToReleaseLock);
     });
 });

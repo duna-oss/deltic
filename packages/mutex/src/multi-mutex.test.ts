@@ -20,27 +20,27 @@ describe('MultiMutex', () => {
         await second.lock(lockId, 10);
 
         // cannot lock because the second mutex was already locked
-        await expect(async () => {
-            await multi.lock(lockId, 100);
-        }).rejects.toThrow(UnableToAcquireLock);
+        await expect(
+            multi.lock(lockId, 100),
+        ).rejects.toThrow(UnableToAcquireLock);
 
         // cannot be unlocked because the first mutex was never locked
-        await expect(async () => {
-            await multi.unlock(lockId);
-        }).rejects.toThrow(UnableToReleaseLock);
+        await expect(
+            multi.unlock(lockId),
+        ).rejects.toThrow(UnableToReleaseLock);
     });
 
     test('locks cannot be acquired when an first mutex is already locked', async () => {
         await first.lock(lockId, 10);
 
         // cannot lock because the first mutex was already locked
-        await expect(async () => {
-            await multi.lock(lockId, 100);
-        }).rejects.toThrow(UnableToAcquireLock);
+        await expect(
+            multi.lock(lockId, 100),
+        ).rejects.toThrow(UnableToAcquireLock);
 
         // cannot be unlocked because the second mutex was never locked
-        await expect(async () => {
-            await multi.unlock(lockId);
-        }).rejects.toThrow(UnableToReleaseLock);
+        await expect(
+            multi.unlock(lockId),
+        ).rejects.toThrow(UnableToReleaseLock);
     });
 });
