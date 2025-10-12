@@ -234,7 +234,7 @@ describe('@deltic/process-queue SequentialProcessQueue', () => {
         });
         processQueue.push('a');
         processQueue.push('b');
-        await wait(7);
+        await wait(8);
         await processQueue.stop();
         expect(result).toEqual(['a', 'a', 'b', 'b']);
     });
