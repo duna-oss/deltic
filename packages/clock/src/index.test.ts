@@ -1,5 +1,11 @@
 import {setTimeout as wait} from 'node:timers/promises';
-import {createTestClock, daysInMilliseconds, millisecondsBetween, SystemClock, DefaultClock} from './index.js';
+import {
+    createTestClock,
+    daysInMilliseconds,
+    millisecondsBetween,
+    SystemClock,
+    GlobalClock,
+} from './index.js';
 
 describe('@deltic/clock', () => {
     describe('clock.SystemClock', () => {
@@ -20,11 +26,11 @@ describe('@deltic/clock', () => {
 
     describe('clock.DefaultClock', () => {
         test('the default clock is a test clock in tests, so time is constant', async () => {
-            const first = DefaultClock.now();
+            const first = GlobalClock.now();
 
             await wait(5); // ensure diff
 
-            expect(first).toEqual(DefaultClock.now());
+            expect(first).toEqual(GlobalClock.now());
         });
     });
 
@@ -60,6 +66,29 @@ describe('@deltic/clock', () => {
             clock.travelTo('02 Nov 2021 18:10:12 GMT');
             expect(clock.now()).toBe(1635876612000);
         });
+
+        it('can wait until a certain time', async () => {
+            const clock = createTestClock(1000);
+            const now = clock.now();
+
+            const promise = clock.wait(1000);
+            expect(clock.now()).toEqual(now);
+
+            await promise;
+            expect(clock.now()).toEqual(now + 1000);
+        });
+
+        it('waiting can be cancelled', async () => {
+            const clock = createTestClock(1000);
+            const now = clock.now();
+
+            const promise = clock.wait(1000);
+            promise.cancel('reason');
+
+            await expect(promise).rejects.toThrow('reason');
+            expect(clock.now()).toEqual(now);
+        });
+
     });
 
     describe('clock.Helpers', () => {
