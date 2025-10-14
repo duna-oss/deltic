@@ -12,12 +12,15 @@ export interface TestClock extends Clock {
     tick(): void,
     advance(increment: number): void,
     travelTo(laterTime: number | string): void,
+    reset(): voidm
 }
 
-export const DefaultClock = process.env.NODE_ENV === 'test' ? createTestClock() : SystemClock;
+export const GlobalClock = process.env.NODE_ENV === 'test' ? createTestClock() : SystemClock;
+export const GlobalTestClock = process.env.NODE_ENV === 'test' ? GlobalClock as TestClock : createTestClock();
 
 export function createTestClock(start: number | string = Date.now()): TestClock {
     let now = typeof start === 'number' ? start : Date.parse(start);
+    const originalNow = now;
 
     return {
         now: () => now,
@@ -27,6 +30,9 @@ export function createTestClock(start: number | string = Date.now()): TestClock 
         travelTo: (newTime: number | string) => {
             now = typeof newTime === 'number' ? newTime : Date.parse(newTime);
         },
+        reset: () => {
+            now = originalNow;
+        }
     };
 }
 
