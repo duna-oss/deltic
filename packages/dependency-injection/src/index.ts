@@ -7,25 +7,25 @@ type ServiceDefinition<T = any> = {} & {
     lazy?: T extends object ? true : never;
 } & ({
     cache?: true;
-    shutdown?: (instance: T) => Promise<void> | void;
+    cleanup?: (instance: T) => Promise<void> | void;
 } | {
     cache: false;
-    shutdown?: never;
+    cleanup?: never;
 });
 
 type InstanceDefinition<T = any> = {
     instance: T;
     cache?: true;
-    shutdown?: (instance: T) => Promise<void> | void;
+    cleanup?: (instance: T) => Promise<void> | void;
 };
 
 /**
- * Represents a resolved service with its shutdown callback and direct dependencies.
- * Only services with shutdown callbacks are tracked.
+ * Represents a resolved service with its cleanup callback and direct dependencies.
+ * Only services with cleanup callbacks are tracked.
  */
 interface ResolvedService {
     key: string;
-    shutdown?: (instance: any) => Promise<void> | void;
+    cleanup?: (instance: any) => Promise<void> | void;
     dependencies: Set<string>;
     instance: any,
 }
@@ -34,7 +34,7 @@ export class DependencyContainer {
     private cache: Record<string, any> = {};
     private definitions: Record<string, ServiceDefinition> = {};
 
-    // Only track resolved services that have shutdown callbacks
+    // Only track resolved services that have cleanup callbacks
     private readonly resolved = new Map<string, ResolvedService>();
 
     // Stack to track current resolution chain
@@ -49,7 +49,7 @@ export class DependencyContainer {
         this.definitions[key] = definition;
     }
 
-    async shutdown(): Promise<void> {
+    async cleanup(): Promise<void> {
         const levels = this.computeShutdownLevels();
 
         for (const level of levels) {
@@ -60,7 +60,7 @@ export class DependencyContainer {
 
                         return resolved?.instance === undefined
                             ? Promise.resolve()
-                            : resolved.shutdown?.(resolved.instance);
+                            : resolved.cleanup?.(resolved.instance);
                     }
                 ),
             );
@@ -71,7 +71,7 @@ export class DependencyContainer {
     }
 
     /**
-     * Computes shutdown levels using reverse topological sort.
+     * Computes cleanup levels using reverse topological sort.
      * Services in the same level have no dependencies between them and can shut down concurrently.
      * Levels are ordered from leaves (nothing depends on them) to roots (depends on nothing).
      */
@@ -113,15 +113,15 @@ export class DependencyContainer {
         if (processed.size < resolvedKeys.length) {
             const missing = new Set(resolvedKeys).difference(processed);
 
-            throw new Error(`Circular dependency detected in shutdown routine, could not shut down: ${[...missing].join(', ')}.`);
+            throw new Error(`Circular dependency detected in cleanup routine, could not shut down: ${[...missing].join(', ')}.`);
         }
 
         return levels;
     }
 
     /**
-     * Records a dependency relationship between the nearest ancestor that is a shutdown
-     * candidate. This may either be a lazy service, or a service with a shutdown callback.
+     * Records a dependency relationship between the nearest ancestor that is a cleanup
+     * candidate. This may either be a lazy service, or a service with a cleanup callback.
      */
     private recordDependency(key: string): void {
         // for loops are more performant than findLast
@@ -137,17 +137,17 @@ export class DependencyContainer {
     }
 
     registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): void {
-        const {shutdown, instance} = definition;
+        const {cleanup, instance} = definition;
         this.cache[key] = instance;
         this.definitions[key] = {
             ...definition,
             factory: () => instance,
         };
 
-        if (shutdown) {
+        if (cleanup) {
             this.resolved.set(key, {
                 key,
-                shutdown,
+                cleanup,
                 dependencies: new Set(),
                 instance,
             });
@@ -155,7 +155,7 @@ export class DependencyContainer {
     }
 
     private createProxyFor<Service extends object>(key: string, definition: ServiceDefinition<Service>): Service {
-        const {factory, cache = true, shutdown} = definition;
+        const {factory, cache = true, cleanup} = definition;
         const handlers: ProxyHandler<object> = {};
         let instance: object | undefined = undefined;
         const resolveInstance = () => {
@@ -167,10 +167,9 @@ export class DependencyContainer {
                 this.cache[key] = instance;
             }
 
-            if (shutdown) {
+            if (cleanup) {
                 this.resolved.get(key)!.instance = instance;
             }
-
 
             this.cache[key] = instance;
 
@@ -187,12 +186,13 @@ export class DependencyContainer {
         return new Proxy<object>({}, handlers) as Service;
     }
 
-    lazyResolve<Service extends object>(key: string): Service {
+    resolveLazy<Service extends object>(key: string): Service {
         const definition = this.definitions[key];
 
         if (!definition) {
             throw new Error(`No definition found for key "${key}".`);
         }
+
         if (definition.lazy) {
             return this.cache[key]! ?? this.resolve<Service>(key);
         }
@@ -204,7 +204,7 @@ export class DependencyContainer {
         const cached = this.cache[key];
 
         if (cached) {
-            // If this cached service has a shutdown callback, record the dependency
+            // If this cached service has a cleanup callback, record the dependency
             if (this.resolved.has(key)) {
                 this.recordDependency(key);
             }
@@ -217,14 +217,14 @@ export class DependencyContainer {
             throw new Error(`No definition found for key "${key}".`);
         }
 
-        const {factory, shutdown, cache = true, lazy = false} = definition;
+        const {factory, cleanup, cache = true, lazy = false} = definition;
 
-        // Register shutdown callback BEFORE executing factory so that child
+        // Register cleanup callback BEFORE executing factory so that child
         // dependencies can record this service as their parent
-        if (shutdown || lazy) {
+        if (cleanup || lazy) {
             this.resolved.set(key, {
                 key,
-                shutdown,
+                cleanup,
                 dependencies: new Set(),
                 instance: undefined,
             });
@@ -237,7 +237,7 @@ export class DependencyContainer {
         this.resolutionStack.pop();
 
         if (cache && !lazy) {
-            if (shutdown) {
+            if (cleanup) {
                 this.resolved.get(key)!.instance = instance;
             }
 

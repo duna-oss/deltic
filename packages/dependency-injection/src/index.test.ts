@@ -49,9 +49,9 @@ describe('@deltic/dependency-injection', () => {
     /**
      * Cleanups are a tad primitive right now, it sequentially executes the cleanup callbacks in
      * reverse order of resolving. This is to ensure each instance can shut down whilst their
-     * dependencies have not yet shut down, ensuring their shutdown has functional dependencies.
+     * dependencies have not yet shut down, ensuring their cleanup has functional dependencies.
      *
-     * At a later point in time, a more sophisticated shutdown routine may be used.
+     * At a later point in time, a more sophisticated cleanup routine may be used.
      */
     describe('cleanups - one service depending on another', () => {
         let segments: string[];
@@ -63,7 +63,7 @@ describe('@deltic/dependency-injection', () => {
                 factory: container => ({
                     dependency: container.resolve('inner'),
                 }),
-                shutdown: async () => {
+                cleanup: async () => {
                     segments.push('outer');
                 },
             });
@@ -72,53 +72,53 @@ describe('@deltic/dependency-injection', () => {
                 factory: () => ({
                     lol: 'what',
                 }),
-                shutdown: async () => {
+                cleanup: async () => {
                     segments.push('inner');
                 },
             });
         });
 
-        test('shutdowns are not triggered when the instances are not resolved', async () => {
-            await container.shutdown();
+        test('cleanups are not triggered when the instances are not resolved', async () => {
+            await container.cleanup();
 
             expect(segments).toHaveLength(0);
         });
 
-        test('when one service is resolved, one shutdown happens', async () => {
+        test('when one service is resolved, one cleanup happens', async () => {
             container.resolve('inner');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toHaveLength(1);
             expect(segments[0]).toEqual('inner');
         });
 
-        test('when two service is resolved, shutdown happens in order', async () => {
+        test('when two service is resolved, cleanup happens in order', async () => {
             container.resolve('outer');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toHaveLength(2);
             expect(segments[0]).toEqual('outer');
             expect(segments[1]).toEqual('inner');
         });
 
-        test('when two service is explicitly resolved, shutdown happens in order', async () => {
+        test('when two service is explicitly resolved, cleanup happens in order', async () => {
             container.resolve('outer');
             container.resolve('inner');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toHaveLength(2);
             expect(segments[0]).toEqual('outer');
             expect(segments[1]).toEqual('inner');
         });
 
-        test('when two service is explicitly resolved in reversed, shutdown still happens in order', async () => {
+        test('when two service is explicitly resolved in reversed, cleanup still happens in order', async () => {
             container.resolve('inner');
             container.resolve('outer');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toHaveLength(2);
             expect(segments[0]).toEqual('outer');
@@ -134,7 +134,7 @@ describe('@deltic/dependency-injection', () => {
 
             container.register('inner', {
                 factory: () => new Dependency('inner'),
-                shutdown: async instance => {
+                cleanup: async instance => {
                     segments.push(instance.name);
                     await wait(2);
                     segments.push(instance.name);
@@ -159,7 +159,7 @@ describe('@deltic/dependency-injection', () => {
                     const middle = c.resolve<Middle>('middle-normal');
                     return new Outer('outer-normal', middle);
                 },
-                shutdown: async instance => {
+                cleanup: async instance => {
                     segments.push(instance.name);
                     await wait(2);
                     segments.push(instance.name);
@@ -172,7 +172,7 @@ describe('@deltic/dependency-injection', () => {
                     return new Outer('outer-lazy', middle);
                 },
                 lazy: true,
-                shutdown: async instance => {
+                cleanup: async instance => {
                     segments.push(instance.name);
                     await wait(2);
                     segments.push(instance.name);
@@ -187,7 +187,7 @@ describe('@deltic/dependency-injection', () => {
             expect(outerNormal.middle.name).toEqual('middle-normal');
             expect(outerNormal.middle.inner.name).toEqual('inner');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toEqual([
                 'outer-normal',
@@ -204,7 +204,7 @@ describe('@deltic/dependency-injection', () => {
             expect(outerLazy.middle.name).toEqual('middle-lazy');
             expect(outerLazy.middle.inner.name).toEqual('inner');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toEqual([
                 'outer-lazy',
@@ -220,7 +220,7 @@ describe('@deltic/dependency-injection', () => {
 
             expect(lazy.name).toEqual('outer-lazy');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toEqual([
                 'outer-normal',
@@ -235,7 +235,7 @@ describe('@deltic/dependency-injection', () => {
         test('cleanups are no invoked for lazy services that are not used', async () => {
             container.resolve<Outer>('outer-lazy');
 
-            await container.shutdown();
+            await container.cleanup();
 
             expect(segments).toEqual([]);
         });
@@ -284,7 +284,7 @@ describe('@deltic/dependency-injection', () => {
             factory: () => new Dependency('what'),
         });
 
-        const proxy = container.lazyResolve('something');
+        const proxy = container.resolveLazy('something');
 
         expect(isProxy(proxy)).toEqual(true);
     });
@@ -295,25 +295,25 @@ describe('@deltic/dependency-injection', () => {
             lazy: true,
         });
 
-        const proxy = container.lazyResolve('something');
+        const proxy = container.resolveLazy('something');
 
         expect(isProxy(proxy)).toEqual(true);
     });
 
     test('shutting down registered instances', async () => {
         const instance = new Dependency('name');
-        let hasShutDown = false;
+        let hascleanup = false;
 
         container.registerInstance('something', {
             instance,
-            shutdown: () => {
-                hasShutDown = true;
+            cleanup: () => {
+                hascleanup = true;
             },
         });
 
-        await container.shutdown();
+        await container.cleanup();
 
-        expect(hasShutDown).toEqual(true);
+        expect(hascleanup).toEqual(true);
     });
 
     test('cleanups with circular dependencies cause errors', async () => {
@@ -350,7 +350,7 @@ describe('@deltic/dependency-injection', () => {
                     c.resolve<SomeCollection>('collection'),
                 );
             },
-            shutdown: async instance => {
+            cleanup: async instance => {
                 segments.push(instance.name);
                 await wait(2);
                 segments.push(instance.name);
@@ -365,7 +365,7 @@ describe('@deltic/dependency-injection', () => {
                     [c.resolve<Something>('something')],
                 );
             },
-            shutdown: async instance => {
+            cleanup: async instance => {
                 segments.push(instance.name);
                 await wait(2);
                 segments.push(instance.name);
@@ -377,9 +377,9 @@ describe('@deltic/dependency-injection', () => {
         expect(something.allNames()).toEqual(['main']);
 
         await expect(
-            container.shutdown(),
+            container.cleanup(),
         ).rejects.toThrow(
-            new Error('Circular dependency detected in shutdown routine, could not shut down: something, collection.'),
+            new Error('Circular dependency detected in cleanup routine, could not shut down: something, collection.'),
         );
 
         expect(segments).toHaveLength(0);
