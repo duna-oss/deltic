@@ -12,7 +12,7 @@ export interface TestClock extends Clock {
     tick(): void,
     advance(increment: number): void,
     travelTo(laterTime: number | string): void,
-    reset(): voidm
+    reset(): void,
 }
 
 export const GlobalClock = process.env.NODE_ENV === 'test' ? createTestClock() : SystemClock;
