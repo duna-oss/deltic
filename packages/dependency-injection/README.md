@@ -1,14 +1,18 @@
 # `@deltic/dependency-injection`
 
-A lightweight dependency injection container that that helps you clean up after yourself.
+A lightweight dependency injection container with intelligent cleanup orchestration.
 
-Design goals for this package:
+## Why this container?
 
-1. No magic; dependencies are resolved using simple factory functions.
-2. Facilitate efficient shutdown routines.
-3. That's it.
+Most DI containers force you to manually manage cleanup order or clean up everything registered (including unused
+services). This container:
 
-The following features are available:
+1. **Tracks actual usage** - only cleans up services that were resolved
+2. **Respects dependencies** - services are cleaned up in reverse resolution order
+3. **Maximizes concurrency** - independent services cleanup in parallel
+4. **No magic** - dependencies resolved via simple factory functions
+
+## What it gives you:
 
 1. Factory function based dependency construction.
 2. Smart dependency cleanup orchestration
@@ -49,6 +53,10 @@ class MyLastNameService {
     }
 }
 
+container.registerInstance<MyLastNameService>('my.last_name_service', {
+    instance: new MyLastNameService('de Jonge'),
+});
+
 container.register<MyNameService>('my.name_service', {
     factory: container => {
         return new MyNameService(
@@ -56,10 +64,6 @@ container.register<MyNameService>('my.name_service', {
             container.resolve('my.last_name_service'),
         )
     }
-});
-
-container.registerInstance<MyLastNameService>('my.last_name_service', {
-    instance: new MyLastNameService('de Jonge'),
 });
 
 const service = container.resolve<MyNameService>('my.name_service');
@@ -151,4 +155,24 @@ container.register<SomeCollection>('collection', {
     },
 });
 ```
+
+## Type Safety
+
+Service keys are strings, which means typos won't be caught at compile time. To mitigate this:
+
+1. **Use constants** for service keys to enable autocomplete and refactoring
+2. **Colocate registration** with service definitions
+3. **Add integration tests** to verify expected services are registered
+
+Missing service resolution throws a descriptive error with the attempted key.
+
+## How It Compares
+
+| Feature                        | @deltic/dependency-injection | tsyringe | inversify |
+|--------------------------------|------------------------------|----------|-----------|
+| Only cleanup used services     | ✅                            | ❌        | ❌         |
+| Dependency-aware cleanup order | ✅                            | ❌        | ❌         |
+| Concurrent cleanup             | ✅                            | ❌        | ❌         |
+| Decorators required            | ❌                            | ✅        | ✅         |
+| Reflection metadata            | ❌                            | ✅        | ✅         |
 
