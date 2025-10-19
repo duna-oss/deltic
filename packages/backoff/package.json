@@ -1,5 +1,6 @@
 {
   "name": "@deltic/backoff",
+  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "A strategy based back-off calculator",

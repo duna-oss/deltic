@@ -1,5 +1,6 @@
 {
   "name": "@deltic/async-pg-pool",
+  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "An opinionated interface to acquire connections from Postgres",

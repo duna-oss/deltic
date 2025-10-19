@@ -1,5 +1,6 @@
 {
   "name": "@deltic/mutex-using-pg",
+  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "Postgres implementation of @deltic/mutex using PG",

@@ -1,5 +1,6 @@
 {
   "name": "@deltic/mutex",
+  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "Contract based mutex, allowing key-based or global locks.",

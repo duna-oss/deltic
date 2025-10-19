@@ -1,5 +1,6 @@
 {
   "name": "@deltic/process-queue",
+  "private": true,
   "version": "0.0.0",
   "type": "module",
   "description": "Various process queue implementations",

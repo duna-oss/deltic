@@ -1,5 +1,6 @@
 {
   "name": "@deltic/abort-signal-options",
+  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "Go-like WaitGroup",
