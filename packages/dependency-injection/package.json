@@ -2,7 +2,7 @@
   "name": "@deltic/dependency-injection",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Reliable dependency injection container.",
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
