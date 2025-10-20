@@ -1,5 +1,11 @@
 # @deltic/dependency-injection
 
+## 0.1.2
+
+### Patch Changes
+
+- e48e390: Added module-sync export
+
 ## 0.1.1
 
 ### Patch Changes
