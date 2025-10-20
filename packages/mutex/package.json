@@ -11,20 +11,20 @@
   ],
   "exports": {
     ".": {
-      "import": "dist/index.js",
-      "types": "dist/index.d.ts"
+      "import":"./dist/index.js",
+      "types":"./dist/index.d.ts"
     },
     "./memory": {
-      "import": "dist/memory-mutex.js",
-      "types": "dist/memory-mutex.d.ts"
+      "import":"./dist/memory-mutex.js",
+      "types":"./dist/memory-mutex.d.ts"
     },
     "./static-memory": {
-      "import": "dist/static-memory-mutex.js",
-      "types": "dist/static-memory-mutex.d.ts"
+      "import":"./dist/static-memory-mutex.js",
+      "types":"./dist/static-memory-mutex.d.ts"
     },
     "./multi": {
-      "import": "dist/multi-mutex.js",
-      "types": "dist/multi-mutex.d.ts"
+      "import":"./dist/multi-mutex.js",
+      "types":"./dist/multi-mutex.d.ts"
     }
   },
   "keywords": [

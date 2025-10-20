@@ -6,16 +6,16 @@
   "description": "Various process queue implementations",
   "exports": {
     ".": {
-      "import": "dist/index.js",
-      "types": "dist/index.d.ts"
+      "import":"./dist/index.js",
+      "types":"./dist/index.d.ts"
     },
     "./concurrent": {
-      "import": "dist/concurrent.js",
-      "types": "dist/concurrent.d.ts"
+      "import":"./dist/concurrent.js",
+      "types":"./dist/concurrent.d.ts"
     },
     "./partitioned": {
-      "import": "dist/partitioned.js",
-      "types": "dist/partitioned.d.ts"
+      "import":"./dist/partitioned.js",
+      "types":"./dist/partitioned.d.ts"
     }
   },
   "scripts": {
