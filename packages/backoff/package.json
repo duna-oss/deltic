@@ -12,14 +12,17 @@
   "exports": {
     ".": {
       "import":"./dist/index.js",
+      "module-sync": "./dist/index.js",
       "types":"./dist/index.d.ts"
     },
     "./exponential": {
       "import":"./dist/exponential.js",
+      "module-sync": "./dist/exponential.js",
       "types":"./dist/exponential.d.ts"
     },
     "./linear": {
       "import":"./dist/linear.js",
+      "module-sync": "./dist/linear.js",
       "types":"./dist/linear.d.ts"
     }
   },

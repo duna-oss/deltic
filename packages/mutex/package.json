@@ -12,18 +12,22 @@
   "exports": {
     ".": {
       "import":"./dist/index.js",
+      "module-sync": "./dist/index.js",
       "types":"./dist/index.d.ts"
     },
     "./memory": {
       "import":"./dist/memory-mutex.js",
+      "module-sync": "./dist/memory-mutex.js",
       "types":"./dist/memory-mutex.d.ts"
     },
     "./static-memory": {
       "import":"./dist/static-memory-mutex.js",
+      "module-sync": "./dist/static-memory-mutex.js",
       "types":"./dist/static-memory-mutex.d.ts"
     },
     "./multi": {
       "import":"./dist/multi-mutex.js",
+      "module-sync": "./dist/multi-mutex.js",
       "types":"./dist/multi-mutex.d.ts"
     }
   },

@@ -7,14 +7,17 @@
   "exports": {
     ".": {
       "import":"./dist/index.js",
+      "module-sync": "./dist/index.js",
       "types":"./dist/index.d.ts"
     },
     "./concurrent": {
       "import":"./dist/concurrent.js",
+      "module-sync": "./dist/concurrent.js",
       "types":"./dist/concurrent.d.ts"
     },
     "./partitioned": {
       "import":"./dist/partitioned.js",
+      "module-sync": "./dist/partitioned.js",
       "types":"./dist/partitioned.d.ts"
     }
   },
