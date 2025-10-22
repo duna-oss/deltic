@@ -10,6 +10,7 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require":"./dist/index.cjs",
       "module-sync": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
