@@ -1,14 +1,8 @@
 {
   "name": "@deltic/backoff",
-  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "A strategy based back-off calculator",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",
@@ -31,7 +25,9 @@
   },
   "keywords": [
     "backoff",
-    "exponential"
+    "back-off",
+    "exponential",
+    "linear"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
@@ -39,5 +35,10 @@
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@deltic/error-standard": "workspace:^"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/backoff"
   }
 }

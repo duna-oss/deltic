@@ -1,14 +1,8 @@
 {
   "name": "@deltic/async-pg-pool",
-  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "An opinionated interface to acquire connections from Postgres",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",
@@ -17,8 +11,9 @@
     }
   },
   "keywords": [
-    "errors",
-    "error"
+    "async",
+    "pg",
+    "pool"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
@@ -31,5 +26,10 @@
   },
   "devDependencies": {
     "@types/pg": "^8.15.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/async-pg-pool"
   }
 }

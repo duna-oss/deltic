@@ -1,6 +1,5 @@
 {
   "name": "@deltic/mutex",
-  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "Contract based mutex, allowing key-based or global locks.",
@@ -43,5 +42,10 @@
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",
-  "dependencies": {}
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/mutex"
+  }
 }

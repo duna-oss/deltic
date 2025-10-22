@@ -42,8 +42,6 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.9.1)(jiti@2.6.1)
 
-  packages/abort-signal-options: {}
-
   packages/async-pg-pool:
     dependencies:
       '@deltic/error-standard':
@@ -114,11 +112,7 @@ importers:
         specifier: workspace:^
         version: link:../wait-group
 
-  packages/wait-group:
-    dependencies:
-      '@deltic/abort-signal-options':
-        specifier: workspace:^
-        version: link:../abort-signal-options
+  packages/wait-group: {}
 
 packages:
 

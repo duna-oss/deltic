@@ -27,11 +27,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "keywords": [
     "queue",
     "process-queue",
@@ -43,5 +38,10 @@
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@deltic/wait-group": "workspace:^"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/process-queue"
   }
 }

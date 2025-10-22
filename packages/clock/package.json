@@ -1,14 +1,8 @@
 {
   "name": "@deltic/clock",
-  "private": true,
   "type": "module",
   "version": "0.0.0",
   "description": "Be in control of time.",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",
@@ -17,9 +11,14 @@
       "types":"./dist/index.d.ts"
     }
   },
-  "keywords": ["errors", "error"],
+  "keywords": ["clock", "time"],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.4"
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/clock"
+  }
 }
