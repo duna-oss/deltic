@@ -1,5 +1,3 @@
-import {resolveOptions} from '@deltic/abort-signal-options';
-
 export type Waiter = () => void;
 
 const resolveWaiter = (w: Waiter) => w();
@@ -56,4 +54,23 @@ export class WaitGroup {
 
         return promise;
     }
+}
+
+function resolveOptions(options: WaitOptions): WaitOptions {
+    let abortSignal: AbortSignal | undefined = options.abortSignal;
+
+    if (options.timeout !== undefined) {
+        abortSignal = options.abortSignal
+            ? AbortSignal.any([
+                options.abortSignal,
+                AbortSignal.timeout(options.timeout),
+            ])
+            : AbortSignal.timeout(options.timeout);
+    }
+
+    if (abortSignal?.aborted) {
+        throw abortSignal.reason;
+    }
+
+    return {...options, abortSignal};
 }
