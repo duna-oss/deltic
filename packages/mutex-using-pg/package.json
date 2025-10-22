@@ -4,11 +4,6 @@
   "type": "module",
   "version": "0.0.0",
   "description": "Postgres implementation of @deltic/mutex using PG",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",

@@ -3,11 +3,6 @@
   "type": "module",
   "version": "0.0.0",
   "description": "Contract based mutex, allowing key-based or global locks.",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",

@@ -3,11 +3,6 @@
   "type": "module",
   "version": "0.0.0",
   "description": "A standard error that adds error codes, context, and previous errors.",
-  "files": [
-    "package.json",
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "import":"./dist/index.js",
