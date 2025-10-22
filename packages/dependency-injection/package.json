@@ -5,7 +5,7 @@
   "description": "Reliable dependency injection container.",
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
-  "license": "MIT",
+  "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "exports": {
     ".": {

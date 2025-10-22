@@ -39,7 +39,7 @@
     "worker"
   ],
   "author": "Frank de Jonge (https://frankdejonge.nl)",
-  "license": "MIT",
+  "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@deltic/wait-group": "workspace:^"
