@@ -1,17 +1,20 @@
 {
   "name": "@deltic/error-standard",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A standard error that adds error codes, context, and previous errors.",
   "exports": {
     ".": {
-      "import":"./dist/index.js",
-      "require":"./dist/index.cjs",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "module-sync": "./dist/index.js",
-      "types":"./dist/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
-  "keywords": ["errors", "error"],
+  "keywords": [
+    "errors",
+    "error"
+  ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

@@ -1,14 +1,14 @@
 {
   "name": "@deltic/wait-group",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Go-like WaitGroup",
   "exports": {
     ".": {
-      "import":"./dist/index.js",
-      "require":"./dist/index.cjs",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "module-sync": "./dist/index.js",
-      "types":"./dist/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {},

@@ -1,27 +1,27 @@
 {
   "name": "@deltic/process-queue",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Various process queue implementations",
   "exports": {
     ".": {
-      "import":"./dist/index.js",
-      "require":"./dist/index.cjs",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "module-sync": "./dist/index.js",
-      "types":"./dist/index.d.ts"
+      "types": "./dist/index.d.ts"
     },
     "./concurrent": {
-      "import":"./dist/concurrent.js",
-      "require":"./dist/concurrent.cjs",
+      "import": "./dist/concurrent.js",
+      "require": "./dist/concurrent.cjs",
       "module-sync": "./dist/concurrent.js",
-      "types":"./dist/concurrent.d.ts"
+      "types": "./dist/concurrent.d.ts"
     },
     "./partitioned": {
-      "import":"./dist/partitioned.js",
-      "require":"./dist/partitioned.cjs",
+      "import": "./dist/partitioned.js",
+      "require": "./dist/partitioned.cjs",
       "module-sync": "./dist/partitioned.js",
-      "types":"./dist/partitioned.d.ts"
+      "types": "./dist/partitioned.d.ts"
     }
   },
   "scripts": {

@@ -1,17 +1,20 @@
 {
   "name": "@deltic/clock",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Be in control of time.",
   "exports": {
     ".": {
-      "import":"./dist/index.js",
-      "require":"./dist/index.cjs",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "module-sync": "./dist/index.js",
-      "types":"./dist/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
-  "keywords": ["clock", "time"],
+  "keywords": [
+    "clock",
+    "time"
+  ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

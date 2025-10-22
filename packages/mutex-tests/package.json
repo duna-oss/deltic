@@ -2,7 +2,7 @@
   "name": "@deltic/mutex-tests",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Contract tests for mutex implementations",
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

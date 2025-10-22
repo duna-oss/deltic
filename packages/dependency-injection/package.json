@@ -1,9 +1,14 @@
 {
   "name": "@deltic/dependency-injection",
   "type": "module",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Reliable dependency injection container.",
-  "keywords": ["dependencies", "dependency", "injection", "container"],
+  "keywords": [
+    "dependencies",
+    "dependency",
+    "injection",
+    "container"
+  ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
