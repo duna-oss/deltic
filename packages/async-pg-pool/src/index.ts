@@ -83,12 +83,15 @@ export interface AsyncPgPoolOptions {
     onRelease?: OnReleaseCallback | string,
     releaseHookOnError?: boolean,
     freshResetQuery?: string,
+    beginQuery?: string,
 }
 
 export class AsyncPgPool {
     private readonly keepConnections: number;
     private readonly maxIdleMs: number;
-    private readonly freshResetQuery: string;
+    private readonly freshResetQuery?: string;
+    private readonly onRelease?: OnReleaseCallback;
+    private readonly beginQuery: string;
 
     constructor(
         private readonly pool: Pool,
@@ -97,7 +100,12 @@ export class AsyncPgPool {
     ) {
         this.keepConnections = options.keepConnections ?? 0;
         this.maxIdleMs = options.maxIdleMs ?? 1000;
-        this.freshResetQuery = options.freshResetQuery ?? 'RESET ALL';
+        this.freshResetQuery = options.freshResetQuery;
+        const onRelease = options.onRelease;
+        this.onRelease = typeof onRelease === 'string'
+            ? (client: Connection) => client.query(onRelease)
+            : onRelease;
+        this.beginQuery = options.beginQuery ?? 'BEGIN';
     }
 
     async primary(): Promise<Connection> {
@@ -220,6 +228,10 @@ export class AsyncPgPool {
     async claimFresh(): Promise<Connection> {
         const connection = await this.claimFromPool();
 
+        if (!this.freshResetQuery) {
+            return connection;
+        }
+
         try {
             await connection.query(this.freshResetQuery);
 
@@ -229,7 +241,7 @@ export class AsyncPgPool {
         }
     }
 
-    async begin(query?: string): Promise<Connection> {
+    async begin(query: string = this.beginQuery): Promise<Connection> {
         const context = this.context.resolve();
         await context.exclusiveAccess.lock();
 
@@ -249,7 +261,7 @@ export class AsyncPgPool {
         }
 
         try {
-            await client.query(query ?? 'BEGIN');
+            await client.query(query);
 
             return context.sharedTransaction = client;
         } catch (e) {
@@ -311,15 +323,10 @@ export class AsyncPgPool {
     }
 
     private async doRelease(connection: Connection, err: unknown = undefined): Promise<void> {
-        let onRelease = this.options.onRelease;
+        const onRelease = this.onRelease;
 
         if (onRelease && (err === undefined || this.options.releaseHookOnError)) {
             try {
-                if (typeof onRelease === 'string') {
-                    const query = onRelease;
-                    onRelease = (client: Connection) => client.query(query);
-                }
-
                 await onRelease(connection, err);
             } catch (onReleaseError) {
                 ((connection as any)[originalRelease] as PoolClient['release'])(
