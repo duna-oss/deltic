@@ -1,5 +1,11 @@
 # @deltic/dependency-injection
 
+## 0.1.3
+
+### Patch Changes
+
+- 9442c10: Added CJS exports and re-license as ISC
+
 ## 0.1.2
 
 ### Patch Changes
