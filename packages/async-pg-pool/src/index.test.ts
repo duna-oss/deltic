@@ -13,7 +13,7 @@ const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
 
 const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory(), free: []});
 
-describe('AyncPgPool', () => {
+describe('AsyncPgPool', () => {
     let pool: Pool;
     let provider: AsyncPgPool;
     const factoryWithStaticPool = (options: AsyncPgPoolOptions = {}) => new AsyncPgPool(pool, options);
@@ -193,7 +193,7 @@ describe('AyncPgPool', () => {
             pool,
             {
                 keepConnections: 0,
-                onRelease: client => client.query('RESET app.tenant_id'),
+                onRelease: 'RESET app.tenant_id',
                 onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
             },
         );

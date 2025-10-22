@@ -74,11 +74,13 @@ export class AsyncPgTransactionContextProvider implements TransactionContextProv
     }
 }
 
+export type OnReleaseCallback = (client: Connection, err?: unknown) => Promise<any> | any;
+
 export interface AsyncPgPoolOptions {
     keepConnections?: number,
     maxIdleMs?: number,
     onClaim?: (client: Connection) => Promise<any> | any,
-    onRelease?: (client: Connection, err?: unknown) => Promise<any> | any,
+    onRelease?: OnReleaseCallback | string,
     releaseHookOnError?: boolean,
     freshResetQuery?: string,
 }
@@ -309,10 +311,15 @@ export class AsyncPgPool {
     }
 
     private async doRelease(connection: Connection, err: unknown = undefined): Promise<void> {
-        const onRelease = this.options.onRelease;
+        let onRelease = this.options.onRelease;
 
         if (onRelease && (err === undefined || this.options.releaseHookOnError)) {
             try {
+                if (typeof onRelease === 'string') {
+                    const query = onRelease;
+                    onRelease = (client: Connection) => client.query(query);
+                }
+
                 await onRelease(connection, err);
             } catch (onReleaseError) {
                 ((connection as any)[originalRelease] as PoolClient['release'])(
