@@ -1,6 +1,0 @@
-**/*
-!dist/**/*
-!CHANGELOG.md
-!LICENSE.md
-!README.md
-!package.json
