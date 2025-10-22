@@ -1,5 +1,11 @@
 # @deltic/dependency-injection
 
+## 0.1.4
+
+### Patch Changes
+
+- Fixed cjs export
+
 ## 0.1.3
 
 ### Patch Changes
