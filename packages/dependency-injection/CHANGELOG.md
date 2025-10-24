@@ -1,5 +1,11 @@
 # @deltic/dependency-injection
 
+## 0.2.1
+
+### Patch Changes
+
+- e769367: Resolve circular dependencies automatically through proxies.
+
 ## 0.2.0
 
 ### Minor Changes
