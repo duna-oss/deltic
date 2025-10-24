@@ -358,7 +358,6 @@ describe('@deltic/dependency-injection', () => {
         });
 
         container.register<SomeCollection>('collection', {
-            lazy: true,
             factory: c => {
                 return new SomeCollection(
                     'collection',
@@ -376,9 +375,7 @@ describe('@deltic/dependency-injection', () => {
 
         expect(something.allNames()).toEqual(['main']);
 
-        await expect(
-            container.cleanup(),
-        ).rejects.toThrow(
+        await expect(container.cleanup()).rejects.toThrow(
             new Error('Circular dependency detected in cleanup routine, could not shut down: something, collection.'),
         );
 

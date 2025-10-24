@@ -38,7 +38,7 @@ export class DependencyContainer {
     private readonly resolved = new Map<string, ResolvedService>();
 
     // Stack to track current resolution chain
-    private resolutionStack: string[] = [];
+    private resolutionStack = new Set<string>();
 
     register<Service>(key: string, definition: ServiceDefinition<Service>): void {
         if (definition.lazy) {
@@ -87,7 +87,6 @@ export class DependencyContainer {
             }
         }
 
-
         const levels: string[][] = [];
         const processed = new Set<string>();
         const resolvedKeys = Array.from(this.resolved.keys());
@@ -95,7 +94,9 @@ export class DependencyContainer {
         while (processed.size < resolvedKeys.length) {
             // Find services whose dependents have all been processed
             const currentLevel = resolvedKeys.filter(key => {
-                if (processed.has(key)) return false;
+                if (processed.has(key)) {
+                    return false;
+                }
 
                 const serviceDependents = dependencies.get(key) ?? new Set();
 
@@ -124,9 +125,10 @@ export class DependencyContainer {
      * candidate. This may either be a lazy service, or a service with a cleanup callback.
      */
     private recordDependency(key: string): void {
+        const resolutionStack = Array.from(this.resolutionStack).toReversed();
+
         // for loops are more performant than findLast
-        for (let i = this.resolutionStack.length - 1; i >= 0; i--) {
-            const ancestor = this.resolutionStack[i];
+        for (const ancestor of resolutionStack) {
             const ancestorService = this.resolved.get(ancestor);
 
             if (ancestorService) {
@@ -156,12 +158,16 @@ export class DependencyContainer {
 
     private createProxyFor<Service extends object>(key: string, definition: ServiceDefinition<Service>): Service {
         const {factory, cache = true, cleanup} = definition;
-        const handlers: ProxyHandler<object> = {};
-        let instance: object | undefined = undefined;
         const resolveInstance = () => {
-            this.resolutionStack.push(key);
+            const cached = this.cache[key];
+
+            if (cached) {
+                return cached;
+            }
+
+            this.resolutionStack.add(key);
             const instance = factory(this);
-            this.resolutionStack.pop();
+            this.resolutionStack.delete(key);
 
             if (cache) {
                 this.cache[key] = instance;
@@ -176,14 +182,21 @@ export class DependencyContainer {
             return instance;
         };
 
+        return this.createProxy(resolveInstance);
+    }
+
+    private createProxy<Service extends object>(createInstance: () => Service): Service {
+        let instance: Service | undefined = undefined;
+        const handlers: ProxyHandler<Service> = {};
+
         for (const method of reflectMethods) {
             handlers[method] = (...args: any[]) => {
-                args[0] = instance ??= resolveInstance();
+                args[0] = instance ??= createInstance();
                 return (Reflect[method] as any)(...args);
             };
         }
 
-        return new Proxy<object>({}, handlers) as Service;
+        return new Proxy<Service>({} as Service, handlers);
     }
 
     resolveLazy<Service extends object>(key: string): Service {
@@ -193,14 +206,16 @@ export class DependencyContainer {
             throw new Error(`No definition found for key "${key}".`);
         }
 
-        if (definition.lazy) {
-            return this.cache[key]! ?? this.resolve<Service>(key);
-        }
+        this.recordDependency(key);
 
         return this.createProxyFor(key, definition);
     }
 
-    resolve<Service>(key: string): Service {
+    resolve<Service extends object>(key: string): Service {
+        if (this.resolutionStack.has(key)) {
+            return this.resolveLazy<Service>(key);
+        }
+
         const cached = this.cache[key];
 
         if (cached) {
@@ -208,6 +223,7 @@ export class DependencyContainer {
             if (this.resolved.has(key)) {
                 this.recordDependency(key);
             }
+
             return cached;
         }
 
@@ -232,9 +248,9 @@ export class DependencyContainer {
             this.recordDependency(key);
         }
 
-        this.resolutionStack.push(key);
+        this.resolutionStack.add(key);
         const instance = factory(this);
-        this.resolutionStack.pop();
+        this.resolutionStack.delete(key);
 
         if (cache && !lazy) {
             if (cleanup) {
