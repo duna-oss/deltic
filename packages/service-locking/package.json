@@ -1,0 +1,34 @@
+{
+  "name": "@deltic/service-locking",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Locking middleware and decorator for @deltic/service-dispatcher",
+  "exports": {
+    "./decorator": {
+      "import": "./dist/decorator.js",
+      "require": "./dist/decorator.cjs",
+      "module-sync": "./dist/decorator.js",
+      "types": "./dist/decorator.d.ts"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.cjs",
+      "module-sync": "./dist/middleware.js",
+      "types": "./dist/middleware.d.ts"
+    }
+  },
+  "keywords": [],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/service-layer"
+  },
+  "dependencies": {
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/mutex": "workspace:^"
+  }
+}

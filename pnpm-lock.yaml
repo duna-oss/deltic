@@ -112,6 +112,21 @@ importers:
         specifier: workspace:^
         version: link:../wait-group
 
+  packages/service-dispatcher:
+    dependencies:
+      fast-equals:
+        specifier: ^5.3.2
+        version: 5.3.2
+
+  packages/service-locking:
+    dependencies:
+      '@deltic/mutex':
+        specifier: workspace:^
+        version: link:../mutex
+      '@deltic/service-dispatcher':
+        specifier: workspace:^
+        version: link:../service-dispatcher
+
   packages/wait-group: {}
 
 packages:
@@ -1012,6 +1027,10 @@ packages:
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
+
+  fast-equals@5.3.2:
+    resolution: {integrity: sha512-6rxyATwPCkaFIL3JLqw8qXqMpIZ942pTX/tbQFkRsDGblS8tNGtlUauA/+mt6RUfqn/4MoEr+WDkYoIQbibWuQ==}
+    engines: {node: '>=6.0.0'}
 
   fast-glob@3.3.3:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
@@ -2620,6 +2639,8 @@ snapshots:
   extendable-error@0.1.7: {}
 
   fast-deep-equal@3.1.3: {}
+
+  fast-equals@5.3.2: {}
 
   fast-glob@3.3.3:
     dependencies:

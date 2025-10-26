@@ -1,0 +1,33 @@
+{
+  "name": "@deltic/service-dispatcher",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A contract-based service abstraction",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./test-tooling": {
+      "import": "./dist/test-tooling.js",
+      "require": "./dist/test-tooling.cjs",
+      "module-sync": "./dist/test-tooling.js",
+      "types": "./dist/test-tooling.d.ts"
+    }
+  },
+  "keywords": [],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/service-layer"
+  },
+  "dependencies": {
+    "fast-equals": "^5.3.2"
+  }
+}
