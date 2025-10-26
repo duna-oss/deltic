@@ -1,9 +1,10 @@
-interface Factory<T = any> {
-    (container: DependencyContainer): T;
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+interface Factory<S extends ServicesStructure<S>, T = any> {
+    (container: DependencyContainer<S>): T;
 }
 
-type ServiceDefinition<T = any> = {} & {
-    factory: Factory<T>;
+type ServiceDefinition<S extends ServicesStructure<S>, T = any> = {} & {
+    factory: Factory<S, T>;
     lazy?: T extends object ? true : never;
 } & ({
     cache?: true;
@@ -24,25 +25,29 @@ type InstanceDefinition<T = any> = {
  * Only services with cleanup callbacks are tracked.
  */
 interface ResolvedService {
-    key: string;
+    key: string | number | symbol;
     cleanup?: (instance: any) => Promise<void> | void;
-    dependencies: Set<string>;
+    dependencies: Set<string | number | symbol>;
     instance: any,
 }
 
-export class DependencyContainer {
-    private cache: Record<string, any> = {};
-    private definitions: Record<string, ServiceDefinition> = {};
+export type ServicesStructure<D> = {
+    [K in keyof D]: any
+};
+
+export class DependencyContainer<Services extends ServicesStructure<Services> = ServiceRegistry> {
+    private cache: Partial<Services> = {};
+    private definitions: Partial<Record<keyof Services, ServiceDefinition<Services>>> = {};
 
     // Only track resolved services that have cleanup callbacks
-    private readonly resolved = new Map<string, ResolvedService>();
+    private readonly resolved = new Map<keyof Services, ResolvedService>();
 
     // Stack to track current resolution chain
-    private resolutionStack = new Set<string>();
+    private resolutionStack = new Set<keyof Services>();
 
-    register<Service>(key: string, definition: ServiceDefinition<Service>): void {
+    register<Key extends keyof Services>(key: Key, definition: ServiceDefinition<Services, Services[Key]>): void {
         if (definition.lazy) {
-            const proxy = this.createProxyFor(key, definition as ServiceDefinition<Service & object>);
+            const proxy = this.createProxyFor(key, definition as ServiceDefinition<Services, Services[Key]& object>);
             definition.factory = () => proxy;
         }
 
@@ -56,7 +61,7 @@ export class DependencyContainer {
             await Promise.all(
                 level.map(
                     key => {
-                        const resolved = this.resolved.get(key);
+                        const resolved = this.resolved.get(key as keyof Services);
 
                         return resolved?.instance === undefined
                             ? Promise.resolve()
@@ -75,20 +80,20 @@ export class DependencyContainer {
      * Services in the same level have no dependencies between them and can shut down concurrently.
      * Levels are ordered from leaves (nothing depends on them) to roots (depends on nothing).
      */
-    private computeShutdownLevels(): string[][] {
-        const dependencies = new Map<string, Set<string>>();
+    private computeShutdownLevels(): (keyof Services)[][] {
+        const dependencies = new Map<keyof Services, Set<keyof Services>>();
 
         for (const [key, service] of this.resolved.entries()) {
             for (const dependency of service.dependencies) {
-                if (!dependencies.has(dependency)) {
-                    dependencies.set(dependency, new Set());
+                if (!dependencies.has(dependency as keyof Services)) {
+                    dependencies.set(dependency as keyof Services, new Set());
                 }
-                dependencies.get(dependency)!.add(key);
+                dependencies.get(dependency as keyof Services)!.add(key);
             }
         }
 
-        const levels: string[][] = [];
-        const processed = new Set<string>();
+        const levels: (keyof Services)[][] = [];
+        const processed = new Set<keyof Services>();
         const resolvedKeys = Array.from(this.resolved.keys());
 
         while (processed.size < resolvedKeys.length) {
@@ -124,7 +129,7 @@ export class DependencyContainer {
      * Records a dependency relationship between the nearest ancestor that is a cleanup
      * candidate. This may either be a lazy service, or a service with a cleanup callback.
      */
-    private recordDependency(key: string): void {
+    private recordDependency(key: keyof Services): void {
         const resolutionStack = Array.from(this.resolutionStack).toReversed();
 
         // for loops are more performant than findLast
@@ -138,7 +143,7 @@ export class DependencyContainer {
         }
     }
 
-    registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): void {
+    registerInstance<Key extends keyof Services>(key: Key, definition: InstanceDefinition<Services[Key]>): void {
         const {cleanup, instance} = definition;
         this.cache[key] = instance;
         this.definitions[key] = {
@@ -156,7 +161,7 @@ export class DependencyContainer {
         }
     }
 
-    private createProxyFor<Service extends object>(key: string, definition: ServiceDefinition<Service>): Service {
+    private createProxyFor<Key extends keyof Services>(key: Key, definition: ServiceDefinition<Services, Services[Key]>): Services[Key] {
         const {factory, cache = true, cleanup} = definition;
         const resolveInstance = () => {
             const cached = this.cache[key];
@@ -182,12 +187,12 @@ export class DependencyContainer {
             return instance;
         };
 
-        return this.createProxy(resolveInstance);
+        return this.createProxy(resolveInstance as any);
     }
 
-    private createProxy<Service extends object>(createInstance: () => Service): Service {
-        let instance: Service | undefined = undefined;
-        const handlers: ProxyHandler<Service> = {};
+    private createProxy<Instance extends Services[keyof Services]>(createInstance: () => Instance): Instance {
+        let instance: Instance | undefined = undefined;
+        const handlers: ProxyHandler<Instance> = {};
 
         for (const method of reflectMethods) {
             handlers[method] = (...args: any[]) => {
@@ -196,24 +201,24 @@ export class DependencyContainer {
             };
         }
 
-        return new Proxy<Service>({} as Service, handlers);
+        return new Proxy<Instance>({} as Instance, handlers);
     }
 
-    resolveLazy<Service extends object>(key: string): Service {
-        const definition = this.definitions[key];
+    resolveLazy<const Key extends keyof Services>(key: Key): Services[Key] {
+        const definition = this.definitions[key] as ServiceDefinition<Services, Services[Key]> | undefined;
 
         if (!definition) {
-            throw new Error(`No definition found for key "${key}".`);
+            throw new Error(`No definition found for key "${String(key)}".`);
         }
 
         this.recordDependency(key);
 
-        return this.createProxyFor(key, definition);
+        return this.createProxyFor(key, definition as any);
     }
 
-    resolve<Service extends object>(key: string): Service {
+    resolve<Key extends keyof Services>(key: Key): Services[Key] {
         if (this.resolutionStack.has(key)) {
-            return this.resolveLazy<Service>(key);
+            return this.resolveLazy<Key>(key);
         }
 
         const cached = this.cache[key];
@@ -227,10 +232,10 @@ export class DependencyContainer {
             return cached;
         }
 
-        const definition = this.definitions[key] as ServiceDefinition<Service>;
+        const definition = this.definitions[key] as ServiceDefinition<Services, Services[Key]> | undefined;
 
         if (definition === undefined) {
-            throw new Error(`No definition found for key "${key}".`);
+            throw new Error(`No definition found for key "${key.toString()}".`);
         }
 
         const {factory, cleanup, cache = true, lazy = false} = definition;
@@ -265,7 +270,10 @@ export class DependencyContainer {
     }
 }
 
-export const container = new DependencyContainer();
+export interface ServiceRegistry {
+}
+
+export const container = new DependencyContainer<ServiceRegistry>();
 
 /**
  * @internal

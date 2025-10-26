@@ -2,6 +2,28 @@ import {DependencyContainer, reflectMethods, container as exportedContainer} fro
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
+interface Inner {
+    lol: 'what';
+}
+
+declare module '@deltic/dependency-injection' {
+    interface ServiceRegistry {
+        something: Dependency,
+        outer: {
+            dependency: Inner,
+        },
+        inner: Inner,
+        'complex-inner': Dependency,
+        'middle-lazy': Middle,
+        'middle-normal': Middle,
+        'outer-lazy': Outer,
+        'outer-normal': Outer,
+        'some': {index: number},
+        'some-instance': SomeInstance,
+        'some-collection': SomeCollection,
+    }
+}
+
 describe('@deltic/dependency-injection', () => {
     let container: DependencyContainer;
 
@@ -27,7 +49,7 @@ describe('@deltic/dependency-injection', () => {
 
         test('can be resolved', () => {
             segments.push('before');
-            const something = container.resolve<Dependency>('something');
+            const something = container.resolve('something');
             segments.push('resolved');
             expect(something.name).toEqual('something');
             segments.push('after');
@@ -35,10 +57,10 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('the next resolve is the actual instance', () => {
-            let something = container.resolve<Dependency>('something');
+            let something = container.resolve('something');
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(true);
-            something = container.resolve<Dependency>('something');
+            something = container.resolve('something');
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(false);
         });
@@ -59,7 +81,6 @@ describe('@deltic/dependency-injection', () => {
         beforeEach(() => {
             segments = [];
             container.register('outer', {
-
                 factory: container => ({
                     dependency: container.resolve('inner'),
                 }),
@@ -132,8 +153,8 @@ describe('@deltic/dependency-injection', () => {
         beforeEach(() => {
             segments.length = 0;
 
-            container.register('inner', {
-                factory: () => new Dependency('inner'),
+            container.register('complex-inner', {
+                factory: () => new Dependency('complex-inner'),
                 cleanup: async instance => {
                     segments.push(instance.name);
                     await wait(2);
@@ -143,20 +164,20 @@ describe('@deltic/dependency-injection', () => {
 
             container.register('middle-normal', {
                 factory: c => {
-                    return new Middle('middle-normal', c.resolve<Dependency>('inner'));
+                    return new Middle('middle-normal', c.resolve('complex-inner'));
                 },
             });
 
-            container.register<Middle>('middle-lazy', {
+            container.register('middle-lazy', {
                 lazy: true,
                 factory: c => {
-                    return new Middle('middle-lazy', c.resolve<Dependency>('inner'));
+                    return new Middle('middle-lazy', c.resolve('complex-inner'));
                 },
             });
 
-            container.register<Outer>('outer-normal', {
+            container.register('outer-normal', {
                 factory: c => {
-                    const middle = c.resolve<Middle>('middle-normal');
+                    const middle = c.resolve('middle-normal');
                     return new Outer('outer-normal', middle);
                 },
                 cleanup: async instance => {
@@ -166,9 +187,9 @@ describe('@deltic/dependency-injection', () => {
                 },
             });
 
-            container.register<Outer>('outer-lazy', {
+            container.register('outer-lazy', {
                 factory: c => {
-                    const middle = c.resolve<Middle>('middle-lazy');
+                    const middle = c.resolve('middle-lazy');
                     return new Outer('outer-lazy', middle);
                 },
                 lazy: true,
@@ -181,7 +202,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving outer normal', async () => {
-            const outerNormal = container.resolve<Outer>('outer-normal');
+            const outerNormal = container.resolve('outer-normal');
 
             expect(outerNormal.name).toEqual('outer-normal');
             expect(outerNormal.middle.name).toEqual('middle-normal');
@@ -198,7 +219,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving outer lazy', async () => {
-            const outerLazy = container.resolve<Outer>('outer-lazy');
+            const outerLazy = container.resolve('outer-lazy');
 
             expect(outerLazy.name).toEqual('outer-lazy');
             expect(outerLazy.middle.name).toEqual('middle-lazy');
@@ -215,8 +236,8 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving and use both (and trigger lazy proxy)', async () => {
-            container.resolve<Outer>('outer-normal');
-            const lazy = container.resolve<Outer>('outer-lazy');
+            container.resolve('outer-normal');
+            const lazy = container.resolve('outer-lazy');
 
             expect(lazy.name).toEqual('outer-lazy');
 
@@ -233,7 +254,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('cleanups are no invoked for lazy services that are not used', async () => {
-            container.resolve<Outer>('outer-lazy');
+            container.resolve('outer-lazy');
 
             await container.cleanup();
 
@@ -275,7 +296,7 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        const dep = container.resolve<{index: number}>('some');
+        const dep = container.resolve('some');
         expect(dep.index).toEqual(42);
     });
 
@@ -319,35 +340,11 @@ describe('@deltic/dependency-injection', () => {
     test('cleanups with circular dependencies cause errors', async () => {
         const segments: string[] = [];
 
-        class Something {
-            constructor(
-                public readonly name: string,
-                private readonly collection: SomeCollection,
-            ) {
-            }
-
-            allNames(): string[] {
-                return this.collection.allNames();
-            }
-        }
-
-        class SomeCollection {
-            constructor(
-                public readonly name: string,
-                private readonly members: Something[],
-            ) {
-            }
-
-            allNames(): string[] {
-                return this.members.map(m => m.name);
-            }
-        }
-
-        container.register<Something>('something', {
+        container.register('some-instance', {
             factory: c => {
-                return new Something(
+                return new SomeInstance(
                     'main',
-                    c.resolve<SomeCollection>('collection'),
+                    c.resolve('some-collection'),
                 );
             },
             cleanup: async instance => {
@@ -357,11 +354,11 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        container.register<SomeCollection>('collection', {
+        container.register('some-collection', {
             factory: c => {
                 return new SomeCollection(
                     'collection',
-                    [c.resolve<Something>('something')],
+                    [c.resolve('some-instance')],
                 );
             },
             cleanup: async instance => {
@@ -371,7 +368,7 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        const something = container.resolve<Something>('something');
+        const something = container.resolve('some-instance');
 
         expect(something.allNames()).toEqual(['main']);
 
@@ -398,4 +395,28 @@ class Outer {
         public readonly name: string,
         public readonly middle: Middle,
     ) {}
+}
+
+class SomeInstance {
+    constructor(
+        public readonly name: string,
+        private readonly collection: SomeCollection,
+    ) {
+    }
+
+    allNames(): string[] {
+        return this.collection.allNames();
+    }
+}
+
+class SomeCollection {
+    constructor(
+        public readonly name: string,
+        private readonly members: SomeInstance[],
+    ) {
+    }
+
+    allNames(): string[] {
+        return this.members.map(m => m.name);
+    }
 }
