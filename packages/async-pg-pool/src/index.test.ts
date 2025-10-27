@@ -71,7 +71,11 @@ describe('AsyncPgPool', () => {
         test('smoketest, using a plain transaction', async () => {
             setupContext();
 
+            expect(provider.inTransaction()).toEqual(false);
+
             const client = await provider.begin();
+
+            expect(provider.inTransaction()).toEqual(true);
 
             try {
                 const result = await client.query('SELECT 1 as num');
@@ -80,6 +84,8 @@ describe('AsyncPgPool', () => {
             } finally {
                 await provider.commit(client);
             }
+
+            expect(provider.inTransaction()).toEqual(false);
         });
     });
 

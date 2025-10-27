@@ -131,6 +131,12 @@ export class AsyncPgPool {
         }
     }
 
+    inTransaction(): boolean {
+        const context = this.context.resolve();
+
+        return context.sharedTransaction !== undefined;
+    }
+
     httpMiddleware(): HttpMiddleware {
         const flush = this.flushSharedContext.bind(this);
 
