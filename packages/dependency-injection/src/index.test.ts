@@ -1,4 +1,4 @@
-import {DependencyContainer, reflectMethods, container as exportedContainer} from './index.js';
+import DependencyContainer, {reflectMethods, container as exportedContainer, ServiceKey} from './index.js';
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
@@ -13,10 +13,11 @@ describe('@deltic/dependency-injection', () => {
 
     describe('lazy dependencies', () => {
         let segments: string[];
+        let somethingKey: ServiceKey<Dependency>;
 
         beforeEach(() => {
             segments = [];
-            container.register('something', {
+            somethingKey = container.register('something', {
                 lazy: true,
                 factory: () => {
                     segments.push('during');
@@ -27,7 +28,7 @@ describe('@deltic/dependency-injection', () => {
 
         test('can be resolved', () => {
             segments.push('before');
-            const something = container.resolve<Dependency>('something');
+            const something = container.resolve(somethingKey);
             segments.push('resolved');
             expect(something.name).toEqual('something');
             segments.push('after');
@@ -35,10 +36,10 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('the next resolve is the actual instance', () => {
-            let something = container.resolve<Dependency>('something');
+            let something = container.resolve(somethingKey);
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(true);
-            something = container.resolve<Dependency>('something');
+            something = container.resolve<Dependency>(somethingKey);
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(false);
         });
@@ -56,24 +57,33 @@ describe('@deltic/dependency-injection', () => {
     describe('cleanups - one service depending on another', () => {
         let segments: string[];
 
+        interface Inner {
+            lol: string;
+        };
+        interface Outer {
+            dependency: Inner;
+        };
+        let innerKey: ServiceKey<Inner>;
+        let outerKey: ServiceKey<Outer>;
+
         beforeEach(() => {
             segments = [];
-            container.register('outer', {
-
-                factory: container => ({
-                    dependency: container.resolve('inner'),
-                }),
-                cleanup: async () => {
-                    segments.push('outer');
-                },
-            });
-
-            container.register('inner', {
+            innerKey = container.register('inner', {
                 factory: () => ({
                     lol: 'what',
                 }),
                 cleanup: async () => {
                     segments.push('inner');
+                },
+            });
+
+            outerKey = container.register('outer', {
+
+                factory: container => ({
+                    dependency: container.resolve(innerKey),
+                }),
+                cleanup: async () => {
+                    segments.push('outer');
                 },
             });
         });
@@ -85,16 +95,16 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('when one service is resolved, one cleanup happens', async () => {
-            container.resolve('inner');
+            container.resolve(innerKey);
 
             await container.cleanup();
 
             expect(segments).toHaveLength(1);
-            expect(segments[0]).toEqual('inner');
+            expect(segments[0]).toEqual(innerKey);
         });
 
         test('when two service is resolved, cleanup happens in order', async () => {
-            container.resolve('outer');
+            container.resolve(outerKey);
 
             await container.cleanup();
 
@@ -104,19 +114,19 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('when two service is explicitly resolved, cleanup happens in order', async () => {
-            container.resolve('outer');
-            container.resolve('inner');
+            container.resolve(outerKey);
+            container.resolve(innerKey);
 
             await container.cleanup();
 
             expect(segments).toHaveLength(2);
-            expect(segments[0]).toEqual('outer');
-            expect(segments[1]).toEqual('inner');
+            expect(segments[0]).toEqual(outerKey);
+            expect(segments[1]).toEqual(innerKey);
         });
 
         test('when two service is explicitly resolved in reversed, cleanup still happens in order', async () => {
-            container.resolve('inner');
-            container.resolve('outer');
+            container.resolve(innerKey);
+            container.resolve(outerKey);
 
             await container.cleanup();
 
@@ -128,11 +138,16 @@ describe('@deltic/dependency-injection', () => {
 
     describe('complex cleanups are concurrent', () => {
         const segments: string[] = [];
+        let innerKey: ServiceKey<Dependency>;
+        let middleNormalKey: ServiceKey<Middle>;
+        let middleLazyKey: ServiceKey<Middle>;
+        let outerNormalKey: ServiceKey<Outer>;
+        let outerLazyKey: ServiceKey<Outer>;
 
         beforeEach(() => {
             segments.length = 0;
 
-            container.register('inner', {
+            innerKey = container.register('inner', {
                 factory: () => new Dependency('inner'),
                 cleanup: async instance => {
                     segments.push(instance.name);
@@ -141,22 +156,22 @@ describe('@deltic/dependency-injection', () => {
                 },
             });
 
-            container.register('middle-normal', {
+            middleNormalKey =container.register('middle-normal', {
                 factory: c => {
-                    return new Middle('middle-normal', c.resolve<Dependency>('inner'));
+                    return new Middle('middle-normal', c.resolve<Dependency>(innerKey));
                 },
             });
 
-            container.register<Middle>('middle-lazy', {
+            middleLazyKey = container.register<Middle>('middle-lazy', {
                 lazy: true,
                 factory: c => {
-                    return new Middle('middle-lazy', c.resolve<Dependency>('inner'));
+                    return new Middle('middle-lazy', c.resolve<Dependency>(innerKey));
                 },
             });
 
-            container.register<Outer>('outer-normal', {
+            outerNormalKey = container.register<Outer>('outer-normal', {
                 factory: c => {
-                    const middle = c.resolve<Middle>('middle-normal');
+                    const middle = c.resolve<Middle>(middleNormalKey);
                     return new Outer('outer-normal', middle);
                 },
                 cleanup: async instance => {
@@ -166,9 +181,9 @@ describe('@deltic/dependency-injection', () => {
                 },
             });
 
-            container.register<Outer>('outer-lazy', {
+            outerLazyKey = container.register<Outer>('outer-lazy', {
                 factory: c => {
-                    const middle = c.resolve<Middle>('middle-lazy');
+                    const middle = c.resolve<Middle>(middleLazyKey);
                     return new Outer('outer-lazy', middle);
                 },
                 lazy: true,
@@ -181,7 +196,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving outer normal', async () => {
-            const outerNormal = container.resolve<Outer>('outer-normal');
+            const outerNormal = container.resolve<Outer>(outerNormalKey);
 
             expect(outerNormal.name).toEqual('outer-normal');
             expect(outerNormal.middle.name).toEqual('middle-normal');
@@ -198,7 +213,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving outer lazy', async () => {
-            const outerLazy = container.resolve<Outer>('outer-lazy');
+            const outerLazy = container.resolve<Outer>(outerLazyKey);
 
             expect(outerLazy.name).toEqual('outer-lazy');
             expect(outerLazy.middle.name).toEqual('middle-lazy');
@@ -215,8 +230,8 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('resolving and use both (and trigger lazy proxy)', async () => {
-            container.resolve<Outer>('outer-normal');
-            const lazy = container.resolve<Outer>('outer-lazy');
+            container.resolve<Outer>(outerNormalKey);
+            const lazy = container.resolve<Outer>(outerLazyKey);
 
             expect(lazy.name).toEqual('outer-lazy');
 
@@ -233,7 +248,7 @@ describe('@deltic/dependency-injection', () => {
         });
 
         test('cleanups are no invoked for lazy services that are not used', async () => {
-            container.resolve<Outer>('outer-lazy');
+            container.resolve<Outer>(outerLazyKey);
 
             await container.cleanup();
 
@@ -266,7 +281,7 @@ describe('@deltic/dependency-injection', () => {
     });
 
     test('being able to lazily resolve a dependency', () => {
-        container.register('some', {
+        const  someKey: ServiceKey<{index: number}> = container.register('some', {
             factory: () => {
                 // eslint-disable-next-line @typescript-eslint/no-require-imports
                 const {SomeDependency} = require('./index.stub.js');
@@ -275,27 +290,27 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        const dep = container.resolve<{index: number}>('some');
+        const dep = container.resolve(someKey);
         expect(dep.index).toEqual(42);
     });
 
     test('resolve a non-lazy dependency as a proxy', () => {
-        container.register('something', {
+        const token = container.register('something', {
             factory: () => new Dependency('what'),
         });
 
-        const proxy = container.resolveLazy('something');
+        const proxy = container.resolveLazy(token);
 
         expect(isProxy(proxy)).toEqual(true);
     });
 
     test('resolve a lazy dependency as a proxy', () => {
-        container.register('something', {
+        const token = container.register('something', {
             factory: () => new Dependency('what'),
             lazy: true,
         });
 
-        const proxy = container.resolveLazy('something');
+        const proxy = container.resolveLazy(token);
 
         expect(isProxy(proxy)).toEqual(true);
     });
@@ -343,11 +358,14 @@ describe('@deltic/dependency-injection', () => {
             }
         }
 
-        container.register<Something>('something', {
+        // eslint-disable-next-line prefer-const
+        let collectionToken: ServiceKey<SomeCollection>;
+
+        const somethingToken = container.register('something', {
             factory: c => {
                 return new Something(
                     'main',
-                    c.resolve<SomeCollection>('collection'),
+                    c.resolve<SomeCollection>(collectionToken),
                 );
             },
             cleanup: async instance => {
@@ -357,11 +375,11 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        container.register<SomeCollection>('collection', {
+        collectionToken = container.register('collection', {
             factory: c => {
                 return new SomeCollection(
                     'collection',
-                    [c.resolve<Something>('something')],
+                    [c.resolve<Something>(somethingToken)],
                 );
             },
             cleanup: async instance => {
@@ -371,7 +389,7 @@ describe('@deltic/dependency-injection', () => {
             },
         });
 
-        const something = container.resolve<Something>('something');
+        const something = container.resolve<Something>(somethingToken);
 
         expect(something.allNames()).toEqual(['main']);
 
