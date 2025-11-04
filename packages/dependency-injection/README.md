@@ -53,20 +53,20 @@ class MyLastNameService {
     }
 }
 
-container.registerInstance<MyLastNameService>('my.last_name_service', {
+const myLastNameService = container.registerInstance<MyLastNameService>('my.last_name_service', {
     instance: new MyLastNameService('de Jonge'),
 });
 
-container.register<MyNameService>('my.name_service', {
+const myNameService = container.register<MyNameService>('my.name_service', {
     factory: container => {
         return new MyNameService(
             'Frank',
-            container.resolve('my.last_name_service'),
+            container.resolve(myLastNameService),
         )
     }
 });
 
-const service = container.resolve<MyNameService>('my.name_service');
+const service = container.resolve(myNameService);
 
 expect(service.fullName()).toEqual('Frank de Jonge');
 ```
@@ -84,7 +84,7 @@ need to be cleaned up so our applications can gracefully shut down.
 import {container} from '@deltic/dependency-injection';
 import {Pool} from 'pg';
 
-container.register<Pool>('pg.pool', {
+const poolToken = container.register<Pool>('pg.pool', {
     factory: () => new Pool({
         host: 'localhost',
         user: 'database-user',
@@ -98,7 +98,7 @@ container.register<Pool>('pg.pool', {
     },
 });
 
-const pool = container.resolve<Pool>('pg.pool');
+const pool = container.resolve(poolToken);
 
 // use the pool
 
@@ -110,21 +110,38 @@ await container.cleanup();
 Never a nice problem to have, but Proxy's to the rescue! Deltic uses proxies, which break cyclical
 dependency resolution. This is a standard approach used by almost all DI containers.
 
-#### Solution: Declare your dependency as `lazy: true`
+#### Solution: No solution needed!
+
+Deltic Dependency Injection automatically detects circular references and resolves dependencies
+using proxies, which defer the instantiation, which breaks the looop. Problem solved!
+
+### Problem: Constructing heavy dependencies that are not always used
+
+Some dependencies are expensive to construct. When they're not always needed, you may want to prevent
+these dependencies from always being constructed.
+
+#### Solution: Make your dependencies lazy
+
+Dependencies can explicitly be lazy, which delays construction until they are actually used.
+
+Eithe use the `lazy: true` setting:
 
 ```typescript
-import {container} from '@deltic/dependency-injection';
+import {container, ServiceKey} from '@deltic/dependency-injection';
 
-container.register<Something>('something', {
+// declared early so it can be referenced
+let collectionToken: ServiceKey<SomeCollection>;
+
+const somethingToken = container.register('something', {
     factory: c => {
         return new Something(
             'something-name',
-            c.resolve<SomeCollection>('collection'),
+            c.resolve<SomeCollection>(collectionToken),
         );
     },
 });
 
-container.register<SomeCollection>('collection', {
+collectionToken = container.register(somethingToken, {
     lazy: true,
     factory: container => {
         return new SomeCollection(
@@ -133,20 +150,26 @@ container.register<SomeCollection>('collection', {
         );
     },
 });
+```
+
+Or, explicitly resolve services as lazy:
+
+```typescript
 
 // ALTERNATIVE
+let collectionToken: ServiceKey<SomeCollection>;
 
-container.register<Something>('something', {
+const somethingToken = container.register('something', {
     factory: container => {
         return new Something(
             'something-name',
-            container.resolveLazy<SomeCollection>('collection'),
+            container.resolveLazy<SomeCollection>(collectionToken),
             // ------------- ^ load it lazy,
         );
     },
 });
 
-container.register<SomeCollection>('collection', {
+collectionToken = container.register('collection', {
     factory: container => {
         return new SomeCollection(
             'collection-name',

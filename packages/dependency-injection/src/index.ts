@@ -47,6 +47,10 @@ class DependencyContainer {
     private resolutionStack = new Set<string>();
 
     register<Service, const Key extends string = string>(key: Key, definition: ServiceDefinition<Service>): ServiceKey<Service> {
+        if (this.definitions[key] !== undefined) {
+            throw new Error(`Dependency ${key} is already registered`);
+        }
+
         if (definition.lazy) {
             const proxy = this.createProxyFor(key as unknown as ServiceKey<Service & object>, definition as ServiceDefinition<Service & object>);
             definition.factory = () => proxy;
@@ -147,6 +151,10 @@ class DependencyContainer {
     }
 
     registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): ServiceKey<Service> {
+        if (this.definitions[key] !== undefined) {
+            throw new Error(`Dependency ${key} is already registered`);
+        }
+
         const {cleanup, instance} = definition;
         this.cache[key] = instance;
         this.definitions[key] = {
@@ -273,6 +281,15 @@ class DependencyContainer {
 
         return instance;
     }
+}
+
+/**
+ * Create service keys without registering a service. Only use this to work around the
+ * intentional limitation of only receiving a token when a service is registered. This
+ * is an escape-hatch, proceed with caution.
+ */
+export function dangerouslyForgeServiceKey<Service>(key: string): ServiceKey<Service> {
+    return key as unknown as ServiceKey<Service>;
 }
 
 export default DependencyContainer;
