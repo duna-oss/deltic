@@ -30,7 +30,13 @@ interface ResolvedService {
     instance: any,
 }
 
-export class DependencyContainer {
+declare const service: unique symbol;
+
+export type ServiceKey<Service> = string & {
+    [service]: Service,
+}
+
+class DependencyContainer {
     private cache: Record<string, any> = {};
     private definitions: Record<string, ServiceDefinition> = {};
 
@@ -40,13 +46,19 @@ export class DependencyContainer {
     // Stack to track current resolution chain
     private resolutionStack = new Set<string>();
 
-    register<Service>(key: string, definition: ServiceDefinition<Service>): void {
+    register<Service, const Key extends string = string>(key: Key, definition: ServiceDefinition<Service>): ServiceKey<Service> {
+        if (this.definitions[key] !== undefined) {
+            throw new Error(`Dependency ${key} is already registered`);
+        }
+
         if (definition.lazy) {
-            const proxy = this.createProxyFor(key, definition as ServiceDefinition<Service & object>);
+            const proxy = this.createProxyFor(key as unknown as ServiceKey<Service & object>, definition as ServiceDefinition<Service & object>);
             definition.factory = () => proxy;
         }
 
         this.definitions[key] = definition;
+
+        return key as unknown as ServiceKey<Service>;
     }
 
     async cleanup(): Promise<void> {
@@ -138,7 +150,11 @@ export class DependencyContainer {
         }
     }
 
-    registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): void {
+    registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): ServiceKey<Service> {
+        if (this.definitions[key] !== undefined) {
+            throw new Error(`Dependency ${key} is already registered`);
+        }
+
         const {cleanup, instance} = definition;
         this.cache[key] = instance;
         this.definitions[key] = {
@@ -154,9 +170,11 @@ export class DependencyContainer {
                 instance,
             });
         }
+
+        return key as unknown as ServiceKey<Service>;
     }
 
-    private createProxyFor<Service extends object>(key: string, definition: ServiceDefinition<Service>): Service {
+    private createProxyFor<Service extends object>(key: ServiceKey<Service>, definition: ServiceDefinition<Service>): Service {
         const {factory, cache = true, cleanup} = definition;
         const resolveInstance = () => {
             const cached = this.cache[key];
@@ -199,7 +217,7 @@ export class DependencyContainer {
         return new Proxy<Service>({} as Service, handlers);
     }
 
-    resolveLazy<Service extends object>(key: string): Service {
+    resolveLazy<Service extends object>(key: ServiceKey<Service>): Service {
         const definition = this.definitions[key];
 
         if (!definition) {
@@ -211,7 +229,7 @@ export class DependencyContainer {
         return this.createProxyFor(key, definition);
     }
 
-    resolve<Service extends object>(key: string): Service {
+    resolve<const Service extends object>(key: ServiceKey<Service>): Service {
         if (this.resolutionStack.has(key)) {
             return this.resolveLazy<Service>(key);
         }
@@ -264,6 +282,17 @@ export class DependencyContainer {
         return instance;
     }
 }
+
+/**
+ * Create service keys without registering a service. Only use this to work around the
+ * intentional limitation of only receiving a token when a service is registered. This
+ * is an escape-hatch, proceed with caution.
+ */
+export function dangerouslyForgeServiceKey<Service>(key: string): ServiceKey<Service> {
+    return key as unknown as ServiceKey<Service>;
+}
+
+export default DependencyContainer;
 
 export const container = new DependencyContainer();
 
