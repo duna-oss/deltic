@@ -1,6 +1,8 @@
 import {NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
 import {DynamicMutex, LockValue} from '@deltic/mutex';
-import {LockIDResolver, LockSkipDetector} from './shared.js';
+import type {LockIDResolver, LockSkipDetector} from './shared-for-locking.js';
+
+export * from './shared-for-locking.js';
 
 export function createServiceLockingMiddleware<
     S extends ServiceStructure<S>,

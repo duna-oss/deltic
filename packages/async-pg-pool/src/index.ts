@@ -1,9 +1,9 @@
 import type {Pool, PoolClient} from 'pg';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
-import {AsyncLocalStorage} from 'node:async_hooks';
+import {AsyncLocalStorage} from 'async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
-import {IncomingMessage, ServerResponse} from 'node:http';
+import {IncomingMessage, ServerResponse} from 'http';
 
 export interface NextFunction {
     (err?: any): void;
@@ -135,6 +135,16 @@ export class AsyncPgPool {
         const context = this.context.resolve();
 
         return context.sharedTransaction !== undefined;
+    }
+
+    withTransaction(): Connection {
+        const {sharedTransaction} = this.context.resolve();
+
+        if (sharedTransaction === undefined) {
+            throw UnableToProvideActiveTransaction.noTransactionWasActive();
+        }
+
+        return sharedTransaction;
     }
 
     httpMiddleware(): HttpMiddleware {
@@ -368,6 +378,15 @@ class UnableToReleaseConnection extends StandardError {
     static because = (err: unknown) => new UnableToReleaseConnection(
         `Unable to release connection: ${errorToMessage(err)}`,
         'async-pg-pool.unable_to_release_connection',
+        {},
+        err,
+    );
+}
+
+class UnableToProvideActiveTransaction extends StandardError {
+    static noTransactionWasActive = (err?: unknown) => new UnableToReleaseConnection(
+        `Unable to release connection: ${errorToMessage(err)}`,
+        'async-pg-pool.no_active_transaction_availble',
         {},
         err,
     );

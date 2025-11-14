@@ -1,9 +1,9 @@
-import {Service, ServiceDispatcher, ServiceHandlers} from '@deltic/service-dispatcher';
-import {createServiceLockingMiddleware} from './middleware.js';
+import {type Service, ServiceDispatcher, type ServiceHandlers} from '@deltic/service-dispatcher';
+import {createServiceLockingMiddleware} from './locking-middleware.js';
 import {MutexUsingMemory} from '@deltic/mutex/memory';
-import {ServiceLocking} from './decorator.js';
-import {ServiceLockingOptions} from './shared.js';
-import {setTimeout as wait} from 'node:timers/promises';
+import {ServiceLocking} from './locking-decorator.js';
+import type {ServiceLockingOptions} from './shared-for-locking.js';
+import {setTimeout as wait} from 'timers/promises';
 
 interface ExampleService {
     ping: {

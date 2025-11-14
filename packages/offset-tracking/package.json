@@ -1,0 +1,30 @@
+{
+  "name": "@deltic/offset-tracking",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "General purpose offset tracking abstraction",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": [
+    "offsets",
+    "offset",
+    "tracking"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/offset-tracking"
+  },
+  "dependencies": {
+  }
+}

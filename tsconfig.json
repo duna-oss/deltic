@@ -8,7 +8,8 @@
   ],
   "compilerOptions": {
     "moduleResolution": "nodenext",
-    "esModuleInterop": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "skipLibCheck": true,
     "lib": [
@@ -19,17 +20,27 @@
     "target": "es2024",
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
     "types": [
       "node",
       "vitest/globals"
     ],
     "paths": {
+      "@deltic/backoff/*": [
+        "./packages/backoff/src/*.ts"
+      ],
+      "@deltic/messaging/*": [
+        "./packages/messaging/src/*.ts"
+      ],
+      "@deltic/event-sourcing/*": [
+        "./packages/event-sourcing/src/*.ts"
+      ],
       "@deltic/mutex/*": [
         "./packages/mutex/src/*-mutex.ts"
       ],
       "@deltic/*": [
         "./packages/*/src/index.ts"
-      ]
+      ],
     }
   }
 }
