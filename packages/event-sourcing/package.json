@@ -1,0 +1,59 @@
+{
+  "name": "@deltic/event-sourcing",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A rich event-sourcing implementation",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./aggregate-projection": {
+      "import": "./dist/aggregate-projection.js",
+      "require": "./dist/aggregate-projection.cjs",
+      "module-sync": "./dist/aggregate-projection.js",
+      "types": "./dist/aggregate-projection.d.ts"
+    },
+    "./snapshotting": {
+      "import": "./dist/snapshotting.js",
+      "require": "./dist/snapshotting.cjs",
+      "module-sync": "./dist/snapshotting.js",
+      "types": "./dist/snapshotting.d.ts"
+    },
+    "./test-tooling": {
+      "import": "./dist/test-tooling.js",
+      "require": "./dist/test-tooling.cjs",
+      "module-sync": "./dist/test-tooling.js",
+      "types": "./dist/test-tooling.d.ts"
+    }
+  },
+  "keywords": [],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/event-sourcing"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.2.2",
+    "@deltic/clock": "workspace:^",
+    "@deltic/messaging": "workspace:^",
+    "@deltic/transaction-manager": "workspace:^"
+  },
+  "peerDependencies": {
+    "@deltic/service-dispatcher": "workspace:^"
+  },
+  "devDependencies": {
+    "@deltic/service-dispatcher": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@deltic/service-dispatcher": {
+      "optional": true
+    }
+  }
+}

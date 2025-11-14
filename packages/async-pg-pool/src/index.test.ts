@@ -8,6 +8,7 @@ import {
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
+import {pgTestCredentials} from '../../pg-credentials.js';
 
 const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
 
@@ -28,16 +29,7 @@ describe('AsyncPgPool', () => {
     };
 
     beforeAll(async () => {
-        pool = new Pool({
-            host: 'localhost',
-            user: 'duna',
-            password: 'duna',
-            port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 5,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
-        });
+        pool = new Pool(pgTestCredentials);
     });
 
     afterAll(async () => {

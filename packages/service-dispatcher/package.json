@@ -15,6 +15,12 @@
       "require": "./dist/test-tooling.cjs",
       "module-sync": "./dist/test-tooling.js",
       "types": "./dist/test-tooling.d.ts"
+    },
+    "./aggregate-service-dispatcher": {
+      "import": "./dist/aggregate-service-dispatcher.js",
+      "require": "./dist/aggregate-service-dispatcher.cjs",
+      "module-sync": "./dist/aggregate-service-dispatcher.js",
+      "types": "./dist/aggregate-service-dispatcher.d.ts"
     }
   },
   "keywords": [],
@@ -27,7 +33,25 @@
     "url": "git+https://github.com/duna-oss/deltic.git",
     "directory": "packages/service-layer"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@deltic/event-sourcing": "workspace:^",
+    "@deltic/mutex": "workspace:^",
     "fast-equals": "^5.3.2"
+  },
+  "devDependencies": {
+    "@deltic/event-sourcing": "workspace:^",
+    "@deltic/mutex": "workspace:^",
+    "fast-equals": "^5.3.2"
+  },
+  "peerDependenciesMeta": {
+    "@deltic/event-sourcing": {
+      "optional": true
+    },
+    "@deltic/mutex": {
+      "optional": true
+    },
+    "fast-equals": {
+      "optional": true
+    }
   }
 }

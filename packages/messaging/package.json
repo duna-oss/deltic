@@ -1,0 +1,149 @@
+{
+  "name": "@deltic/messaging",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A rich messaging abstraction",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./decorating-consumer": {
+      "import": "./dist/decorating-consumer.js",
+      "require": "./dist/decorating-consumer.cjs",
+      "module-sync": "./dist/decorating-consumer.js",
+      "types": "./dist/decorating-consumer.d.ts"
+    },
+    "./dispatching-consumer": {
+      "import": "./dist/dispatching-consumer.js",
+      "require": "./dist/dispatching-consumer.cjs",
+      "module-sync": "./dist/dispatching-consumer.js",
+      "types": "./dist/dispatching-consumer.d.ts"
+    },
+    "./decorating-dispatcher": {
+      "import": "./dist/decorating-dispatcher.js",
+      "require": "./dist/decorating-dispatcher.cjs",
+      "module-sync": "./dist/decorating-dispatcher.js",
+      "types": "./dist/decorating-dispatcher.d.ts"
+    },
+    "./helpers": {
+      "import": "./dist/helpers.js",
+      "require": "./dist/helpers.cjs",
+      "module-sync": "./dist/helpers.js",
+      "types": "./dist/helpers.d.ts"
+    },
+    "./upcasting": {
+      "import": "./dist/upcasting.js",
+      "require": "./dist/upcasting.cjs",
+      "module-sync": "./dist/upcasting.js",
+      "types": "./dist/upcasting.d.ts"
+    },
+    "./outbox": {
+      "import": "./dist/outbox.js",
+      "require": "./dist/outbox.cjs",
+      "module-sync": "./dist/outbox.js",
+      "types": "./dist/outbox.d.ts"
+    },
+    "./consumer-chain": {
+      "import": "./dist/consumer-chain.js",
+      "require": "./dist/consumer-chain.cjs",
+      "module-sync": "./dist/consumer-chain.js",
+      "types": "./dist/consumer-chain.d.ts"
+    },
+    "./decorator-chain": {
+      "import": "./dist/decorator-chain.js",
+      "require": "./dist/decorator-chain.cjs",
+      "module-sync": "./dist/decorator-chain.js",
+      "types": "./dist/decorator-chain.d.ts"
+    },
+    "./dispatcher-chain": {
+      "import": "./dist/dispatcher-chain.js",
+      "require": "./dist/dispatcher-chain.cjs",
+      "module-sync": "./dist/dispatcher-chain.js",
+      "types": "./dist/dispatcher-chain.d.ts"
+    },
+    "./repository-using-memory": {
+      "import": "./dist/repository-using-memory.js",
+      "require": "./dist/repository-using-memory.cjs",
+      "module-sync": "./dist/repository-using-memory.js",
+      "types": "./dist/repository-using-memory.d.ts"
+    },
+    "./collecting-dispatcher": {
+      "import": "./dist/collecting-dispatcher.js",
+      "require": "./dist/collecting-dispatcher.cjs",
+      "module-sync": "./dist/collecting-dispatcher.js",
+      "types": "./dist/collecting-dispatcher.d.ts"
+    },
+    "./collecting-consumer": {
+      "import": "./dist/collecting-consumer.js",
+      "require": "./dist/collecting-consumer.cjs",
+      "module-sync": "./dist/collecting-consumer.js",
+      "types": "./dist/collecting-consumer.d.ts"
+    },
+    "./pg/outbox-repository": {
+      "import": "./dist/pg/outbox-repository.js",
+      "require": "./dist/pg/outbox-repository.cjs",
+      "module-sync": "./dist/pg/outbox-repository.js",
+      "types": "./dist/pg/outbox-repository.d.ts"
+    },
+    "./pg/message-repository": {
+      "import": "./dist/pg/message-repository.js",
+      "require": "./dist/pg/message-repository.cjs",
+      "module-sync": "./dist/pg/message-repository.js",
+      "types": "./dist/pg/message-repository.d.ts"
+    },
+    "./pg/throttled-outbox": {
+      "import": "./dist/pg/throttled-outbox.js",
+      "require": "./dist/pg/throttled-outbox.cjs",
+      "module-sync": "./dist/pg/throttled-outbox.js",
+      "types": "./dist/pg/throttled-outbox.d.ts"
+    },
+    "./pg/delayed-outbox-repository": {
+      "import": "./dist/pg/delayed-outbox-repository.js",
+      "require": "./dist/pg/delayed-outbox-repository.cjs",
+      "module-sync": "./dist/pg/delayed-outbox-repository.js",
+      "types": "./dist/pg/delayed-outbox-repository.d.ts"
+    },
+    "./pg/notifying-outbox-decorator": {
+      "import": "./dist/pg/notifying-outbox-decorator.js",
+      "require": "./dist/pg/notifying-outbox-decorator.cjs",
+      "module-sync": "./dist/pg/notifying-outbox-decorator.js",
+      "types": "./dist/pg/notifying-outbox-decorator.d.ts"
+    }
+  },
+  "keywords": [
+    "messaging",
+    "outbox",
+    "dispatching",
+    "consumer"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/error-standard"
+  },
+  "peerDependencies": {
+    "@deltic/context": "workspace:^",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@deltic/context": "workspace:^",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6",
+    "uuid": "^13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@deltic/context": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  }
+}
