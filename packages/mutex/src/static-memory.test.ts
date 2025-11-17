@@ -3,7 +3,7 @@ import {
     UnableToAcquireLock,
     UnableToReleaseLock,
 } from './index.js';
-import {StaticMutexUsingMemory} from './static-memory-mutex.js';
+import {StaticMutexUsingMemory} from './static-memory.js';
 
 let mutex: StaticMutex;
 

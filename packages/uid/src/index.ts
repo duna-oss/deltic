@@ -52,6 +52,8 @@ export class PrefixedBrandedIdConversion<Prefix extends string, DatabaseType ext
         private readonly conversion: IdConversion<string, DatabaseType>
     ) {
         this.prefixLength = prefix.length + 1;
+        this.fromDatabase.bind(this);
+        this.toDatabase.bind(this);
     }
 
     fromDatabase(to: DatabaseType): PrefixedId<Prefix> {

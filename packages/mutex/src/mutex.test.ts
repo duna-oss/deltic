@@ -1,11 +1,13 @@
 import {setTimeout} from 'node:timers/promises';
-import {DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from '@deltic/mutex';
+import {DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 import {Pool} from 'pg';
 
-import {Crc32LockIdConverter, makePostgresMutex, MutexUsingPostgres} from '@deltic/mutex-using-pg';
+import {makePostgresMutex, MutexUsingPostgres} from './pg.js';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
-import {MutexUsingMemory} from '@deltic/mutex/memory';
-import {MultiMutex} from '@deltic/mutex/multi';
+import {MutexUsingMemory} from './memory.js';
+import {MultiMutex} from './multi.js';
+import {Crc32LockIdConverter} from './crc32-lock-id-converter.js';
+import {pgTestCredentials} from '../../pg-credentials.js';
 
 const lockId1 = 'lock-id-1';
 let pool: Pool;
@@ -37,16 +39,7 @@ describe.each([
     let mutex: DynamicMutex<string>;
 
     beforeAll(() => {
-        pool = new Pool({
-            host: 'localhost',
-            user: 'duna',
-            password: 'duna',
-            port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 20,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
-        });
+        pool = new Pool(pgTestCredentials);
     });
 
     beforeEach(() => {

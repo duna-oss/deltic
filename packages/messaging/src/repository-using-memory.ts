@@ -29,7 +29,6 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
             aggregate_root_id: id,
             tenant_id: tenantId,
             stream_offset: ++this.incrementalId,
-            stream_partition: m.headers['stream_partition'] ?? 0,
         }));
         const list = (this.messages.get(tenantId)?.get(id) || []).concat(messages);
         this._lastCommit = messages;
@@ -71,7 +70,7 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
         }
     }
 
-    async* paginateIds(limit: number, afterId?: Stream['aggregateRootId'], partition: number = 0): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+    async* paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
         let left = limit;
         let shouldYield = afterId === undefined;
         const collected = new Set<Stream['aggregateRootId']>();
@@ -80,8 +79,7 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
             for (const [aggregateId, messages] of group) {
                 if (
                     collected.has(aggregateId) ||
-                    messages.length === 0 ||
-                    messages.some(message => partition !== Number(message.headers['stream_partition'] ?? 0))
+                    messages.length === 0
                 ) {
                     continue;
                 }

@@ -1,5 +1,5 @@
-import {MutexUsingMemory} from './memory-mutex.js';
-import {MultiMutex} from './multi-mutex.js';
+import {MutexUsingMemory} from './memory.js';
+import {MultiMutex} from './multi.js';
 import {DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 
 const lockId = 'lock-id';

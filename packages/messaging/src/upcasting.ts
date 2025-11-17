@@ -137,8 +137,8 @@ export class UpcastingMessageRepository<Stream extends VersionedStreamDefinition
     ) {
     }
 
-    paginateIds(limit: number, afterId?: Stream['aggregateRootId'], partition?: number): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
-        return this.repository.paginateIds(limit, afterId, partition);
+    paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+        return this.repository.paginateIds(limit, afterId);
     }
 
     persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void> {

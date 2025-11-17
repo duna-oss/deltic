@@ -97,5 +97,5 @@ export interface MessageRepository<Stream extends StreamDefinition> {
 
     retrieveBetweenVersions(id: Stream['aggregateRootId'], after: number, before: number): AsyncGenerator<AnyMessageFrom<Stream>>,
 
-    paginateIds(limit: number, afterId?: Stream['aggregateRootId'], partition?: number): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>,
+    paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>,
 }

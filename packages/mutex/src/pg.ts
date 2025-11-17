@@ -1,6 +1,5 @@
 import {type DynamicMutex, type LockValue, UnableToAcquireLock, UnableToReleaseLock} from '@deltic/mutex';
 import {AsyncPgPool, Connection} from '@deltic/async-pg-pool';
-import crc32 from 'crc/crc32';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {MultiMutex} from '@deltic/mutex/multi';
 import {MutexUsingMemory} from '@deltic/mutex/memory';
@@ -143,17 +142,6 @@ export type LockRange = {
     base: number,
     range: number,
 };
-
-export class Crc32LockIdConverter implements LockIdConverter<string> {
-    constructor(
-        private lockRange: LockRange,
-    ) {
-    }
-
-    convert(id: string): number {
-        return this.lockRange.base + (crc32(id) % this.lockRange.range);
-    }
-}
 
 export function makePostgresMutex<
     const LockID extends string | number,

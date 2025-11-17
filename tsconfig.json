@@ -36,7 +36,13 @@
         "./packages/event-sourcing/src/*.ts"
       ],
       "@deltic/mutex/*": [
-        "./packages/mutex/src/*-mutex.ts"
+        "./packages/mutex/src/*.ts"
+      ],
+      "@deltic/offset-tracking/*": [
+        "./packages/offset-tracking/src/*.ts"
+      ],
+      "@deltic/key-value/*": [
+        "./packages/key-value/src/*.ts"
       ],
       "@deltic/*": [
         "./packages/*/src/index.ts"

@@ -1,5 +1,5 @@
 import {StaticMutex} from './index.js';
-import {MutexUsingMemory} from './memory-mutex.js';
+import {MutexUsingMemory} from './memory.js';
 
 export class StaticMutexUsingMemory implements StaticMutex {
     private readonly mutex = new MutexUsingMemory<true>();
