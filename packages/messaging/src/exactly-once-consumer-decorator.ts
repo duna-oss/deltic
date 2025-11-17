@@ -48,17 +48,10 @@ export class ExactlyOnceConsumerDecorator<Stream extends StreamDefinition> imple
         const offset = this.resolveOffset(message);
         const identifier = this.resolveIdentifier(message);
 
-        await this.transactions.begin();
-
-        try {
+        await this.transactions.runInTransaction(async () => {
             await this.offsets.store(identifier, offset);
             await this.consumer.consume(message);
-        } catch (error) {
-            await this.transactions.abort();
-            throw error;
-        }
-
-        await this.transactions.commit();
+        });
     }
 
     private async replayBetween(id: Stream['aggregateRootId'], after: number, before: number): Promise<void> {

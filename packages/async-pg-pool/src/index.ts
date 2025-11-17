@@ -4,6 +4,7 @@ import {AsyncLocalStorage} from 'async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
 import {IncomingMessage, ServerResponse} from 'http';
+import type {TransactionManager} from '@deltic/transaction-manager';
 
 export interface NextFunction {
     (err?: any): void;
@@ -390,5 +391,47 @@ class UnableToProvideActiveTransaction extends StandardError {
         {},
         err,
     );
+}
+
+export class TransactionManagerUsingPg implements TransactionManager {
+    constructor(
+        private readonly pool: AsyncPgPool,
+    ) {
+    }
+
+    rollback(error?: unknown): Promise<void> {
+        return this.pool.rollback(this.pool.withTransaction(), error);
+    }
+
+    async begin(): Promise<void> {
+        await this.pool.begin();
+    }
+
+    commit(): Promise<void> {
+        return this.pool.commit(this.pool.withTransaction());
+    }
+
+    inTransaction(): boolean {
+        return this.pool.inTransaction();
+    }
+
+    async runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        if (this.pool.inTransaction()) {
+            return fn();
+        }
+
+        const transaction = await this.pool.begin();
+
+        try {
+            const response = await fn();
+            await this.pool.commit(transaction);
+
+            return response;
+        } catch (e) {
+            await this.pool.rollback(transaction, e);
+            throw e;
+        }
+    }
+
 }
 

@@ -1,12 +1,13 @@
 export interface TransactionManager {
     begin(): Promise<void>,
-    inTransaction(): boolean
+    inTransaction(): boolean;
+    runInTransaction<R>(fn: () => Promise<R>): Promise<R>;
     commit(): Promise<void>,
-    abort(): Promise<void>,
+    rollback(error?: unknown): Promise<void>,
 }
 
 export class NoopTransactionManager implements TransactionManager {
-    async abort(): Promise<void> {
+    async rollback(): Promise<void> {
     }
 
     inTransaction(): boolean {
@@ -17,5 +18,9 @@ export class NoopTransactionManager implements TransactionManager {
     }
 
     async commit(): Promise<void> {
+    }
+
+    runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        return fn();
     }
 }

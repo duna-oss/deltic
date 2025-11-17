@@ -87,7 +87,7 @@ export class AggregateRootRepositoryWithSnapshotting<
             }
         } catch (error) {
             if (!alreadyInTransaction) {
-                await this.transactionManager.abort();
+                await this.transactionManager.rollback();
             }
             throw error;
         }

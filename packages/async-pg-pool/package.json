@@ -22,6 +22,7 @@
   "peerDependencies": {
     "@deltic/error-standard": "workspace:^",
     "@deltic/mutex": "workspace:^",
+    "@deltic/transaction-manager": "workspace:^",
     "pg": "^8.16.3"
   },
   "devDependencies": {

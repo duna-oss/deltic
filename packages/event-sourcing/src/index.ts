@@ -77,7 +77,7 @@ export class EventSourcedAggregateRepository<
             await this.messageDispatcher?.send(...messages);
         } catch (e) {
             if (!alreadyInTransaction) {
-                await this.transactionManager.abort();
+                await this.transactionManager.rollback();
             }
             throw e;
         }

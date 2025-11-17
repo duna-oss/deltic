@@ -29,7 +29,7 @@ export class AggregateRepositoryWithProjector<
             await this.projector.upsert(aggregateRoot);
         } catch (e) {
             if (!alreadyInTransaction) {
-                await this.transactionManager.abort();
+                await this.transactionManager.rollback();
             }
             throw e;
         }
