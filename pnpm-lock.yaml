@@ -50,6 +50,9 @@ importers:
       '@deltic/mutex':
         specifier: workspace:^
         version: link:../mutex
+      '@deltic/transaction-manager':
+        specifier: workspace:^
+        version: link:../transaction-manager
       pg:
         specifier: ^8.16.3
         version: 8.16.3
