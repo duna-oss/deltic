@@ -148,6 +148,24 @@ export class AsyncPgPool {
         return sharedTransaction;
     }
 
+    async runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        if (this.inTransaction()) {
+            return fn();
+        }
+
+        const transaction = await this.begin();
+
+        try {
+            const response = await fn();
+            await this.commit(transaction);
+
+            return response;
+        } catch (e) {
+            await this.rollback(transaction, e);
+            throw e;
+        }
+    }
+
     httpMiddleware(): HttpMiddleware {
         const flush = this.flushSharedContext.bind(this);
 
@@ -415,22 +433,8 @@ export class TransactionManagerUsingPg implements TransactionManager {
         return this.pool.inTransaction();
     }
 
-    async runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
-        if (this.pool.inTransaction()) {
-            return fn();
-        }
-
-        const transaction = await this.pool.begin();
-
-        try {
-            const response = await fn();
-            await this.pool.commit(transaction);
-
-            return response;
-        } catch (e) {
-            await this.pool.rollback(transaction, e);
-            throw e;
-        }
+    runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        return this.pool.runInTransaction(fn);
     }
 
 }
