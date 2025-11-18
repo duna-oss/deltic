@@ -1,9 +1,10 @@
 import type {Pool, PoolClient} from 'pg';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
-import {AsyncLocalStorage} from 'node:async_hooks';
+import {AsyncLocalStorage} from 'async_hooks';
 import {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
-import {IncomingMessage, ServerResponse} from 'node:http';
+import {IncomingMessage, ServerResponse} from 'http';
+import type {TransactionManager} from '@deltic/transaction-manager';
 
 export interface NextFunction {
     (err?: any): void;
@@ -135,6 +136,34 @@ export class AsyncPgPool {
         const context = this.context.resolve();
 
         return context.sharedTransaction !== undefined;
+    }
+
+    withTransaction(): Connection {
+        const {sharedTransaction} = this.context.resolve();
+
+        if (sharedTransaction === undefined) {
+            throw UnableToProvideActiveTransaction.noTransactionWasActive();
+        }
+
+        return sharedTransaction;
+    }
+
+    async runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        if (this.inTransaction()) {
+            return fn();
+        }
+
+        const transaction = await this.begin();
+
+        try {
+            const response = await fn();
+            await this.commit(transaction);
+
+            return response;
+        } catch (e) {
+            await this.rollback(transaction, e);
+            throw e;
+        }
     }
 
     httpMiddleware(): HttpMiddleware {
@@ -371,5 +400,42 @@ class UnableToReleaseConnection extends StandardError {
         {},
         err,
     );
+}
+
+class UnableToProvideActiveTransaction extends StandardError {
+    static noTransactionWasActive = (err?: unknown) => new UnableToReleaseConnection(
+        `Unable to release connection: ${errorToMessage(err)}`,
+        'async-pg-pool.no_active_transaction_availble',
+        {},
+        err,
+    );
+}
+
+export class TransactionManagerUsingPg implements TransactionManager {
+    constructor(
+        private readonly pool: AsyncPgPool,
+    ) {
+    }
+
+    rollback(error?: unknown): Promise<void> {
+        return this.pool.rollback(this.pool.withTransaction(), error);
+    }
+
+    async begin(): Promise<void> {
+        await this.pool.begin();
+    }
+
+    commit(): Promise<void> {
+        return this.pool.commit(this.pool.withTransaction());
+    }
+
+    inTransaction(): boolean {
+        return this.pool.inTransaction();
+    }
+
+    runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
+        return this.pool.runInTransaction(fn);
+    }
+
 }
 
