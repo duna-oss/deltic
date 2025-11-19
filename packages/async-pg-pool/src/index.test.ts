@@ -36,14 +36,26 @@ describe('AsyncPgPool', () => {
         await pool.end();
     });
 
+    afterEach(async () => {
+        if (provider) {
+            await provider.flushSharedContext();
+        }
+    });
+
     describe.each([
         ['pool, static transaction context', factoryWithStaticPool],
         ['pool, async transaction context', factoryWithAsyncPool],
     ] as const)('basics for %s', (_name, factory) => {
+        let provider: AsyncPgPool;
+
         beforeEach(() => {
             provider = factory({
                 freshResetQuery: 'RESET ALL',
             });
+        });
+
+        afterEach(async() => {
+
         });
 
         test('smoketest, claiming a client', async () => {
@@ -79,19 +91,27 @@ describe('AsyncPgPool', () => {
 
             expect(provider.inTransaction()).toEqual(false);
         });
+
+        test('smoketest, using an encapsulated transaction', async () => {
+            setupContext();
+            let wasInTransaction: boolean = false;
+
+            expect(provider.inTransaction()).toEqual(false);
+
+            await provider.runInTransaction(async () => {
+                wasInTransaction = provider.inTransaction();
+            });
+
+            expect(wasInTransaction).toEqual(true);
+        });
     });
 
     describe('primary connections and flushing async context', () => {
-        let provider: AsyncPgPool;
 
         beforeEach(() => {
             provider = factoryWithStaticPool({
                 freshResetQuery: 'RESET ALL',
             });
-        });
-
-        afterEach(async () => {
-            await provider.flushSharedContext();
         });
 
         test('primary connections are re-used', async () => {
