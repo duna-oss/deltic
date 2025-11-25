@@ -129,12 +129,16 @@
     "directory": "packages/messaging"
   },
   "peerDependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/clock": "workspace:^",
     "@deltic/context": "workspace:^",
     "@deltic/key-value": "workspace:^",
     "@deltic/offset-tracking": "workspace:^",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/clock": "workspace:^",
     "@deltic/context": "workspace:^",
     "@deltic/offset-tracking": "workspace:^",
     "@deltic/key-value": "workspace:^",
@@ -143,6 +147,12 @@
     "uuid": "^13.0.0"
   },
   "peerDependenciesMeta": {
+    "@deltic/async-pg-pool": {
+      "optional": true
+    },
+    "@deltic/clock": {
+      "optional": true
+    },
     "@deltic/context": {
       "optional": true
     },
