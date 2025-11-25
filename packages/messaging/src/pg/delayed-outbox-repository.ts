@@ -36,15 +36,16 @@ export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> imp
              * in a sub-query and delete the matching records. Knex does
              * not warn you about this, unfortunately.
              */
-            const response = await connection.query(
-                `DELETE
-                 FROM ${this.tableName}
-                 WHERE id IN (SELECT id
-                              FROM ${this.tableName}
-                              WHERE consumed = true
-                              ORDER BY id ASC
-                     LIMIT $1
-                     )`,
+            const response = await connection.query(`
+                DELETE
+                FROM ${this.tableName}
+                WHERE id IN (
+                    SELECT id
+                    FROM ${this.tableName}
+                    WHERE consumed = true
+                    ORDER BY id ASC
+                    LIMIT $1
+                )`,
                 [limit],
             );
 

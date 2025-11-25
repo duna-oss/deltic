@@ -4,7 +4,7 @@ import {messageFactory} from '@deltic/messaging/helpers';
 import {OffsetRepositoryUsingMemory} from '@deltic/offset-tracking/memory';
 import {ExactlyOnceConsumerDecorator} from '@deltic/messaging/exactly-once-consumer-decorator';
 import {KeyValueStoreUsingMemory} from '@deltic/key-value/memory';
-import {ReducingMessageConsumer} from '@deltic/key-value/reducing-message-consumer';
+import {ReducingMessageConsumer} from './reducing-message-consumer.js';
 
 interface EventsForAutomaticRebuilds {
     topic: 'automatic-rebuilds',

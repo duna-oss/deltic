@@ -1,19 +1,15 @@
 import {ServiceDispatcher} from '@deltic/service-dispatcher';
 import {
-    ExampleAggregateRoot,
+    ExampleUsingReflectMetadata,
+    ExampleUsingHandlerMap,
+    ExampleUsingReducerMap,
+    ExampleUsingReducerFunc,
     type ExampleAggregateRootId,
     type ExampleStream,
     type Member,
 } from './example-stream.stubs.js';
 import {AggregateRepository} from '@deltic/event-sourcing';
 import {createTestTooling} from './test-tooling.js';
-
-const frank: Member = {id: '1234', name: 'Frank', age: 32};
-const renske: Member = {id: '1235', name: 'Renske', age: 29};
-const {id, given, when, whenAggregate, then, expectError, createMessage, repository, retrieveEntity, emittedEventsWithHeaders, testClock} = createTestTooling<
-    ExampleStream,
-    ExampleService
->('abcde', ExampleAggregateRoot, createService);
 
 interface ExampleService {
     add_member: {
@@ -31,32 +27,45 @@ interface ExampleService {
     },
 }
 
-function createService(context: {
-    repository: AggregateRepository<ExampleStream>,
-}) {
-    return new ServiceDispatcher<ExampleService>({
-        add_member: async (payload) => {
-            const aggregate = await context.repository.retrieve(payload.id);
+describe.each([
+    ['AggregateRootUsingReflectMetadata', ExampleUsingReflectMetadata],
+    ['ExampleUsingHandlerMap', ExampleUsingHandlerMap],
+    ['ExampleUsingReducerMap', ExampleUsingReducerMap],
+    ['ExampleUsingReducerFunc', ExampleUsingReducerFunc],
+] as const)('Example aggregate root testing for ', (_name: string, aggregate) => {
+    type AggregateType = typeof aggregate.prototype;
+    const frank: Member = {id: '1234', name: 'Frank', age: 32};
+    const renske: Member = {id: '1235', name: 'Renske', age: 29};
+    const {id, given, when, whenAggregate, then, expectError, createMessage, repository, retrieveEntity, emittedEventsWithHeaders, testClock} = createTestTooling<
+        ExampleStream<AggregateType>,
+        ExampleService
+    >('abcde', aggregate, createService);
 
-            aggregate.addMember(payload.member);
+    function createService(context: {
+        repository: AggregateRepository<ExampleStream<AggregateType>>,
+    }) {
+        return new ServiceDispatcher<ExampleService>({
+            add_member: async (payload) => {
+                const aggregate = await context.repository.retrieve(payload.id);
 
-            await context.repository.persist(aggregate);
+                aggregate.addMember(payload.member);
 
-            return payload.member.id;
-        },
-        throw_error: async (payload) => {
-            const aggregate = await context.repository.retrieve(payload.id);
-
-            try {
-                aggregate.throwAnError(new Error('what the hell'));
-            } finally {
                 await context.repository.persist(aggregate);
-            }
-        },
-    });
-}
 
-describe('Example aggregate root testing', () => {
+                return payload.member.id;
+            },
+            throw_error: async (payload) => {
+                const aggregate = await context.repository.retrieve(payload.id);
+
+                try {
+                    aggregate.throwAnError(new Error('what the hell'));
+                } finally {
+                    await context.repository.persist(aggregate);
+                }
+            },
+        });
+    }
+
     test('sets time of recording unless already in headers', async () => {
         await whenAggregate(async ({aggregateRoot}) => {
             // This command does not set the time of recording header

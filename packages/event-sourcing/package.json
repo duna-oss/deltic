@@ -16,6 +16,12 @@
       "module-sync": "./dist/aggregate-projection.js",
       "types": "./dist/aggregate-projection.d.ts"
     },
+    "./using-reflect-metadata": {
+      "import": "./dist/using-reflect-metadata.js",
+      "require": "./dist/using-reflect-metadata.cjs",
+      "module-sync": "./dist/using-reflect-metadata.js",
+      "types": "./dist/using-reflect-metadata.d.ts"
+    },
     "./snapshotting": {
       "import": "./dist/snapshotting.js",
       "require": "./dist/snapshotting.cjs",
@@ -40,15 +46,16 @@
     "directory": "packages/event-sourcing"
   },
   "dependencies": {
-    "reflect-metadata": "^0.2.2",
     "@deltic/clock": "workspace:^",
     "@deltic/messaging": "workspace:^",
     "@deltic/transaction-manager": "workspace:^"
   },
   "peerDependencies": {
+    "reflect-metadata": "^0.2.2",
     "@deltic/service-dispatcher": "workspace:^"
   },
   "devDependencies": {
+    "reflect-metadata": "^0.2.2",
     "@deltic/service-dispatcher": "workspace:^"
   },
   "peerDependenciesMeta": {

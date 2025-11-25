@@ -5,12 +5,12 @@ import {
     type AggregateStreamWithSnapshotting,
     type Snapshot,
 } from './snapshotting.js';
-import {AnyMessageFrom, AnyMessageTypeFromStream} from '@deltic/messaging';
-import {AggregateRootBehavior, EventHandler} from '@deltic/event-sourcing';
-import {createTestTooling} from '@deltic/event-sourcing/test-tooling';
+import {AnyMessageFrom} from '@deltic/messaging';
+import {createTestTooling} from './test-tooling.js';
 import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
+import {AggregateRootUsingReflectMetadata, makeEventHandler} from './using-reflect-metadata.js';
 
-const When = EventHandler<AnyMessageTypeFromStream<SnapshottingTestEvents>>;
+const When = makeEventHandler<SnapshottingTestEvents>();
 
 type TestSnapshot = {total: number};
 
@@ -26,7 +26,7 @@ interface SnapshottingTestEvents extends AggregateStreamWithSnapshotting<Snapsho
     snapshot: TestSnapshot,
 }
 
-class SnapshottedEntity extends AggregateRootBehavior<SnapshottingTestEvents> implements AggregateRootWithSnapshotting<SnapshottingTestEvents> {
+class SnapshottedEntity extends AggregateRootUsingReflectMetadata<SnapshottingTestEvents> implements AggregateRootWithSnapshotting<SnapshottingTestEvents> {
     private counter: number = 0;
 
     createSnapshot(): TestSnapshot {

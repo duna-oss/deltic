@@ -55,6 +55,7 @@ export type MessagesPerMessageType<Stream extends StreamDefinition> = {
 export type AnyMessageFrom<Stream extends StreamDefinition> = MessagesPerMessageType<Stream>[keyof MessagesPerMessageType<Stream>];
 export type AnyPayloadFromStream<Stream extends StreamDefinition> = AnyMessageFrom<Stream>['payload'];
 export type SpecificMessageFrom<Stream extends StreamDefinition, Type extends keyof MessagesPerMessageType<Stream>> = MessagesPerMessageType<Stream>[Type];
+export type SpecificPayloadFrom<Stream extends StreamDefinition, Type extends keyof Stream['messages']> = Stream['messages'][Type];
 export type MessagesFrom<Stream extends StreamDefinition> = AnyMessageFrom<Stream>[];
 
 export interface MessageConsumerFunc<Stream extends StreamDefinition> {

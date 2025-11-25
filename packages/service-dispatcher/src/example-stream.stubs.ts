@@ -1,5 +1,5 @@
 import {AnyMessageFrom} from '@deltic/messaging';
-import {AggregateRootBehavior, EventHandler} from '@deltic/event-sourcing';
+import {AggregateRootUsingReflectMetadata, makeEventHandler} from '@deltic/event-sourcing/using-reflect-metadata';
 
 export interface Member {
     readonly id: string,
@@ -29,9 +29,9 @@ export interface ExampleStream {
     },
 }
 
-const When = EventHandler<keyof ExampleStream['messages']>;
+const When = makeEventHandler<ExampleStream>();
 
-export class ExampleAggregateRoot extends AggregateRootBehavior<ExampleStream> {
+export class ExampleAggregateRoot extends AggregateRootUsingReflectMetadata<ExampleStream> {
     private members: Map<string, Member> = new Map();
     private addedCounter: number = 0;
 

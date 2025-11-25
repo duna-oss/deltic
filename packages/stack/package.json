@@ -1,0 +1,34 @@
+{
+  "name": "@deltic/stack",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Combining the deltic components into a cohesive unit",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": [
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "@deltic/clock": "workspace:^",
+    "@deltic/dependency-injection": "workspace:^",
+    "@deltic/event-sourcing": "workspace:^",
+    "@deltic/messaging": "workspace:^",
+    "@deltic/offset-tracking": "workspace:^",
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/mutex": "workspace:^"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/stack"
+  }
+}

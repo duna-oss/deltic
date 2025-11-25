@@ -1,5 +1,5 @@
 import {ReducingMessageConsumer, routeSomeToReducer} from './reducing-message-consumer.js';
-import {KeyValueStoreUsingMemory} from './memory.js';
+import {KeyValueStoreUsingMemory} from '@deltic/key-value/memory';
 import type {MessagesFrom} from '@deltic/messaging';
 import {messageFactory} from '@deltic/messaging/helpers';
 

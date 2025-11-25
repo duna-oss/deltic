@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import type {
     AdditionalMessageHeaders,
     AnyMessageFrom,
@@ -88,46 +87,18 @@ export class EventSourcedAggregateRepository<
     }
 }
 
-const eventHandlerMetadataKey = Symbol.for('deltic:event-sourcing:event-handler');
-
-type MessageType = string;
-type KeyType = string | symbol;
-export type EventHandlerMap = Map<MessageType, KeyType[]>;
-
-export const makeEventHandler = (metaKey: symbol): DecoratedHandler => <T extends MessageType>(messageType: T): MethodDecorator => {
-    return (aggregateRoot: object, key: KeyType) => {
-        const metadata: EventHandlerMap = Reflect.getMetadata(metaKey, aggregateRoot) || new Map();
-        const handlers = metadata.get(messageType) ?? [];
-        handlers.push(key);
-        metadata.set(messageType, handlers);
-        Reflect.defineMetadata(metaKey, metadata, aggregateRoot);
-    };
-};
-
-export interface DecoratedHandler {
-    <T extends MessageType>(messageType: T): MethodDecorator,
-}
-
-export const EventHandler = makeEventHandler(eventHandlerMetadataKey);
-
-export function createHandlerLookupTable(target: object, metaKey: symbol = eventHandlerMetadataKey) {
-    return Reflect.getMetadata(metaKey, target) || new Map();
-}
-
 export type AggregateRootOptions = {
     clock?: Clock,
 };
 
 export abstract class AggregateRootBehavior<Stream extends AggregateStream<Stream>> implements AggregateRoot<Stream> {
-    private readonly _clock: Clock;
+    protected readonly _clock: Clock;
     readonly aggregateRootId: Stream['aggregateRootId'];
-    private recordedMessages: MessagesFrom<Stream> = [];
+    protected recordedMessages: MessagesFrom<Stream> = [];
     protected aggregateRootVersionNumber = 0;
-    private readonly eventHandlerMethodMap: EventHandlerMap;
 
     constructor(aggregateRootId: Stream['aggregateRootId'], options: AggregateRootOptions = {}) {
         this.aggregateRootId = aggregateRootId;
-        this.eventHandlerMethodMap = createHandlerLookupTable(this);
         this.recordThat = this.recordThat.bind(this);
         this._clock = options.clock ?? GlobalClock;
     }
@@ -147,21 +118,8 @@ export abstract class AggregateRootBehavior<Stream extends AggregateStream<Strea
         this.apply(message);
     }
 
-    protected apply(message: AnyMessageFrom<Stream>): void {
-        const handlers = this.eventHandlerMethodMap.get(message.type as MessageType) ?? [];
+    protected abstract apply(message: AnyMessageFrom<Stream>): void;
 
-        this.aggregateRootVersionNumber = Number(message.headers['aggregate_root_version'] || 1);
-
-        for (const handler of handlers) {
-            (this as any)[handler](message.payload, message.headers);
-        }
-    }
-
-    /**
-     *
-     * @param messages
-     * @return {this}
-     */
     protected async applyAll(messages: AsyncGenerator<AnyMessageFrom<Stream>>): Promise<this> {
         for await (const m of messages) {
             this.apply(m);
