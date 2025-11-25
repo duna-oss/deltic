@@ -46,16 +46,10 @@ describe('AsyncPgPool', () => {
         ['pool, static transaction context', factoryWithStaticPool],
         ['pool, async transaction context', factoryWithAsyncPool],
     ] as const)('basics for %s', (_name, factory) => {
-        let provider: AsyncPgPool;
-
         beforeEach(() => {
             provider = factory({
                 freshResetQuery: 'RESET ALL',
             });
-        });
-
-        afterEach(async() => {
-
         });
 
         test('smoketest, claiming a client', async () => {
