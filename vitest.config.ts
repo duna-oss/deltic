@@ -8,8 +8,8 @@ export default defineConfig({
     resolve: {
         alias: [
             {
-                find: '@deltic/mutex/static-memory-mutex',
-                replacement: join(new URL(import.meta.url).pathname, '../packages/mutex/src/static-memory-mutex.ts'),
+                find: '@deltic/mutex/static-memory',
+                replacement: join(new URL(import.meta.url).pathname, '../packages/mutex/src/static-memory.ts'),
             },
             {
                 find: /^@\/(.*)$/,
@@ -18,15 +18,37 @@ export default defineConfig({
         ],
     },
     test: {
+        logHeapUsage: true,
         testTimeout: 10_000,
-        include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+        // include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
         globals: true,
         clearMocks: false,
         env: {
             POSTGRES_PORT: process.env.POSTGRES_PORT ?? '35432',
         },
+        projects: [
+            {
+                test: {
+                    name: 'Context',
+                    isolate: true,
+                    include: ['packages/context/src/**.test.ts'],
+                },
+                extends: true,
+            },
+            {
+                test: {
+                    name: 'Other',
+                    isolate: false,
+                    exclude: ['packages/context/src/**.test.ts'],
+                    include: ['packages/*/src/**.test.ts'],
+                },
+                extends: true,
+            },
+        ]
         // setupFiles: ['dotenv/config'],
 
+        // pool: 'threads',
+        // isolate: false,
         // profiling
         // pool: 'forks',
         // poolOptions: {

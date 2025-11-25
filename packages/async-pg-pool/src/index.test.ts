@@ -8,6 +8,7 @@ import {
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
+import {pgTestCredentials} from '../../pg-credentials.js';
 
 const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
 
@@ -28,20 +29,17 @@ describe('AsyncPgPool', () => {
     };
 
     beforeAll(async () => {
-        pool = new Pool({
-            host: 'localhost',
-            user: 'duna',
-            password: 'duna',
-            port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 5,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
-        });
+        pool = new Pool(pgTestCredentials);
     });
 
     afterAll(async () => {
         await pool.end();
+    });
+
+    afterEach(async () => {
+        if (provider) {
+            await provider.flushSharedContext();
+        }
     });
 
     describe.each([
@@ -87,19 +85,27 @@ describe('AsyncPgPool', () => {
 
             expect(provider.inTransaction()).toEqual(false);
         });
+
+        test('smoketest, using an encapsulated transaction', async () => {
+            setupContext();
+            let wasInTransaction: boolean = false;
+
+            expect(provider.inTransaction()).toEqual(false);
+
+            await provider.runInTransaction(async () => {
+                wasInTransaction = provider.inTransaction();
+            });
+
+            expect(wasInTransaction).toEqual(true);
+        });
     });
 
     describe('primary connections and flushing async context', () => {
-        let provider: AsyncPgPool;
 
         beforeEach(() => {
             provider = factoryWithStaticPool({
                 freshResetQuery: 'RESET ALL',
             });
-        });
-
-        afterEach(async () => {
-            await provider.flushSharedContext();
         });
 
         test('primary connections are re-used', async () => {

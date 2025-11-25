@@ -1,6 +1,7 @@
 # root ignores
 /.idea
 /.data
+/docs
 /packages/*/dist
 
 # ignore patterns

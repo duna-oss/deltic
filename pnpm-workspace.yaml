@@ -6,4 +6,5 @@ linkWorkspacePackages: true
 recursiveInstall: true
 
 packages:
+  - 'docs'
   - 'packages/*'
