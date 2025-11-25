@@ -28,7 +28,7 @@ export default defineConfig({
         // setupFiles: ['dotenv/config'],
 
         // pool: 'threads',
-        isolate: false,
+        // isolate: false,
         // profiling
         // pool: 'forks',
         // poolOptions: {
