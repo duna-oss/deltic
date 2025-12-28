@@ -1,6 +1,6 @@
 import type {KeyValueStore} from './index.js';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import type {TenantContextReader} from '@deltic/context';
+import type {ContextValueReader} from '@deltic/context';
 import type {IdConversion} from '@deltic/uid';
 
 export type PropertyType = string | number | boolean | null | undefined | ObjectType | Array<PropertyType>;
@@ -44,7 +44,7 @@ export class KeyValueStoreWithColumnsUsingPg<
         private readonly tableName: string,
         identityKeys: Column<Key>[],
         storedKeys: Column<Value>[],
-        private readonly tenantContext?: TenantContextReader<TenantId>,
+        private readonly tenantContext?: ContextValueReader<TenantId>,
         private readonly tenantIdConversion?: IdConversion<TenantId>,
     ) {
         this.identityColumns = identityKeys.map((key) => this.resolveColumnParameter<Key>(key));

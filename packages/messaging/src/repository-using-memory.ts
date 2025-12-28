@@ -5,7 +5,7 @@ import type {
     MessagesFrom,
     StreamDefinition,
 } from './index.js';
-import {SyncTenantContext, type TenantContextReader} from '@deltic/context';
+import {SyncTenantContext, type ContextValueReader} from '@deltic/context';
 
 import {messageWithHeaders} from './helpers.js';
 
@@ -15,7 +15,7 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
     private incrementalId: number = 0;
 
     constructor(
-        private readonly tenantContext: TenantContextReader<Stream['aggregateRootId']> = new SyncTenantContext()
+        private readonly tenantContext: ContextValueReader<Stream['aggregateRootId']> = new SyncTenantContext()
     ) {
     }
 

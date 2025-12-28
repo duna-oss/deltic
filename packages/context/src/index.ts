@@ -71,18 +71,18 @@ export class Context<C extends ContextData<C>> {
     }
 }
 
-export interface TenantContextReader<TenantId> {
+export interface ContextValueReader<TenantId> {
     resolve(): TenantId | undefined,
     mustResolve(): TenantId,
     preventCrossTenantUsage(tenantId: TenantId): void,
 }
 
-export interface TenantContextWriter<TenantId> extends TenantContextReader<TenantId> {
+export interface ContextValueWriter<TenantId> extends ContextValueReader<TenantId> {
     use(context?: TenantId): void,
     forget(): void,
 }
 
-export class SyncTenantContext<TenantId extends string | number> implements TenantContextWriter<TenantId> {
+export class SyncTenantContext<TenantId extends string | number> implements ContextValueWriter<TenantId> {
     constructor(private tenantContext?: TenantId) {
     }
 
@@ -115,7 +115,7 @@ type KeyValueToObject<Key extends string, Value extends string | number> = {
     [K in Key]: Value
 };
 
-export class TenantContext<const Key extends string, Value extends string | number> implements TenantContextWriter<Value> {
+export class TenantContext<const Key extends string, Value extends string | number> implements ContextValueWriter<Value> {
     constructor(
         private readonly context: Context<KeyValueToObject<Key, Value>>,
         private readonly key: Key,
