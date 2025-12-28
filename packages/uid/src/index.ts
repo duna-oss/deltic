@@ -18,7 +18,7 @@ export interface IdGenerator<Type extends string | number> {
     generateId(): Type;
 }
 
-export class PrefixedBrandedIdGenerator<Prefix extends string> implements PrefixedBrandedIdGenerator<Prefix> {
+export class PrefixedBrandedIdGenerator<Prefix extends string> implements IdGenerator<PrefixedId<Prefix>> {
     constructor(
         private readonly prefix: Prefix,
         private readonly factory: IdFactory<string>,
