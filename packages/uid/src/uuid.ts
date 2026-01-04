@@ -1,4 +1,4 @@
-import {type IdValidator, PrefixedBrandedIdGenerator} from './index.js';
+import {PrefixedBrandedIdGenerator} from './index.js';
 import * as uuid from 'uuid';
 
 export function uuidV7PrefixedBrandedIdGenerator<Prefix extends string>(prefix: Prefix): PrefixedBrandedIdGenerator<Prefix> {
