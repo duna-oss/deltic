@@ -46,7 +46,7 @@ class DependencyContainer {
     // Stack to track current resolution chain
     private resolutionStack = new Set<string>();
 
-    register<Service, const Key extends string = string>(key: Key, definition: ServiceDefinition<Service>): ServiceKey<Service> {
+    register<Service, const Key extends string | ServiceKey<Service> = string>(key: Key, definition: ServiceDefinition<Service>): ServiceKey<Service> {
         if (this.definitions[key] !== undefined) {
             throw new Error(`Dependency ${key} is already registered`);
         }
@@ -288,7 +288,7 @@ class DependencyContainer {
  * intentional limitation of only receiving a token when a service is registered. This
  * is an escape-hatch, proceed with caution.
  */
-export function dangerouslyForgeServiceKey<Service>(key: string): ServiceKey<Service> {
+export function forgeServiceKey<Service>(key: string): ServiceKey<Service> {
     return key as unknown as ServiceKey<Service>;
 }
 

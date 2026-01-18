@@ -1,4 +1,9 @@
-import DependencyContainer, {reflectMethods, container as exportedContainer, ServiceKey} from './index.js';
+import DependencyContainer, {
+    reflectMethods,
+    container as exportedContainer,
+    ServiceKey,
+    forgeServiceKey,
+} from './index.js';
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
@@ -398,6 +403,29 @@ describe('@deltic/dependency-injection', () => {
         );
 
         expect(segments).toHaveLength(0);
+    });
+
+    test('resolving a dependency using a forged key', () => {
+        class SomeThing {
+            constructor(
+                public readonly name: string,
+            ) {
+            }
+        }
+
+        const key = forgeServiceKey<SomeThing>('key');
+
+        expect(
+            () => container.resolve(key),
+        ).toThrow();
+
+        container.register(key, {
+            factory: () => new SomeThing('lol'),
+        });
+
+        const instance = container.resolve(key);
+
+        expect(instance).toEqual(new SomeThing('lol'));
     });
 });
 
