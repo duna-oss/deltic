@@ -1,11 +1,12 @@
-import type {AnyMessageFrom, AnyPayloadFromStream} from '../index.js';
-import {MessageRepositoryUsingPg} from './message-repository.js';
+import type {AnyMessageFrom, AnyPayloadFromStream} from './index.js';
+import {MessageRepositoryUsingPg} from './pg/message-repository.js';
 import {Pool} from 'pg';
 import * as uuid from 'uuid';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
-import {pgTestCredentials} from '../../../pg-credentials.js';
+import {pgTestCredentials} from '../../pg-credentials.js';
 import {SyncTenantContext} from '@deltic/context';
 import {collect, messageFactory} from '@deltic/messaging/helpers';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
 const firstTenantId = uuid.v7();
 const secondTenantId = uuid.v7();
 const tenantContext = new SyncTenantContext(firstTenantId);
@@ -22,42 +23,62 @@ const createMessage = messageFactory<ExampleEventStream>();
 const generateId = () => uuid.v7();
 const id = generateId();
 
-describe('MessageRepositoryUsingPg', () => {
-    let repository: MessageRepositoryUsingPg<ExampleEventStream>;
-    let pgPool: Pool;
-    let asyncPool: AsyncPgPool;
+let pgPool: Pool;
+let asyncPool: AsyncPgPool;
 
-    beforeAll(async () => {
-        pgPool = new Pool(pgTestCredentials);
+beforeAll(async () => {
+    pgPool = new Pool(pgTestCredentials);
 
-        await pgPool.query(`
-            CREATE TABLE IF NOT EXISTS test__message_repository (
-                id BIGSERIAL PRIMARY KEY,
-                tenant_id UUID,
-                aggregate_root_id UUID NOT NULL,
-                version SMALLINT NOT NULL,
-                event_type VARCHAR(255) NOT NULL,
-                payload JSON NOT NULL
-            );
-        `);
-    });
-
-    beforeEach(async () => {
-        asyncPool = new AsyncPgPool(pgPool);
-        repository = new MessageRepositoryUsingPg<ExampleEventStream>(
-            asyncPool,
-            'test__message_repository',
+    await pgPool.query(`
+        DROP TABLE IF EXISTS test__message_repository;
+        CREATE TABLE IF NOT EXISTS test__message_repository (
+            id BIGSERIAL PRIMARY KEY,
+            tenant_id UUID,
+            aggregate_root_id UUID NOT NULL,
+            version SMALLINT NOT NULL,
+            event_type VARCHAR(255) NOT NULL,
+            payload JSON NOT NULL
         );
-    });
+    `);
+});
 
-    afterAll(async () => {
-        await asyncPool.flushSharedContext();
-        await pgPool.end();
+afterAll(async () => {
+    await pgPool.end();
+});
+
+describe.each([
+    ['Pg', {
+        factory: () => {
+            asyncPool = new AsyncPgPool(pgPool);
+
+            return new MessageRepositoryUsingPg<ExampleEventStream>(
+                asyncPool,
+                'test__message_repository',
+                {
+                    tenantContext,
+                }
+            );
+        },
+        eachCleanup: async () => {
+            await asyncPool.flushSharedContext();
+            await pgPool.query('TRUNCATE TABLE test__message_repository RESTART IDENTITY');
+        },
+    }],
+    ['Memory', {
+        factory: () => new MessageRepositoryUsingMemory<ExampleEventStream>(tenantContext),
+        eachCleanup: undefined,
+    }]
+] as const)('MessageRepositoryUsing%s', (_, {factory, eachCleanup}) => {
+    let repository: ReturnType<typeof factory>;
+
+    beforeEach(() => {
+        repository = factory();
+        tenantContext.use(firstTenantId);
     });
 
     afterEach(async () => {
-        await asyncPool.flushSharedContext();
-        await pgPool.query('TRUNCATE TABLE test__message_repository RESTART IDENTITY');
+        await eachCleanup?.();
+        tenantContext.forget();
     });
 
     test('it stores and retrieves messages', async () => {
@@ -87,25 +108,25 @@ describe('MessageRepositoryUsingPg', () => {
         expect(retrievedStreamIDs).toEqual([1, 2]);
     });
 
-    test.skip('it filters out based on tenant context', async () => {
+    test('it filters out based on tenant context', async () => {
         const firstMessage: AnyMessageFrom<ExampleEventStream> = createMessage('first', 'first');
         const secondMessage: AnyMessageFrom<ExampleEventStream> = createMessage('second', 2);
+
         tenantContext.use(firstTenantId);
         await repository.persist(id, [firstMessage, secondMessage]);
-        tenantContext.use(secondTenantId);
-        const retrievedPayloads: AnyPayloadFromStream<ExampleEventStream>[] = [];
 
-        // fetch as second tenant, get nothing
-        for await (const m of repository.retrieveAllForAggregate(id)) {
-            retrievedPayloads.push(m.payload);
-        }
+        tenantContext.use(secondTenantId);
+        const retrievedPayloads: AnyPayloadFromStream<ExampleEventStream>[] = (await collect(
+            repository.retrieveAllForAggregate(id)
+        )).map(m => m.payload);
+
         expect(retrievedPayloads).toHaveLength(0);
 
         // fetch as first tenant, get the 2 messages
         tenantContext.use(firstTenantId);
-        for await (const m of repository.retrieveAllForAggregate(id)) {
-            retrievedPayloads.push(m.payload);
-        }
+        retrievedPayloads.push(...(await collect(
+            repository.retrieveAllForAggregate(id)
+        )).map(m => m.payload));
         expect(retrievedPayloads).toHaveLength(2);
     });
 

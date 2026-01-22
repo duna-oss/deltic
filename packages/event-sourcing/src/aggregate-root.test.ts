@@ -8,7 +8,7 @@ import {
     type ExampleStream,
     type Member,
 } from './example-stream.stubs.js';
-import {AggregateRepository} from '@deltic/event-sourcing';
+import type {AggregateRepository} from '@deltic/event-sourcing';
 import {createTestTooling} from './test-tooling.js';
 
 interface ExampleService {

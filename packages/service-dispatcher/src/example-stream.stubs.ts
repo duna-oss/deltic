@@ -1,4 +1,4 @@
-import {AnyMessageFrom} from '@deltic/messaging';
+import type {AnyMessageFrom} from '@deltic/messaging';
 import {AggregateRootUsingReflectMetadata, makeEventHandler} from '@deltic/event-sourcing/using-reflect-metadata';
 
 export interface Member {

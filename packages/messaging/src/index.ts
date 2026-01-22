@@ -85,6 +85,13 @@ export interface MessageDecoratorFunc<Stream extends StreamDefinition> {
 export interface AggregateIdWithStreamOffset<Stream extends StreamDefinition> {
     version: number,
     id: Stream['aggregateRootId'],
+    message: AnyMessageFrom<Stream>,
+}
+
+export interface IdPaginationOptions<Stream extends StreamDefinition> {
+    limit: number,
+    afterId?: Stream['aggregateRootId'],
+    whichMessage?: 'first' | 'last',
 }
 
 export interface MessageRepository<Stream extends StreamDefinition> {
@@ -98,5 +105,5 @@ export interface MessageRepository<Stream extends StreamDefinition> {
 
     retrieveBetweenVersions(id: Stream['aggregateRootId'], after: number, before: number): AsyncGenerator<AnyMessageFrom<Stream>>,
 
-    paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>,
+    paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>,
 }

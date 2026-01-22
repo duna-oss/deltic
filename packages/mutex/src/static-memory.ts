@@ -1,4 +1,4 @@
-import {StaticMutex} from './index.js';
+import type {StaticMutex} from './index.js';
 import {MutexUsingMemory} from './memory.js';
 
 export class StaticMutexUsingMemory implements StaticMutex {

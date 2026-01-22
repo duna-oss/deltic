@@ -1,7 +1,7 @@
 import type {Pool, PoolClient} from 'pg';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 import {AsyncLocalStorage} from 'async_hooks';
-import {StaticMutex} from '@deltic/mutex';
+import type {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
 import {IncomingMessage, ServerResponse} from 'http';
 import type {TransactionManager} from '@deltic/transaction-manager';

@@ -9,32 +9,30 @@ import type {
     StreamDefinition,
 } from '@deltic/messaging';
 import {type Clock, GlobalClock} from '@deltic/clock';
-import {TransactionManager} from '@deltic/transaction-manager';
+import type {TransactionManager} from '@deltic/transaction-manager';
 
 export interface AggregateStream<Stream extends AggregateStream<Stream>> extends StreamDefinition {
-    aggregateRoot: AggregateRoot<Stream>,
+    aggregateRoot: AggregateRoot<Stream>;
 }
 
 export interface AggregateRoot<Stream extends AggregateStream<Stream>> {
-    releaseEvents(): MessagesFrom<Stream>,
-
-    peekEvents(): MessagesFrom<Stream>,
-
-    aggregateRootVersion(): number,
-
-    readonly aggregateRootId: Stream['aggregateRootId'],
+    releaseEvents(): MessagesFrom<Stream>;
+    peekEvents(): MessagesFrom<Stream>;
+    hasUnreleasedEvents(): boolean;
+    aggregateRootVersion(): number;
+    readonly aggregateRootId: Stream['aggregateRootId'];
 }
 
 export interface AggregateRootFactory<Stream extends AggregateStream<Stream>> {
-    reconstituteFromEvents(id: Stream['aggregateRootId'], events: AsyncGenerator<AnyMessageFrom<Stream>>): Promise<Stream['aggregateRoot']>,
+    reconstituteFromEvents(id: Stream['aggregateRootId'], events: AsyncGenerator<AnyMessageFrom<Stream>>): Promise<Stream['aggregateRoot']>;
 }
 
 export interface AggregateRepository<
     Stream extends AggregateStream<Stream>,
 > {
-    retrieve(id: Stream['aggregateRootId']): Promise<Stream['aggregateRoot']>,
-    retrieveAtVersion(id: Stream['aggregateRootId'], version: number): Promise<Stream['aggregateRoot']>,
-    persist(aggregateRoot: Stream['aggregateRoot']): Promise<void>,
+    retrieve(id: Stream['aggregateRootId']): Promise<Stream['aggregateRoot']>;
+    retrieveAtVersion(id: Stream['aggregateRootId'], version: number): Promise<Stream['aggregateRoot']>;
+    persist(aggregateRoot: Stream['aggregateRoot']): Promise<void>;
 }
 
 export class EventSourcedAggregateRepository<
@@ -140,6 +138,10 @@ export abstract class AggregateRootBehavior<Stream extends AggregateStream<Strea
 
     peekEvents(): MessagesFrom<Stream> {
         return structuredClone(this.recordedMessages);
+    }
+
+    hasUnreleasedEvents(): boolean {
+        return this.recordedMessages.length !== 0;
     }
 }
 

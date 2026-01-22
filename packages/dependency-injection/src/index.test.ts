@@ -1,8 +1,8 @@
 import DependencyContainer, {
     reflectMethods,
     container as exportedContainer,
-    ServiceKey,
     forgeServiceKey,
+    type ServiceKey,
 } from './index.js';
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';

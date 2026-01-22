@@ -1,5 +1,5 @@
 import {type DynamicMutex, type LockValue, UnableToAcquireLock, UnableToReleaseLock} from '@deltic/mutex';
-import {AsyncPgPool, Connection} from '@deltic/async-pg-pool';
+import {AsyncPgPool, type Connection} from '@deltic/async-pg-pool';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {MultiMutex} from '@deltic/mutex/multi';
 import {MutexUsingMemory} from '@deltic/mutex/memory';

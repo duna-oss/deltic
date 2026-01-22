@@ -1,7 +1,7 @@
 import {type Clock, SystemClock} from '@deltic/clock';
 import type {AnyMessageFrom, MessagesFrom, StreamDefinition} from '@deltic/messaging';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import {OUTBOX_ID_HEADER_KEY, OUTBOX_TABLE_HEADER_KEY, OutboxRepository} from '@deltic/messaging/outbox';
+import {OUTBOX_ID_HEADER_KEY, OUTBOX_TABLE_HEADER_KEY, type OutboxRepository} from '@deltic/messaging/outbox';
 import {messageWithHeaders} from '@deltic/messaging/helpers';
 
 interface ThrottledOutboxRecord<Stream extends StreamDefinition> {

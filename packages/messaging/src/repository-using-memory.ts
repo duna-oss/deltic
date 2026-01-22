@@ -1,6 +1,6 @@
 import type {
     AggregateIdWithStreamOffset,
-    AnyMessageFrom,
+    AnyMessageFrom, IdPaginationOptions,
     MessageRepository,
     MessagesFrom,
     StreamDefinition,
@@ -70,7 +70,8 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
         }
     }
 
-    async* paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+    async* paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+        const {limit, afterId, whichMessage = 'last'} = options;
         let left = limit;
         let shouldYield = afterId === undefined;
         const collected = new Set<Stream['aggregateRootId']>();
@@ -93,9 +94,13 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
                     continue;
                 }
 
-                const versions = messages.map(message => Number(message.headers['aggregate_root_version'] ?? 0));
+                const message = messages.at(whichMessage === 'first' ? 0 : -1)!;
 
-                yield {id: aggregateId, version: Math.max(...versions)};
+                yield {
+                    id: aggregateId,
+                    version: message.headers['aggregate_root_version'] ?? 0,
+                    message,
+                };
                 left--;
 
                 if (left === 0) {

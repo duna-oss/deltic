@@ -7,7 +7,7 @@ import {
     type Member,
 } from './example-stream.stubs.js';
 import {createTestTooling} from '@deltic/event-sourcing/test-tooling';
-import {AggregateRepository} from '@deltic/event-sourcing';
+import type {AggregateRepository} from '@deltic/event-sourcing';
 
 interface ExampleCommand {
     id: ExampleAggregateRootId,

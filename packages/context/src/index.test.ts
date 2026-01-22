@@ -1,5 +1,6 @@
 import {
-    Context, ContextStore,
+    Context,
+    type ContextStore,
     CrossTenantOperationDetected, StaticContextStore, TenantContext, UnableToResolveTenantContext,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';

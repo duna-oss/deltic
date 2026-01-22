@@ -1,6 +1,6 @@
-import {Service, ServiceStructure} from '@deltic/service-dispatcher';
-import {DynamicMutex, LockValue} from '@deltic/mutex';
-import {defaultLockTimeoutMs, LockIDResolver, LockSkipDetector, ServiceLockingOptions} from './shared-for-locking.js';
+import type {Service, ServiceStructure} from '@deltic/service-dispatcher';
+import type {DynamicMutex, LockValue} from '@deltic/mutex';
+import {defaultLockTimeoutMs, type LockIDResolver, type LockSkipDetector, type ServiceLockingOptions} from './shared-for-locking.js';
 
 export * from './shared-for-locking.js';
 

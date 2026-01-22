@@ -8,6 +8,7 @@
     "dist"
   ],
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

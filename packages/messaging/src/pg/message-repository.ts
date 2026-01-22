@@ -1,6 +1,6 @@
 import type {
     AggregateIdWithStreamOffset,
-    AnyMessageFrom,
+    AnyMessageFrom, IdPaginationOptions,
     MessageRepository,
     MessagesFrom,
     StreamDefinition,
@@ -70,10 +70,9 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
          * For tenant-scoped tables: tenant_id, aggregate_root_id, version ASC
          * For tenant-less tables: aggregate_root_id, version ASC
          */
-
         if (tenantId !== undefined) {
             values.push(this.tenantIdConversion?.toDatabase(tenantId) ?? tenantId);
-            whereClauses.push(`version > $${values.length}`);
+            whereClauses.push(`tenant_id = $${values.length}`);
         }
 
         values.push(this.idConversion?.toDatabase(id) ?? id);
@@ -113,17 +112,19 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
         const values: any[] = [this.idConversion?.toDatabase(id) ?? id];
         const tenantId = this.tenantContext?.mustResolve();
         let tenantIdColumn = '';
+        let globalReferences = '$1, ';
+        let index: number = 1;
+        const references: string[] = [];
 
         if (tenantId !== undefined) {
             tenantIdColumn = 'tenant_id, ';
+            globalReferences = '$1, $2, ';
+            index++;
             values.push(this.tenantIdConversion?.toDatabase(tenantId) ?? tenantId);
         }
 
-        const references: string[] = [];
-        let index: number = 1;
-
         for (const message of messages) {
-            references.push(`$1, $${++index}, $${++index}, $${++index}`);
+            references.push(`${globalReferences}$${++index}, $${++index}, $${++index}`);
             values.push(message.headers.aggregate_root_version ?? 0, message.type, message);
         }
 
@@ -176,7 +177,8 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
         return this.retrieveBetweenVersions(id, 0, 0);
     }
 
-    async* paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+    async* paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+        const {limit, afterId, whichMessage = 'last'} = options;
         const connection = await this.pool.primary();
 
         const values: any[] = [limit];
@@ -187,16 +189,20 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
             whereClause = 'WHERE aggregate_root_id > $1';
         }
 
-        const {rows} = await connection.query(`
-            SELECT DISTINCT ON (aggregate_root_id) aggregate_root_id, version FROM ${this.tableName} ${whereClause}
-            ORDER BY aggregate_root_id, version DESC
+        const {rows} = await connection.query<MessageRecord<Stream>>(`
+            SELECT DISTINCT ON (aggregate_root_id) aggregate_root_id, payload, version FROM ${this.tableName} ${whereClause}
+            ORDER BY aggregate_root_id, version ${whichMessage === 'last' ? 'DESC' : 'ASC'}
             LIMIT $${values.length}
         `, values);
 
-        for (const result of rows) {
+        for (const row of rows) {
             yield {
-                id: this.idConversion?.fromDatabase(result.aggregate_root_id) ?? result.aggregate_root_id as Stream['aggregateRootId'],
-                version: Number(result.version),
+                id: this.idConversion?.fromDatabase(row.aggregate_root_id) ?? row.aggregate_root_id as Stream['aggregateRootId'],
+                version: Number(row.version),
+                message: messageWithHeader(row.payload, {
+                    key: 'stream_offset',
+                    value: row.id,
+                }),
             };
         }
     }

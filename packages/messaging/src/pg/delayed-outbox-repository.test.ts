@@ -4,7 +4,7 @@ import {collect, messageFactory} from '@deltic/messaging/helpers';
 import {Pool} from 'pg';
 import {pgTestCredentials} from '../../../pg-credentials.js';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
-import {AnyMessageFrom} from '@deltic/messaging';
+import type {AnyMessageFrom} from '@deltic/messaging';
 import {LinearBackoffStrategy} from '@deltic/backoff/linear';
 import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-dispatcher';
 import {OutboxMessageDispatcher, OutboxRelay} from '@deltic/messaging/outbox';

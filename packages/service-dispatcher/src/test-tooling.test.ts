@@ -1,5 +1,5 @@
-import {AnyStagedResponse, errorForMissingMockedResponseForInput, MockedService} from './test-tooling.js';
-import {AnyInputForService} from './index.js';
+import {type AnyStagedResponse, errorForMissingMockedResponseForInput, MockedService} from './test-tooling.js';
+import type {AnyInputForService} from './index.js';
 
 interface MockedServiceDefinition {
     ping: {

@@ -1,6 +1,6 @@
 import type {
     AggregateIdWithStreamOffset,
-    AnyMessageFrom,
+    AnyMessageFrom, IdPaginationOptions,
     Message,
     MessageConsumer,
     MessageDecorator,
@@ -137,8 +137,8 @@ export class UpcastingMessageRepository<Stream extends VersionedStreamDefinition
     ) {
     }
 
-    paginateIds(limit: number, afterId?: Stream['aggregateRootId']): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
-        return this.repository.paginateIds(limit, afterId);
+    paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+        return this.repository.paginateIds(options);
     }
 
     persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void> {

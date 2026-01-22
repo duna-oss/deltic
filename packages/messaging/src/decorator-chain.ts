@@ -1,4 +1,4 @@
-import {type MessageDecorator, MessagesFrom, StreamDefinition} from './index.js';
+import type {MessageDecorator, MessagesFrom, StreamDefinition} from './index.js';
 
 export class MessageDecoratorChain<Stream extends StreamDefinition> implements MessageDecorator<Stream> {
     constructor(private readonly decorators: MessageDecorator<Stream>[]) {

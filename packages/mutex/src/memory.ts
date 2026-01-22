@@ -1,4 +1,4 @@
-import {DynamicMutex, LockValue, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
+import {type DynamicMutex, type LockValue, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 
 interface LockWaiter {
     done: boolean;

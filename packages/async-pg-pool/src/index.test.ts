@@ -1,10 +1,10 @@
 import {Pool} from 'pg';
 import {
     AsyncPgPool,
-    AsyncPgPoolOptions,
     AsyncPgTransactionContextProvider,
-    Connection,
-    TransactionContext,
+    type AsyncPgPoolOptions,
+    type Connection,
+    type TransactionContext,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';

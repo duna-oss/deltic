@@ -1,4 +1,4 @@
-import {AnyMessageFrom} from '@deltic/messaging';
+import type {AnyMessageFrom} from '@deltic/messaging';
 import {AggregateRootUsingReflectMetadata, makeEventHandler} from './using-reflect-metadata.js';
 import {AggregateRootUsingHandlerMap, type HandlerMap} from './using-handler-map.js';
 import type {AggregateRoot} from './index.js';

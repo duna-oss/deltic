@@ -1,5 +1,5 @@
 import type {MessageDecorator, MessagesFrom, StreamDefinition} from './index.js';
-import {ContextValueReader} from '@deltic/context';
+import type {ContextValueReader} from '@deltic/context';
 import {messageWithHeader} from './helpers.js';
 
 export class TenantIdMessageDecorator<Stream extends StreamDefinition, TenantId extends string | number = string | number> implements MessageDecorator<Stream> {

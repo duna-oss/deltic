@@ -1,5 +1,5 @@
 import {setTimeout} from 'node:timers/promises';
-import {DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
+import {type DynamicMutex, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 import {Pool} from 'pg';
 
 import {makePostgresMutex, MutexUsingPostgres} from './pg.js';

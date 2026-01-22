@@ -103,10 +103,10 @@ export class OutboxRepositoryUsingMemory<Stream extends StreamDefinition> implem
     }
 
     async markConsumed(messages: MessagesFrom<Stream>): Promise<void> {
-        const ids = messages.map(m => m.headers[OUTBOX_ID_HEADER_KEY]);
+        const ids = new Set(messages.map(m => m.headers[OUTBOX_ID_HEADER_KEY]));
 
         this.messages = this.messages.map(
-            m => ids.includes(m.headers[OUTBOX_ID_HEADER_KEY])
+            m => ids.has(m.headers[OUTBOX_ID_HEADER_KEY])
                 ? messageWithHeader(m, {key: OUTBOX_CONSUMED_HEADER_KEY, value: 'yes'})
                 : m,
         );

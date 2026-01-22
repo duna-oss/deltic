@@ -1,7 +1,7 @@
 import {createTestClock, secondsToMilliseconds, type TestClock} from '@deltic/clock';
 import {ThrottledOutboxRepositoryUsingPg} from './throttled-outbox-repository.js';
 import {collect, messageFactory, withoutHeaders} from '@deltic/messaging/helpers';
-import {OutboxMessageDispatcher, OutboxRepository, OutboxRelay} from '@deltic/messaging/outbox';
+import {OutboxMessageDispatcher, OutboxRelay, type OutboxRepository} from '@deltic/messaging/outbox';
 import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-dispatcher';
 import {NotifyingOutboxDecoratorUsingPg} from './notifying-outbox-decorator.js';
 import {Pool} from 'pg';

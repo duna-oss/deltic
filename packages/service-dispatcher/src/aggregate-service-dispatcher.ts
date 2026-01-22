@@ -32,7 +32,7 @@ export class AggregateServiceDispatcher<
         try {
             return await (handler)(aggregate as any, payload);
         } finally {
-            if (aggregate.peekEvents().length > 0) {
+            if (aggregate.hasUnreleasedEvents()) {
                 await this.repository.persist(aggregate);
             }
         }

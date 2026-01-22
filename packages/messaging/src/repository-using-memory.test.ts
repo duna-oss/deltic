@@ -1,7 +1,7 @@
 import {MessageRepositoryUsingMemory} from './repository-using-memory.js';
 import type {AnyMessageFrom, MessagesFrom} from './index.js';
 import {SyncTenantContext} from '@deltic/context';
-import {createMessage} from './helpers.js';
+import {collect, createMessage} from './helpers.js';
 
 enum ExampleTypes {
     First = 'first',
@@ -51,15 +51,6 @@ describe('InMemoryMessageRepository', () => {
         }
 
         // Assert
-        expect(retrievedMessages).toHaveLength(0);
-    });
-
-    test('it retrieves nothing when nothing is stored', async () => {
-        const repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
-        const retrievedMessages: AnyMessageFrom<ExampleEventStream>[] = [];
-        for await (const m of repository.retrieveAllForAggregate('this')) {
-            retrievedMessages.push(m);
-        }
         expect(retrievedMessages).toHaveLength(0);
     });
 
@@ -152,34 +143,48 @@ describe('InMemoryMessageRepository', () => {
         expect(retrievedPayloads[2]).toEqual(thirdMessage.payload);
     });
 
-    test('it can paginate over ids', async () => {
-        const repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
-        let id = 0;
-        const ids = Array(10).fill(0).map(() => String(++id) as ExampleEventStream['aggregateRootId']);
-        const inserts: [ExampleEventStream['aggregateRootId'], MessagesFrom<ExampleEventStream>][] = ids.map(id => {
-            let index = 0;
-            const make = () => createMessage<ExampleEventStream>(ExampleTypes.First, 'first', {
-                aggregate_root_version: ++index,
-                aggregate_root_id: id,
+    describe('ID pagination', () => {
+        let repository: MessageRepositoryUsingMemory<ExampleEventStream>;
+        let ids: string[];
+
+        beforeEach(async () => {
+            repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
+            let id = 0;
+            ids = Array(10).fill(0).map(() => String(++id) as ExampleEventStream['aggregateRootId']);
+            const inserts: [ExampleEventStream['aggregateRootId'], MessagesFrom<ExampleEventStream>][] = ids.map(id => {
+                let index = 0;
+                const make = () => createMessage<ExampleEventStream>(ExampleTypes.First, 'first', {
+                    aggregate_root_version: ++index,
+                    aggregate_root_id: id,
+                });
+
+                return [id, [make(), make(), make()]];
             });
-
-            return [id, [make(), make(), make()]];
+            for (const [id, messages] of inserts) {
+                await repository.persist(id, messages);
+            }
         });
-        for (const [id, messages] of inserts) {
-            await repository.persist(id, messages);
-        }
 
-        const paginated = repository.paginateIds(5, '2');
-        const collected: string[] = [];
-        let lastVersion = 0;
+        test('it can paginate over ids', async () => {
+            const paginated = repository.paginateIds({limit: 5, afterId: '2', whichMessage: 'last'});
+            const messages = await collect(paginated);
+            const collected: string[] = messages.map(m => m.id);
+            const lastVersion = messages.map(m => m.version).at(-1);
 
-        for await (const {id, version} of paginated) {
-            lastVersion = version;
-            collected.push(id);
-        }
+            expect(lastVersion).toEqual(3);
+            expect(collected.length).toEqual(5);
+            expect(collected).toEqual(ids.slice(2, 7));
+        });
 
-        expect(lastVersion).toEqual(3);
-        expect(collected.length).toEqual(5);
-        expect(collected).toEqual(ids.slice(2, 7));
+        test('it can paginate over ids, and get the first message', async () => {
+            const paginated = repository.paginateIds({limit: 5, afterId: '2', whichMessage: 'first'});
+            const messages = await collect(paginated);
+            const collected: string[] = messages.map(m => m.id);
+            const lastVersion = messages.map(m => m.version).at(-1);
+
+            expect(lastVersion).toEqual(1);
+            expect(collected.length).toEqual(5);
+            expect(collected).toEqual(ids.slice(2, 7));
+        });
     });
 });

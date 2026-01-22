@@ -5,7 +5,7 @@ import {
     type AggregateStreamWithSnapshotting,
     type Snapshot,
 } from './snapshotting.js';
-import {AnyMessageFrom} from '@deltic/messaging';
+import type {AnyMessageFrom} from '@deltic/messaging';
 import {createTestTooling} from './test-tooling.js';
 import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
 import {AggregateRootUsingReflectMetadata, makeEventHandler} from './using-reflect-metadata.js';

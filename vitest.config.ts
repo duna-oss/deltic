@@ -31,7 +31,7 @@ export default defineConfig({
                 test: {
                     name: 'Context',
                     isolate: true,
-                    include: ['packages/context/src/**.test.ts'],
+                    include: ['packages/context/src/**/*.test.ts'],
                 },
                 extends: true,
             },
@@ -39,8 +39,8 @@ export default defineConfig({
                 test: {
                     name: 'Other',
                     isolate: false,
-                    exclude: ['packages/context/src/**.test.ts'],
-                    include: ['packages/*/src/**.test.ts'],
+                    exclude: ['packages/context/src/**/*.test.ts'],
+                    include: ['packages/*/src/**/*.test.ts'],
                 },
                 extends: true,
             },

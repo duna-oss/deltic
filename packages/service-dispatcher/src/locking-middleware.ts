@@ -1,5 +1,5 @@
-import {NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
-import {DynamicMutex, LockValue} from '@deltic/mutex';
+import type {NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
+import type {DynamicMutex, LockValue} from '@deltic/mutex';
 import type {LockIDResolver, LockSkipDetector} from './shared-for-locking.js';
 
 export * from './shared-for-locking.js';

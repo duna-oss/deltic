@@ -1,4 +1,4 @@
-import {type ProcessQueue, ProcessQueueDefaults, ProcessQueueOptions} from './api.js';
+import {type ProcessQueue, ProcessQueueDefaults, type ProcessQueueOptions} from './api.js';
 import {type ProcessStackItem} from './internals.js';
 import {WaitGroup} from '@deltic/wait-group';
 
