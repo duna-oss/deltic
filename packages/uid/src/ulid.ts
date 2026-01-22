@@ -19,9 +19,3 @@ export class UlidToUuidIdConversion implements IdConversion<ULID, UUID> {
 }
 
 export const isValidUlid: IdValidator<ULID> = isValid as IdValidator<ULID>;
-
-const lol: string = 'random';
-
-if (isValidUlid(lol)) {
-    lol
-}

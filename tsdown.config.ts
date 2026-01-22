@@ -32,18 +32,16 @@ await Promise.all(packageDirectories.map(async name => {
     sources[name] = sourceFiles.map(file => `packages/${name}/${file}`);
 }));
 
-export default [
-    ...packageDirectories.map(dirname => {
-        return defineConfig({
-            dts: true,
-            format: ['esm', 'cjs'],
-            external: [/^@deltic\//],
-            alias: aliases,
-            skipNodeModulesBundle: true,
-            entry: sources[dirname] ?? [],
-            outDir: resolve(import.meta.dirname, `packages/${dirname}/dist`),
-            platform: 'node',
-            unbundle: true,
-        });
-    }),
-];
+export default packageDirectories.map(dirname => {
+    return defineConfig({
+        dts: true,
+        format: ['esm', 'cjs'],
+        external: [/^@deltic\//],
+        alias: aliases,
+        skipNodeModulesBundle: true,
+        entry: sources[dirname] ?? [],
+        outDir: resolve(import.meta.dirname, `packages/${dirname}/dist`),
+        platform: 'node',
+        unbundle: true,
+    });
+});

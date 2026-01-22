@@ -71,7 +71,7 @@ export type DefineVersionedStream<Stream extends VersionedStreamStructure> =
 
 interface VersionedStreamDefinition<Stream extends VersionedStreamDefinition<Stream>> extends StreamDefinition {
     upcasters: {
-        [index: string]: [any, any, ...any[]];
+        [K in keyof Stream['upcasters']]: [any, any, ...any[]];
     };
 }
 
