@@ -25,10 +25,10 @@ export interface Connection extends Omit<PoolClient, 'release'> {
 }
 
 export interface TransactionContext {
-    exclusiveAccess: StaticMutex,
-    sharedTransaction?: Connection | undefined,
-    primaryConnection?: Connection | undefined,
-    free: Array<[Connection, undefined | ReturnType<typeof setTimeout>]>,
+    exclusiveAccess: StaticMutex;
+    sharedTransaction?: Connection | undefined;
+    primaryConnection?: Connection | undefined;
+    free: Array<[Connection, undefined | ReturnType<typeof setTimeout>]>;
 }
 
 export interface TransactionContextProvider {
@@ -52,8 +52,7 @@ export class StaticPgTransactionContextProvider implements TransactionContextPro
 export class AsyncPgTransactionContextProvider implements TransactionContextProvider {
     constructor(
         private readonly store: AsyncLocalStorage<TransactionContext> = new AsyncLocalStorage<TransactionContext>(),
-    ) {
-    }
+    ) {}
 
     resolve(): TransactionContext {
         const context = this.store.getStore();
@@ -66,25 +65,28 @@ export class AsyncPgTransactionContextProvider implements TransactionContextProv
     }
 
     run<R>(callback: () => R): R {
-        return this.store.run({
-            exclusiveAccess: new StaticMutexUsingMemory(),
-            sharedTransaction: undefined,
-            primaryConnection: undefined,
-            free: [],
-        }, callback);
+        return this.store.run(
+            {
+                exclusiveAccess: new StaticMutexUsingMemory(),
+                sharedTransaction: undefined,
+                primaryConnection: undefined,
+                free: [],
+            },
+            callback,
+        );
     }
 }
 
 export type OnReleaseCallback = (client: Connection, err?: unknown) => Promise<any> | any;
 
 export interface AsyncPgPoolOptions {
-    keepConnections?: number,
-    maxIdleMs?: number,
-    onClaim?: (client: Connection) => Promise<any> | any,
-    onRelease?: OnReleaseCallback | string,
-    releaseHookOnError?: boolean,
-    freshResetQuery?: string,
-    beginQuery?: string,
+    keepConnections?: number;
+    maxIdleMs?: number;
+    onClaim?: (client: Connection) => Promise<any> | any;
+    onRelease?: OnReleaseCallback | string;
+    releaseHookOnError?: boolean;
+    freshResetQuery?: string;
+    beginQuery?: string;
 }
 
 export class AsyncPgPool {
@@ -103,9 +105,7 @@ export class AsyncPgPool {
         this.maxIdleMs = options.maxIdleMs ?? 1000;
         this.freshResetQuery = options.freshResetQuery;
         const onRelease = options.onRelease;
-        this.onRelease = typeof onRelease === 'string'
-            ? (client: Connection) => client.query(onRelease)
-            : onRelease;
+        this.onRelease = typeof onRelease === 'string' ? (client: Connection) => client.query(onRelease) : onRelease;
         this.beginQuery = options.beginQuery ?? 'BEGIN';
     }
 
@@ -126,7 +126,7 @@ export class AsyncPgPool {
                 return primaryConnection;
             }
 
-            return context.primaryConnection = await this.claim();
+            return (context.primaryConnection = await this.claim());
         } finally {
             await context.exclusiveAccess.unlock();
         }
@@ -187,10 +187,12 @@ export class AsyncPgPool {
         await context.exclusiveAccess.lock();
 
         try {
-            await Promise.all(context.free.map(([connection, timeout]) => {
-                clearTimeout(timeout);
-                this.doRelease(connection);
-            }));
+            await Promise.all(
+                context.free.map(([connection, timeout]) => {
+                    clearTimeout(timeout);
+                    this.doRelease(connection);
+                }),
+            );
             context.free.length = 0;
 
             if (context.primaryConnection) {
@@ -199,7 +201,9 @@ export class AsyncPgPool {
             }
 
             if (context.sharedTransaction) {
-                throw new Error('Expected not the have a transaction, but one was found. Forgot to call commit or rollback?');
+                throw new Error(
+                    'Expected not the have a transaction, but one was found. Forgot to call commit or rollback?',
+                );
             }
         } finally {
             await context.exclusiveAccess.unlock();
@@ -220,7 +224,7 @@ export class AsyncPgPool {
     }
 
     private async claimFromPool(): Promise<Connection> {
-        const client = await this.pool.connect() as unknown as Connection;
+        const client = (await this.pool.connect()) as unknown as Connection;
         const onClaim = this.options.onClaim;
 
         if (onClaim) {
@@ -280,7 +284,6 @@ export class AsyncPgPool {
         const context = this.context.resolve();
         await context.exclusiveAccess.lock();
 
-
         if (context.sharedTransaction) {
             await context.exclusiveAccess.unlock();
             throw new Error('Cannot begin transaction when already inside one');
@@ -289,7 +292,7 @@ export class AsyncPgPool {
         let client: Connection;
 
         try {
-            client = context.primaryConnection ?? await this.claim();
+            client = context.primaryConnection ?? (await this.claim());
         } catch (e) {
             await context.exclusiveAccess.unlock();
             throw e;
@@ -298,7 +301,7 @@ export class AsyncPgPool {
         try {
             await client.query(query);
 
-            return context.sharedTransaction = client;
+            return (context.sharedTransaction = client);
         } catch (e) {
             await this.doRelease(client, e);
             throw e;
@@ -315,7 +318,11 @@ export class AsyncPgPool {
         return this.finalizeTransaction('ROLLBACK', client, error);
     }
 
-    private async finalizeTransaction(command: 'ROLLBACK' | 'COMMIT', client: Connection, error?: unknown): Promise<void> {
+    private async finalizeTransaction(
+        command: 'ROLLBACK' | 'COMMIT',
+        client: Connection,
+        error?: unknown,
+    ): Promise<void> {
         const context = this.context.resolve();
 
         if (context.sharedTransaction !== client) {
@@ -341,16 +348,17 @@ export class AsyncPgPool {
         }
 
         if (err === undefined && this.keepConnections > context.free.length) {
-            const timeout = this.maxIdleMs === undefined
-                ? undefined
-                : setTimeout(() => {
-                    const context = this.context.resolve();
-                    const index = context.free.findIndex(([c]) => c === connection);
+            const timeout =
+                this.maxIdleMs === undefined
+                    ? undefined
+                    : setTimeout(() => {
+                          const context = this.context.resolve();
+                          const index = context.free.findIndex(([c]) => c === connection);
 
-                    if (index >= 0) {
-                        context.free.splice(index, 1);
-                    }
-                }, this.maxIdleMs);
+                          if (index >= 0) {
+                              context.free.splice(index, 1);
+                          }
+                      }, this.maxIdleMs);
             context.free.push([connection, timeout]);
         } else {
             return this.doRelease(connection, err);
@@ -365,9 +373,7 @@ export class AsyncPgPool {
                 await onRelease(connection, err);
             } catch (onReleaseError) {
                 ((connection as any)[originalRelease] as PoolClient['release'])(
-                    onReleaseError instanceof Error
-                        ? onReleaseError
-                        : new Error(String(onReleaseError))
+                    onReleaseError instanceof Error ? onReleaseError : new Error(String(onReleaseError)),
                 );
 
                 throw UnableToReleaseConnection.because(onReleaseError);
@@ -375,47 +381,43 @@ export class AsyncPgPool {
         }
 
         ((connection as any)[originalRelease] as PoolClient['release'])(
-            err === undefined
-                ? err
-                : err instanceof Error
-                    ? err
-                    : new Error(String(err)),
+            err === undefined ? err : err instanceof Error ? err : new Error(String(err)),
         );
     }
 }
 
 class UnableToClaimConnection extends StandardError {
-    static because = (err: unknown) => new UnableToClaimConnection(
-        `Unable to claim connection: ${errorToMessage(err)}`,
-        'async-pg-pool.unable_to_claim_connection',
-        {},
-        err,
-    );
+    static because = (err: unknown) =>
+        new UnableToClaimConnection(
+            `Unable to claim connection: ${errorToMessage(err)}`,
+            'async-pg-pool.unable_to_claim_connection',
+            {},
+            err,
+        );
 }
 
 class UnableToReleaseConnection extends StandardError {
-    static because = (err: unknown) => new UnableToReleaseConnection(
-        `Unable to release connection: ${errorToMessage(err)}`,
-        'async-pg-pool.unable_to_release_connection',
-        {},
-        err,
-    );
+    static because = (err: unknown) =>
+        new UnableToReleaseConnection(
+            `Unable to release connection: ${errorToMessage(err)}`,
+            'async-pg-pool.unable_to_release_connection',
+            {},
+            err,
+        );
 }
 
 class UnableToProvideActiveTransaction extends StandardError {
-    static noTransactionWasActive = (err?: unknown) => new UnableToReleaseConnection(
-        `Unable to release connection: ${errorToMessage(err)}`,
-        'async-pg-pool.no_active_transaction_availble',
-        {},
-        err,
-    );
+    static noTransactionWasActive = (err?: unknown) =>
+        new UnableToReleaseConnection(
+            `Unable to release connection: ${errorToMessage(err)}`,
+            'async-pg-pool.no_active_transaction_availble',
+            {},
+            err,
+        );
 }
 
 export class TransactionManagerUsingPg implements TransactionManager {
-    constructor(
-        private readonly pool: AsyncPgPool,
-    ) {
-    }
+    constructor(private readonly pool: AsyncPgPool) {}
 
     rollback(error?: unknown): Promise<void> {
         return this.pool.rollback(this.pool.withTransaction(), error);
@@ -436,6 +438,4 @@ export class TransactionManagerUsingPg implements TransactionManager {
     runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
         return this.pool.runInTransaction(fn);
     }
-
 }
-

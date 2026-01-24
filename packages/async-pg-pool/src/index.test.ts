@@ -19,13 +19,7 @@ describe('AsyncPgPool', () => {
     let provider: AsyncPgPool;
     const factoryWithStaticPool = (options: AsyncPgPoolOptions = {}) => new AsyncPgPool(pool, options);
     const factoryWithAsyncPool = (options: AsyncPgPoolOptions = {}) => {
-        return new AsyncPgPool(
-            pool,
-            options,
-            new AsyncPgTransactionContextProvider(
-                asyncLocalStorage,
-            ),
-        );
+        return new AsyncPgPool(pool, options, new AsyncPgTransactionContextProvider(asyncLocalStorage));
     };
 
     beforeAll(async () => {
@@ -101,7 +95,6 @@ describe('AsyncPgPool', () => {
     });
 
     describe('primary connections and flushing async context', () => {
-
         beforeEach(() => {
             provider = factoryWithStaticPool({
                 freshResetQuery: 'RESET ALL',
@@ -116,7 +109,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.primary();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
 
             expect(result.rows[0].value).toEqual('something');
         });
@@ -129,7 +122,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.claim();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
             await provider.release(connection);
 
             expect(result.rows[0].value).toEqual('something');
@@ -143,7 +136,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.claimFresh();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
             await provider.release(connection);
 
             expect(result.rows[0].value).toEqual('');
@@ -157,7 +150,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             const transaction = await provider.begin();
-            const result = await transaction.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await transaction.query("SELECT current_setting('app.custom_value') as value");
             await provider.rollback(transaction);
 
             expect(result.rows[0].value).toEqual('something');
@@ -172,9 +165,7 @@ describe('AsyncPgPool', () => {
         });
     });
 
-    describe.each([
-        ['pool', factoryWithStaticPool],
-    ] as const)('transactional behaviour using %s', (name, factory) => {
+    describe.each([['pool', factoryWithStaticPool]] as const)('transactional behaviour using %s', (name, factory) => {
         const tableName = `transactions_test_for_${name.toLowerCase().replace(/ /g, '_')}`;
 
         beforeAll(async () => {
@@ -205,18 +196,15 @@ describe('AsyncPgPool', () => {
     test('being able to set a setting for a connection', async () => {
         let index = 0;
         let usedConnection: Connection | undefined = undefined;
-        const provider = new AsyncPgPool(
-            pool,
-            {
-                keepConnections: 0,
-                onRelease: 'RESET app.tenant_id',
-                onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
-            },
-        );
+        const provider = new AsyncPgPool(pool, {
+            keepConnections: 0,
+            onRelease: 'RESET app.tenant_id',
+            onClaim: (client) => client.query(`SET app.tenant_id = '${++index}'`),
+        });
 
         async function fetchTenantId() {
             await using connection = await provider.claim();
-            const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+            const result = await connection.query("SELECT current_setting('app.tenant_id') as num");
             usedConnection = connection;
 
             return Number(result.rows[0].num);
@@ -225,12 +213,11 @@ describe('AsyncPgPool', () => {
         expect(await fetchTenantId()).toEqual(1);
         expect(await fetchTenantId()).toEqual(2);
 
-
         // Verify the tenant ID does not leak when the connection is
         const connection = await pool.connect();
         // Strict equal check to ensure the connection was the same as used before.
         expect(usedConnection).toStrictEqual(connection);
-        const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+        const result = await connection.query("SELECT current_setting('app.tenant_id') as num");
         connection.release();
 
         expect(result.rows[0].num).toEqual('');
@@ -238,17 +225,14 @@ describe('AsyncPgPool', () => {
 
     test('using async dispose to close a connection', async () => {
         let released = false;
-        const provider = new AsyncPgPool(
-            pool,
-            {
-                onRelease: () => {
-                    released = true;
-                },
+        const provider = new AsyncPgPool(pool, {
+            onRelease: () => {
+                released = true;
             },
-        );
+        });
 
         await (async () => {
-                await using connection = await provider.claim();
+            await using connection = await provider.claim();
 
             const result = await connection.query('SELECT 1 as num');
             expect(result.rowCount).toEqual(1);
