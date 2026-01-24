@@ -3,24 +3,21 @@ import {StandardError} from '@deltic/error-standard';
 export type ContextValue = null | object | undefined | string | number | boolean | ContextValue[] | ContextObject;
 
 export type ContextObject = {
-    [index: string | number]: ContextValue,
+    [index: string | number]: ContextValue;
 };
 
 export type ContextData<C> = {
-    [K in keyof C]: C[K]
+    [K in keyof C]: C[K];
 };
 
 export interface ContextStore<C extends ContextData<C>> {
-    getStore(): Partial<C> | undefined,
-    enterWith(store: Partial<C>): void,
-    run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R>,
+    getStore(): Partial<C> | undefined;
+    enterWith(store: Partial<C>): void;
+    run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R>;
 }
 
 export class StaticContextStore<C extends ContextData<C>> implements ContextStore<C> {
-    constructor(
-        private context: Partial<C> = {}
-    ) {
-    }
+    constructor(private context: Partial<C> = {}) {}
 
     enterWith(store: Partial<C>): void {
         this.context = {...this.context, ...store};
@@ -41,10 +38,7 @@ export class StaticContextStore<C extends ContextData<C>> implements ContextStor
 }
 
 export class Context<C extends ContextData<C>> {
-    constructor(
-        private readonly storage: ContextStore<Partial<C>>,
-    ) {
-    }
+    constructor(private readonly storage: ContextStore<Partial<C>>) {}
 
     async run<R>(fn: () => Promise<R>, context: Partial<C> = {}): Promise<R> {
         return this.storage.run(context, fn);
@@ -72,19 +66,18 @@ export class Context<C extends ContextData<C>> {
 }
 
 export interface ContextValueReader<TenantId> {
-    resolve(): TenantId | undefined,
-    mustResolve(): TenantId,
-    preventCrossTenantUsage(tenantId: TenantId): void,
+    resolve(): TenantId | undefined;
+    mustResolve(): TenantId;
+    preventCrossTenantUsage(tenantId: TenantId): void;
 }
 
 export interface ContextValueWriter<TenantId> extends ContextValueReader<TenantId> {
-    use(context?: TenantId): void,
-    forget(): void,
+    use(context?: TenantId): void;
+    forget(): void;
 }
 
 export class SyncTenantContext<TenantId extends string | number> implements ContextValueWriter<TenantId> {
-    constructor(private tenantContext?: TenantId) {
-    }
+    constructor(private tenantContext?: TenantId) {}
 
     resolve(): TenantId | undefined {
         return this.tenantContext;
@@ -112,15 +105,17 @@ export class SyncTenantContext<TenantId extends string | number> implements Cont
 }
 
 type KeyValueToObject<Key extends string, Value extends string | number> = {
-    [K in Key]: Value
+    [K in Key]: Value;
 };
 
-export class TenantContext<const Key extends string, Value extends string | number> implements ContextValueWriter<Value> {
+export class TenantContext<
+    const Key extends string,
+    Value extends string | number,
+> implements ContextValueWriter<Value> {
     constructor(
         private readonly context: Context<KeyValueToObject<Key, Value>>,
         private readonly key: Key,
-    ) {
-    }
+    ) {}
 
     forget(): void {
         this.use(undefined);
@@ -153,21 +148,27 @@ export class TenantContext<const Key extends string, Value extends string | numb
 
 export class UnableToResolveTenantContext extends StandardError {
     constructor() {
-        super(
-            'Tenant ID not found in context. Forgot to set it?',
-            'context.unable_to_resolve_tenant_context',
-        );
+        super('Tenant ID not found in context. Forgot to set it?', 'context.unable_to_resolve_tenant_context');
     }
 }
 
-export function preventCrossTenantUsage<TenantId extends string | number>(context: {expectedId: TenantId, tenantId: TenantId}): void {
+export function preventCrossTenantUsage<TenantId extends string | number>(context: {
+    expectedId: TenantId;
+    tenantId: TenantId;
+}): void {
     if (context.tenantId !== context.expectedId) {
         throw CrossTenantOperationDetected.forIds(context);
     }
 }
 
 export class CrossTenantOperationDetected extends StandardError {
-    static forIds<TenantId extends string | number>({expectedId, tenantId}: {expectedId: TenantId, tenantId: TenantId}) {
+    static forIds<TenantId extends string | number>({
+        expectedId,
+        tenantId,
+    }: {
+        expectedId: TenantId;
+        tenantId: TenantId;
+    }) {
         return new CrossTenantOperationDetected(
             `Cross-tenant operation detected. Expected ${String(expectedId)} detected ${String(tenantId)}`,
             'context.cross_tenant_operation_detected',
