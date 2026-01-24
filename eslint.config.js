@@ -11,22 +11,16 @@ export default tseslint.config(
         files: ['./packages/**/*.ts', './*.config.*'],
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
-            'object-curly-spacing': [
-                'error',
-                'never'
-            ],
-            'quotes': [
+            'object-curly-spacing': ['error', 'never'],
+            quotes: [
                 'error',
                 'single',
                 {
-                    'allowTemplateLiterals': false,
-                    'avoidEscape': true
-                }
+                    allowTemplateLiterals: false,
+                    avoidEscape: true,
+                },
             ],
-            'semi': [
-                'error',
-                'always'
-            ],
+            semi: ['error', 'always'],
         },
     },
     globalIgnores(['**/dist']),
