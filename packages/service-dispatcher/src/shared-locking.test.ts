@@ -8,50 +8,41 @@ import {setTimeout as wait} from 'timers/promises';
 interface ExampleService {
     ping: {
         payload: {
-            id: string,
-            returnThis: string,
-        },
+            id: string;
+            returnThis: string;
+        };
         response: {
-            value: string,
-        },
-    },
+            value: string;
+        };
+    };
     pong: {
         payload: {
-            id: string,
-            returnWhat: string,
-        },
+            id: string;
+            returnWhat: string;
+        };
         response: {
-            returned: string,
-        }
-    },
+            returned: string;
+        };
+    };
     excluded: {
         payload: {
-            id: string,
-            value: string,
-        },
-        response: string,
-    },
+            id: string;
+            value: string;
+        };
+        response: string;
+    };
 }
 
 describe.each([
     [
         'middleware',
-        (
-            handlers: ServiceHandlers<ExampleService>,
-            options: ServiceLockingOptions<ExampleService, string>,
-        ) => new ServiceDispatcher(handlers, [
-            createServiceLockingMiddleware(options),
-        ]),
+        (handlers: ServiceHandlers<ExampleService>, options: ServiceLockingOptions<ExampleService, string>) =>
+            new ServiceDispatcher(handlers, [createServiceLockingMiddleware(options)]),
     ],
     [
         'decorator',
-        (
-            handlers: ServiceHandlers<ExampleService>,
-            options: ServiceLockingOptions<ExampleService, string>,
-        ) => new ServiceLocking(
-            new ServiceDispatcher(handlers),
-            options,
-        )
+        (handlers: ServiceHandlers<ExampleService>, options: ServiceLockingOptions<ExampleService, string>) =>
+            new ServiceLocking(new ServiceDispatcher(handlers), options),
     ],
 ] as const)('@deltic/service-locking using %s', (_name, factory) => {
     let service: Service<ExampleService>;
@@ -59,37 +50,40 @@ describe.each([
 
     beforeEach(() => {
         segments = [];
-        service = factory({
-            ping: async payload => {
-                segments.push(payload.returnThis);
-                await wait(5);
-                segments.push(payload.returnThis);
+        service = factory(
+            {
+                ping: async payload => {
+                    segments.push(payload.returnThis);
+                    await wait(5);
+                    segments.push(payload.returnThis);
 
-                return {
-                    value: payload.returnThis,
-                };
+                    return {
+                        value: payload.returnThis,
+                    };
+                },
+                pong: async payload => {
+                    segments.push(payload.returnWhat);
+                    await wait(5);
+                    segments.push(payload.returnWhat);
+
+                    return {
+                        returned: payload.returnWhat,
+                    };
+                },
+                excluded: async payload => {
+                    segments.push(payload.value);
+                    await wait(5);
+                    segments.push(payload.value);
+
+                    return payload.value;
+                },
             },
-            pong: async payload => {
-                segments.push(payload.returnWhat);
-                await wait(5);
-                segments.push(payload.returnWhat);
-
-                return {
-                    returned: payload.returnWhat,
-                };
+            {
+                mutex: new MutexUsingMemory<string>(),
+                lockResolver: input => input.payload.id,
+                shouldSkip: input => input.type === 'excluded',
             },
-            excluded: async payload => {
-                segments.push(payload.value);
-                await wait(5);
-                segments.push(payload.value);
-
-                return payload.value;
-            }
-        }, {
-            mutex: new MutexUsingMemory<string>(),
-            lockResolver: input => input.payload.id,
-            shouldSkip: input => input.type === 'excluded',
-        });
+        );
     });
 
     test('dispatching two different commands at the same time for the same lock', async () => {

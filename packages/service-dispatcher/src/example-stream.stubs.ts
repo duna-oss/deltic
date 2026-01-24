@@ -2,31 +2,31 @@ import type {AnyMessageFrom} from '@deltic/messaging';
 import {AggregateRootUsingReflectMetadata, makeEventHandler} from '@deltic/event-sourcing/using-reflect-metadata';
 
 export interface Member {
-    readonly id: string,
-    readonly name: string,
-    readonly age: number,
+    readonly id: string;
+    readonly name: string;
+    readonly age: number;
 }
 
 export interface MemberWasAdded {
-    readonly id: string,
-    readonly name: string,
-    readonly age: number,
+    readonly id: string;
+    readonly name: string;
+    readonly age: number;
 }
 
 export interface MemberWasRemoved {
-    readonly id: string,
+    readonly id: string;
 }
 
 export type ExampleAggregateRootId = string;
 
 export interface ExampleStream {
-    aggregateRoot: ExampleAggregateRoot,
-    aggregateRootId: ExampleAggregateRootId,
+    aggregateRoot: ExampleAggregateRoot;
+    aggregateRootId: ExampleAggregateRootId;
     messages: {
-        member_was_added: MemberWasAdded,
-        member_was_removed: MemberWasRemoved,
-        nothing_happened: string,
-    },
+        member_was_added: MemberWasAdded;
+        member_was_removed: MemberWasRemoved;
+        nothing_happened: string;
+    };
 }
 
 const When = makeEventHandler<ExampleStream>();
@@ -43,10 +43,14 @@ export class ExampleAggregateRoot extends AggregateRootUsingReflectMetadata<Exam
 
     removeMember(id: string): void {
         if (this.members.has(id)) {
-            this.recordThat('member_was_removed', {id}, {
-                time_of_recording: 'now',
-                time_of_recording_ms: 0,
-            });
+            this.recordThat(
+                'member_was_removed',
+                {id},
+                {
+                    time_of_recording: 'now',
+                    time_of_recording_ms: 0,
+                },
+            );
         }
     }
 

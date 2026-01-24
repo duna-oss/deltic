@@ -10,27 +10,35 @@ import {createTestTooling} from '@deltic/event-sourcing/test-tooling';
 import type {AggregateRepository} from '@deltic/event-sourcing';
 
 interface ExampleCommand {
-    id: ExampleAggregateRootId,
+    id: ExampleAggregateRootId;
 }
 
 interface AddMember extends ExampleCommand {
-    member: Member,
+    member: Member;
 }
 
 interface ExampleService {
-    add: {payload: AddMember, response: string},
+    add: {payload: AddMember; response: string};
 }
 
-const {when, then, createMessage} = createTestTooling<ExampleStream, ExampleService>('abcde', ExampleAggregateRoot, createService);
+const {when, then, createMessage} = createTestTooling<ExampleStream, ExampleService>(
+    'abcde',
+    ExampleAggregateRoot,
+    createService,
+);
 
 function createService(context: {repository: AggregateRepository<ExampleStream>}) {
-    return new AggregateServiceDispatcher<ExampleService, ExampleStream>({
-        add: async (aggregate, input) => {
-            aggregate.addMember(input.member);
+    return new AggregateServiceDispatcher<ExampleService, ExampleStream>(
+        {
+            add: async (aggregate, input) => {
+                aggregate.addMember(input.member);
 
-            return input.member.id;
+                return input.member.id;
+            },
         },
-    }, context.repository, (command: ExampleCommand) => command.id);
+        context.repository,
+        (command: ExampleCommand) => command.id,
+    );
 }
 
 describe('AggregateServiceBus', () => {
@@ -40,18 +48,13 @@ describe('AggregateServiceBus', () => {
             name: 'Frank',
             age: 35,
         };
-        const response = await when(
-            'add',
-            {
-                id: 'aggregate-id',
-                member: frank,
-            },
-        );
+        const response = await when('add', {
+            id: 'aggregate-id',
+            member: frank,
+        });
 
         expect(response).toBe('1234');
 
-        then(
-            createMessage('member_was_added', frank),
-        );
+        then(createMessage('member_was_added', frank));
     });
 });

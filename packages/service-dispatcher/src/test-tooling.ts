@@ -1,25 +1,22 @@
-import type {
-    AnyInputForService,
-    Service,
-    ServiceStructure,
-} from './index.js';
+import type {AnyInputForService, Service, ServiceStructure} from './index.js';
 import {deepEqual} from 'fast-equals';
 
 type StagedResponse<Definition extends ServiceStructure<Definition>> = {
     [Type in keyof Definition]: {
-        readonly type: Type,
-        readonly payload?: Definition[Type]['payload'],
-        readonly response?: Definition[Type]['response'],
-        readonly error?: Error,
-    }
+        readonly type: Type;
+        readonly payload?: Definition[Type]['payload'];
+        readonly response?: Definition[Type]['response'];
+        readonly error?: Error;
+    };
 };
 
-export type AnyStagedResponse<Definition extends ServiceStructure<Definition>> = StagedResponse<Definition>[keyof StagedResponse<Definition>];
+export type AnyStagedResponse<Definition extends ServiceStructure<Definition>> =
+    StagedResponse<Definition>[keyof StagedResponse<Definition>];
 
-function shouldRespondTo<
-    Service extends ServiceStructure<Service>,
-    Type extends keyof Service,
->(input: AnyInputForService<Service>, stagedResponse: AnyStagedResponse<Service>): stagedResponse is StagedResponse<Service>[Type] {
+function shouldRespondTo<Service extends ServiceStructure<Service>, Type extends keyof Service>(
+    input: AnyInputForService<Service>,
+    stagedResponse: AnyStagedResponse<Service>,
+): stagedResponse is StagedResponse<Service>[Type] {
     if (input.type !== stagedResponse.type) {
         return false;
     }
@@ -70,9 +67,7 @@ export class MockedService<Definition extends ServiceStructure<Definition>> impl
         throw errorForMissingMockedResponseForInput(input);
     }
 
-    stageResponse<T extends keyof Definition>(
-        response: StagedResponse<Definition>[T],
-    ): void {
+    stageResponse<T extends keyof Definition>(response: StagedResponse<Definition>[T]): void {
         this.stagedResponses.push(response);
     }
 

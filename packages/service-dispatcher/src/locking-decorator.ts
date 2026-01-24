@@ -1,13 +1,15 @@
 import type {Service, ServiceStructure} from '@deltic/service-dispatcher';
 import type {DynamicMutex, LockValue} from '@deltic/mutex';
-import {defaultLockTimeoutMs, type LockIDResolver, type LockSkipDetector, type ServiceLockingOptions} from './shared-for-locking.js';
+import {
+    defaultLockTimeoutMs,
+    type LockIDResolver,
+    type LockSkipDetector,
+    type ServiceLockingOptions,
+} from './shared-for-locking.js';
 
 export * from './shared-for-locking.js';
 
-export class ServiceLocking<
-    S extends ServiceStructure<S>,
-    LockId extends LockValue,
-> implements Service<S> {
+export class ServiceLocking<S extends ServiceStructure<S>, LockId extends LockValue> implements Service<S> {
     private readonly mutex: DynamicMutex<LockId>;
     private lockResolver: LockIDResolver<S, LockId>;
     private timeoutMs: number;
@@ -23,9 +25,7 @@ export class ServiceLocking<
         this.timeoutMs = timeoutMs;
     }
 
-    async handle<
-        T extends keyof S,
-    >(type: T, payload: S[T]['payload']): Promise<S[T]['response']> {
+    async handle<T extends keyof S>(type: T, payload: S[T]['payload']): Promise<S[T]['response']> {
         const input = {type, payload};
 
         if (this.shouldSkip(input)) {

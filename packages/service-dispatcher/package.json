@@ -21,6 +21,18 @@
       "require": "./dist/aggregate-service-dispatcher.cjs",
       "module-sync": "./dist/aggregate-service-dispatcher.js",
       "types": "./dist/aggregate-service-dispatcher.d.ts"
+    },
+    "./locking-middleware": {
+      "import": "./dist/locking-middleware.js",
+      "require": "./dist/locking-middleware.cjs",
+      "module-sync": "./dist/locking-middleware.js",
+      "types": "./dist/locking-middleware.d.ts"
+    },
+    "./locking-decorator": {
+      "import": "./dist/locking-decorator.js",
+      "require": "./dist/locking-decorator.cjs",
+      "module-sync": "./dist/locking-decorator.js",
+      "types": "./dist/locking-decorator.d.ts"
     }
   },
   "keywords": [],

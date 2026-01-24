@@ -7,13 +7,17 @@ type BusHandlerWithAggregate<
     Definition extends ServiceStructure<Definition>,
     Stream extends AggregateStream<Stream>,
 > = {
-    readonly [T in keyof Definition]: (aggregate: Stream['aggregateRoot'], input: Definition[T]['payload']) => Promise<Definition[T]['response']> | Definition[T]['response']
+    readonly [T in keyof Definition]: (
+        aggregate: Stream['aggregateRoot'],
+        input: Definition[T]['payload'],
+    ) => Promise<Definition[T]['response']> | Definition[T]['response'];
 };
 
-export type AggregateRootIdResolver<
-    Definition extends ServiceStructure<Definition>,
-    Result,
-> = <T extends keyof Definition>(command: Definition[T]['payload']) => Result;
+export type AggregateRootIdResolver<Definition extends ServiceStructure<Definition>, Result> = <
+    T extends keyof Definition,
+>(
+    command: Definition[T]['payload'],
+) => Result;
 
 export class AggregateServiceDispatcher<
     Definition extends ServiceStructure<Definition>,
@@ -25,12 +29,15 @@ export class AggregateServiceDispatcher<
         private findAggregateId: AggregateRootIdResolver<Definition, Stream['aggregateRootId']>,
     ) {}
 
-    async handle<T extends keyof Definition>(type: T, payload: Definition[T]['payload']): Promise<Definition[T]['response']> {
+    async handle<T extends keyof Definition>(
+        type: T,
+        payload: Definition[T]['payload'],
+    ): Promise<Definition[T]['response']> {
         const handler = this.handlers[type];
         const aggregate = await this.repository.retrieve(this.findAggregateId(payload));
 
         try {
-            return await (handler)(aggregate as any, payload);
+            return await handler(aggregate as any, payload);
         } finally {
             if (aggregate.hasUnreleasedEvents()) {
                 await this.repository.persist(aggregate);
