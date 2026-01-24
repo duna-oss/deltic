@@ -6,36 +6,38 @@ import {AggregateRootUsingReducerMap, type ReducerMap} from './using-reducer-map
 import {AggregateRootUsingReducerFunc} from './using-reducer-func.js';
 
 export interface Member {
-    readonly id: string,
-    readonly name: string,
-    readonly age: number,
+    readonly id: string;
+    readonly name: string;
+    readonly age: number;
 }
 
 export interface MemberWasAdded {
-    readonly id: string,
-    readonly name: string,
-    readonly age: number,
+    readonly id: string;
+    readonly name: string;
+    readonly age: number;
 }
 
 export interface MemberWasRemoved {
-    readonly id: string,
+    readonly id: string;
 }
 
 export type ExampleAggregateRootId = string;
 
 export interface ExampleStream<Entity extends AggregateRoot<any>> {
-    aggregateRoot: Entity,
-    aggregateRootId: ExampleAggregateRootId,
+    aggregateRoot: Entity;
+    aggregateRootId: ExampleAggregateRootId;
     messages: {
-        member_was_added: MemberWasAdded,
-        member_was_removed: MemberWasRemoved,
-        nothing_happened: string,
-    },
+        member_was_added: MemberWasAdded;
+        member_was_removed: MemberWasRemoved;
+        nothing_happened: string;
+    };
 }
 
 const When = makeEventHandler<ExampleStream<any>>();
 
-export class ExampleUsingReflectMetadata extends AggregateRootUsingReflectMetadata<ExampleStream<ExampleUsingReflectMetadata>> {
+export class ExampleUsingReflectMetadata extends AggregateRootUsingReflectMetadata<
+    ExampleStream<ExampleUsingReflectMetadata>
+> {
     private members: Map<string, Member> = new Map();
     private addedCounter: number = 0;
 
@@ -47,10 +49,14 @@ export class ExampleUsingReflectMetadata extends AggregateRootUsingReflectMetada
 
     removeMember(id: string): void {
         if (this.members.has(id)) {
-            this.recordThat('member_was_removed', {id}, {
-                time_of_recording: 'now',
-                time_of_recording_ms: 0,
-            });
+            this.recordThat(
+                'member_was_removed',
+                {id},
+                {
+                    time_of_recording: 'now',
+                    time_of_recording_ms: 0,
+                },
+            );
         }
     }
 
@@ -100,7 +106,7 @@ export class ExampleUsingHandlerMap extends AggregateRootUsingHandlerMap<Example
     private addedCounter: number = 0;
 
     protected readonly handlers: HandlerMap<ExampleStream<ExampleUsingHandlerMap>> = {
-        member_was_added: (event) => {
+        member_was_added: event => {
             this.members.set(event.id, event);
             this.addedCounter++;
         },
@@ -117,10 +123,14 @@ export class ExampleUsingHandlerMap extends AggregateRootUsingHandlerMap<Example
 
     removeMember(id: string): void {
         if (this.members.has(id)) {
-            this.recordThat('member_was_removed', {id}, {
-                time_of_recording: 'now',
-                time_of_recording_ms: 0,
-            });
+            this.recordThat(
+                'member_was_removed',
+                {id},
+                {
+                    time_of_recording: 'now',
+                    time_of_recording_ms: 0,
+                },
+            );
         }
     }
 
@@ -155,7 +165,10 @@ interface ExampleState {
     addedCounter: number;
 }
 
-export class ExampleUsingReducerMap extends AggregateRootUsingReducerMap<ExampleStream<ExampleUsingReducerMap>, ExampleState> {
+export class ExampleUsingReducerMap extends AggregateRootUsingReducerMap<
+    ExampleStream<ExampleUsingReducerMap>,
+    ExampleState
+> {
     protected readonly handlers: ReducerMap<ExampleStream<ExampleUsingReducerMap>, ExampleState> = {
         member_was_added: (state, event) => {
             return {
@@ -184,10 +197,14 @@ export class ExampleUsingReducerMap extends AggregateRootUsingReducerMap<Example
 
     removeMember(id: string): void {
         if (id in this.state.members) {
-            this.recordThat('member_was_removed', {id}, {
-                time_of_recording: 'now',
-                time_of_recording_ms: 0,
-            });
+            this.recordThat(
+                'member_was_removed',
+                {id},
+                {
+                    time_of_recording: 'now',
+                    time_of_recording_ms: 0,
+                },
+            );
         }
     }
 
@@ -220,7 +237,10 @@ export class ExampleUsingReducerMap extends AggregateRootUsingReducerMap<Example
     }
 }
 
-export class ExampleUsingReducerFunc extends AggregateRootUsingReducerFunc<ExampleStream<ExampleUsingReducerFunc>, ExampleState> {
+export class ExampleUsingReducerFunc extends AggregateRootUsingReducerFunc<
+    ExampleStream<ExampleUsingReducerFunc>,
+    ExampleState
+> {
     addMember(member: Member): void {
         if (!(member.id in this.state.members)) {
             this.recordThat('member_was_added', member);
@@ -229,10 +249,14 @@ export class ExampleUsingReducerFunc extends AggregateRootUsingReducerFunc<Examp
 
     removeMember(id: string): void {
         if (id in this.state.members) {
-            this.recordThat('member_was_removed', {id}, {
-                time_of_recording: 'now',
-                time_of_recording_ms: 0,
-            });
+            this.recordThat(
+                'member_was_removed',
+                {id},
+                {
+                    time_of_recording: 'now',
+                    time_of_recording_ms: 0,
+                },
+            );
         }
     }
 
@@ -264,7 +288,10 @@ export class ExampleUsingReducerFunc extends AggregateRootUsingReducerFunc<Examp
         return aggregateRoot;
     }
 
-    protected reduce(state: ExampleState, message: AnyMessageFrom<ExampleStream<ExampleUsingReducerFunc>>): ExampleState {
+    protected reduce(
+        state: ExampleState,
+        message: AnyMessageFrom<ExampleStream<ExampleUsingReducerFunc>>,
+    ): ExampleState {
         if (message.type === 'member_was_added') {
             return {
                 members: {

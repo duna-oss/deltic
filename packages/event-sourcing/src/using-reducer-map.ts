@@ -1,22 +1,15 @@
-import type {
-    AnyMessageFrom, MessageHeaders, SpecificPayloadFrom,
-} from '@deltic/messaging';
-import {
-    AggregateRootBehavior,
-    type AggregateRootOptions,
-    type AggregateStream,
-} from '@deltic/event-sourcing';
+import type {AnyMessageFrom, MessageHeaders, SpecificPayloadFrom} from '@deltic/messaging';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
 
-type HandlerFunc<
-    Stream extends AggregateStream<Stream>,
-    State,
-    Event extends keyof Stream['messages'],
-> = (state: State, event: SpecificPayloadFrom<Stream, Event>, headers: MessageHeaders<Stream['aggregateRootId']>) => State
-
+type HandlerFunc<Stream extends AggregateStream<Stream>, State, Event extends keyof Stream['messages']> = (
+    state: State,
+    event: SpecificPayloadFrom<Stream, Event>,
+    headers: MessageHeaders<Stream['aggregateRootId']>,
+) => State;
 
 export type ReducerMap<Stream extends AggregateStream<Stream>, State> = {
     [E in keyof Stream['messages']]?: HandlerFunc<Stream, State, E>;
-}
+};
 
 export abstract class AggregateRootUsingReducerMap<
     Stream extends AggregateStream<Stream>,
@@ -25,11 +18,7 @@ export abstract class AggregateRootUsingReducerMap<
     protected abstract readonly handlers: ReducerMap<Stream, State>;
     private _state: State;
 
-    constructor(
-        aggregateRootId: Stream['aggregateRootId'],
-        initialState: State,
-        options: AggregateRootOptions = {},
-    ) {
+    constructor(aggregateRootId: Stream['aggregateRootId'], initialState: State, options: AggregateRootOptions = {}) {
         super(aggregateRootId, options);
         this._state = structuredClone(initialState);
     }

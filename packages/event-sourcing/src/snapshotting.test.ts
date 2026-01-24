@@ -15,18 +15,21 @@ const When = makeEventHandler<SnapshottingTestEvents>();
 type TestSnapshot = {total: number};
 
 interface SnapshottingTestEvents extends AggregateStreamWithSnapshotting<SnapshottingTestEvents> {
-    topic: 'testing',
+    topic: 'testing';
     messages: {
         number_was_incremented: {
-            by: number,
-        },
-    },
-    aggregateRootId: string,
-    aggregateRoot: SnapshottedEntity,
-    snapshot: TestSnapshot,
+            by: number;
+        };
+    };
+    aggregateRootId: string;
+    aggregateRoot: SnapshottedEntity;
+    snapshot: TestSnapshot;
 }
 
-class SnapshottedEntity extends AggregateRootUsingReflectMetadata<SnapshottingTestEvents> implements AggregateRootWithSnapshotting<SnapshottingTestEvents> {
+class SnapshottedEntity
+    extends AggregateRootUsingReflectMetadata<SnapshottingTestEvents>
+    implements AggregateRootWithSnapshotting<SnapshottingTestEvents>
+{
     private counter: number = 0;
 
     createSnapshot(): TestSnapshot {
@@ -42,10 +45,7 @@ class SnapshottedEntity extends AggregateRootUsingReflectMetadata<SnapshottingTe
         this.counter += event.by;
     }
 
-    static async reconstituteFromEvents(
-        id: string,
-        messages: AsyncGenerator<AnyMessageFrom<SnapshottingTestEvents>>,
-    ) {
+    static async reconstituteFromEvents(id: string, messages: AsyncGenerator<AnyMessageFrom<SnapshottingTestEvents>>) {
         const aggregateRoot = new SnapshottedEntity(id);
 
         for await (const m of messages) {
@@ -73,19 +73,12 @@ class SnapshottedEntity extends AggregateRootUsingReflectMetadata<SnapshottingTe
 }
 
 const aggregateRootId = 'not important';
-const {createMessage} = createTestTooling<SnapshottingTestEvents>(
-    aggregateRootId,
-    SnapshottedEntity,
-);
+const {createMessage} = createTestTooling<SnapshottingTestEvents>(aggregateRootId, SnapshottedEntity);
 
 describe('snapshotting an event-sourced entity', () => {
     const snapshots = new SnapshotRepositoryForTesting<SnapshottingTestEvents>();
     const messages = new MessageRepositoryUsingMemory<SnapshottingTestEvents>();
-    const repository = new AggregateRootRepositoryWithSnapshotting(
-        SnapshottedEntity,
-        snapshots,
-        messages,
-    );
+    const repository = new AggregateRootRepositoryWithSnapshotting(SnapshottedEntity, snapshots, messages);
 
     afterEach(async () => {
         await snapshots.clear();
@@ -94,23 +87,35 @@ describe('snapshotting an event-sourced entity', () => {
 
     test('using a snapshot', async () => {
         // expect this message not to affect the total
-        const message1 = createMessage('number_was_incremented', {
-            by: 5,
-        }, {
-            aggregate_root_version: 2,
-        });
+        const message1 = createMessage(
+            'number_was_incremented',
+            {
+                by: 5,
+            },
+            {
+                aggregate_root_version: 2,
+            },
+        );
 
         // expect these to be played over the snapshot
-        const message2 = createMessage('number_was_incremented', {
-            by: 5,
-        }, {
-            aggregate_root_version: 3,
-        });
-        const message3 = createMessage('number_was_incremented', {
-            by: 5,
-        }, {
-            aggregate_root_version: 4,
-        });
+        const message2 = createMessage(
+            'number_was_incremented',
+            {
+                by: 5,
+            },
+            {
+                aggregate_root_version: 3,
+            },
+        );
+        const message3 = createMessage(
+            'number_was_incremented',
+            {
+                by: 5,
+            },
+            {
+                aggregate_root_version: 4,
+            },
+        );
         await messages.persist(aggregateRootId, [message1, message2, message3]);
 
         // persist a snapshot

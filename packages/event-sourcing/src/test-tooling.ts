@@ -1,7 +1,12 @@
 import {GlobalClock, type TestClock} from '@deltic/clock';
 import type {Service, ServiceStructure} from '@deltic/service-dispatcher';
 import {NoopTransactionManager} from '@deltic/transaction-manager';
-import {type AggregateRepository, type AggregateRootFactory, type AggregateStream, EventSourcedAggregateRepository} from '@deltic/event-sourcing';
+import {
+    type AggregateRepository,
+    type AggregateRootFactory,
+    type AggregateStream,
+    EventSourcedAggregateRepository,
+} from '@deltic/event-sourcing';
 import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
 import {MessageDecoratorChain} from '@deltic/messaging/decorator-chain';
 import {createMessageDecorator, messageWithHeaders} from '@deltic/messaging/helpers';
@@ -14,17 +19,18 @@ import type {
     MessagesFrom,
 } from '@deltic/messaging';
 
-type WhenHandler<Stream extends AggregateStream<Stream>> =
-    (context: {aggregateRoot: Stream['aggregateRoot'], repository: AggregateRepository<Stream>}) => Promise<void>;
+type WhenHandler<Stream extends AggregateStream<Stream>> = (context: {
+    aggregateRoot: Stream['aggregateRoot'];
+    repository: AggregateRepository<Stream>;
+}) => Promise<void>;
 
 export type ServiceFactory<
     Stream extends AggregateStream<Stream>,
     ServiceDefinition extends ServiceStructure<ServiceDefinition>,
-> =
-    (context: {
-        repository: AggregateRepository<Stream>,
-        messageRepository: MessageRepositoryUsingMemory<Stream>,
-    }) => Service<ServiceDefinition>;
+> = (context: {
+    repository: AggregateRepository<Stream>;
+    messageRepository: MessageRepositoryUsingMemory<Stream>;
+}) => Service<ServiceDefinition>;
 
 export function createTestTooling<
     Stream extends AggregateStream<Stream>,
@@ -55,10 +61,12 @@ export function createTestTooling<
         new NoopTransactionManager(),
     );
     const error: any | undefined = undefined;
-    const bus = serviceFactory ? serviceFactory({
-        messageRepository,
-        repository,
-    }) : undefined;
+    const bus = serviceFactory
+        ? serviceFactory({
+              messageRepository,
+              repository,
+          })
+        : undefined;
 
     afterEach(() => {
         messageRepository.clear();
@@ -90,7 +98,10 @@ export function createTestTooling<
         messageRepository.clearLastCommit();
     };
 
-    const when = async <T extends keyof ServiceDefinition>(type: T, payload: ServiceDefinition[T]['payload']): Promise<ServiceDefinition[T]['response']> => {
+    const when = async <T extends keyof ServiceDefinition>(
+        type: T,
+        payload: ServiceDefinition[T]['payload'],
+    ): Promise<ServiceDefinition[T]['response']> => {
         if (!bus) {
             throw new Error('Invalid tools setup, using when without setting up a service.');
         }
@@ -104,7 +115,9 @@ export function createTestTooling<
 
                 const msg = unthrownError instanceof Error ? unthrownError.message : 'Unknown type of error';
 
-                throw new Error(`Expected error to be thrown but did not occur: ${msg}`, {cause: unthrownError});
+                throw new Error(`Expected error to be thrown but did not occur: ${msg}`, {
+                    cause: unthrownError,
+                });
             }
 
             return result;
@@ -135,7 +148,9 @@ export function createTestTooling<
 
                 const msg = unthrownError instanceof Error ? unthrownError.message : 'Unknown type of error';
 
-                throw new Error(`Expected error to be thrown but did not occur: ${msg}`, {cause: unthrownError});
+                throw new Error(`Expected error to be thrown but did not occur: ${msg}`, {
+                    cause: unthrownError,
+                });
             }
         } catch (e) {
             if (expectedError) {
@@ -154,30 +169,46 @@ export function createTestTooling<
     };
 
     let expectedError: any = undefined;
-    const expectError = (error: any) => expectedError = error;
+    const expectError = (error: any) => (expectedError = error);
 
-    const removeHeaders = <M extends Message<any, any>>(message: M): M => ({...message, headers: {}});
+    const removeHeaders = <M extends Message<any, any>>(message: M): M => ({
+        ...message,
+        headers: {},
+    });
     const emittedEvents = () => messageRepository.lastCommit.map(removeHeaders);
     const emittedEventsWithHeaders = () => messageRepository.lastCommit;
     const then = (...expected: MessagesFrom<Stream>) => expect(emittedEvents()).toEqual(expected.map(removeHeaders));
     const expectNoEvents = () => expect(emittedEvents()).toHaveLength(0);
 
     type TestTooling = {
-        given: typeof given,
-        whenAggregate: typeof whenAggregate,
-        id: typeof id,
-        when: typeof when,
-        createMessage: typeof createMessage,
-        expectError: typeof expectError,
-        emittedEvents: typeof emittedEvents,
-        emittedEventsWithHeaders: typeof emittedEventsWithHeaders,
-        then: typeof then,
-        retrieveEntity: typeof retrieveEntity,
-        testClock: TestClock,
-        expectNoEvents: typeof expectNoEvents,
+        given: typeof given;
+        whenAggregate: typeof whenAggregate;
+        id: typeof id;
+        when: typeof when;
+        createMessage: typeof createMessage;
+        expectError: typeof expectError;
+        emittedEvents: typeof emittedEvents;
+        emittedEventsWithHeaders: typeof emittedEventsWithHeaders;
+        then: typeof then;
+        retrieveEntity: typeof retrieveEntity;
+        testClock: TestClock;
+        expectNoEvents: typeof expectNoEvents;
     };
 
-    const tools: TestTooling = {expectNoEvents, given, whenAggregate, then, retrieveEntity, id, when, createMessage, emittedEvents, emittedEventsWithHeaders, expectError, testClock};
+    const tools: TestTooling = {
+        expectNoEvents,
+        given,
+        whenAggregate,
+        then,
+        retrieveEntity,
+        id,
+        when,
+        createMessage,
+        emittedEvents,
+        emittedEventsWithHeaders,
+        expectError,
+        testClock,
+    };
 
     return {repository, bus, ...tools};
 }

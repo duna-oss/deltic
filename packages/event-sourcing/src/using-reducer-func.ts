@@ -1,9 +1,5 @@
 import type {AnyMessageFrom} from '@deltic/messaging';
-import {
-    AggregateRootBehavior,
-    type AggregateRootOptions,
-    type AggregateStream,
-} from '@deltic/event-sourcing';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
 
 export abstract class AggregateRootUsingReducerFunc<
     Stream extends AggregateStream<Stream>,
@@ -11,11 +7,7 @@ export abstract class AggregateRootUsingReducerFunc<
 > extends AggregateRootBehavior<Stream> {
     private _state: State;
 
-    constructor(
-        aggregateRootId: Stream['aggregateRootId'],
-        initialState: State,
-        options: AggregateRootOptions = {},
-    ) {
+    constructor(aggregateRootId: Stream['aggregateRootId'], initialState: State, options: AggregateRootOptions = {}) {
         super(aggregateRootId, options);
         this._state = structuredClone(initialState);
     }

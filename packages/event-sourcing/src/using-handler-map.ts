@@ -1,21 +1,15 @@
-import type {
-    AnyMessageFrom,
-    MessageHeaders,
-    SpecificPayloadFrom,
-} from '@deltic/messaging';
-import {
-    AggregateRootBehavior,
-    type AggregateRootOptions,
-    type AggregateStream,
-} from '@deltic/event-sourcing';
+import type {AnyMessageFrom, MessageHeaders, SpecificPayloadFrom} from '@deltic/messaging';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
 
-type HandlerFunc<Stream extends AggregateStream<Stream>, Event extends keyof Stream['messages']> =
-    (this: Stream['aggregateRoot'], event: SpecificPayloadFrom<Stream, Event>, headers: MessageHeaders<Stream['aggregateRootId']>) => void
-
+type HandlerFunc<Stream extends AggregateStream<Stream>, Event extends keyof Stream['messages']> = (
+    this: Stream['aggregateRoot'],
+    event: SpecificPayloadFrom<Stream, Event>,
+    headers: MessageHeaders<Stream['aggregateRootId']>,
+) => void;
 
 export type HandlerMap<Stream extends AggregateStream<Stream>> = {
     [E in keyof Stream['messages']]?: HandlerFunc<Stream, E>;
-}
+};
 
 export abstract class AggregateRootUsingHandlerMap<
     Stream extends AggregateStream<Stream>,

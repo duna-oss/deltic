@@ -1,10 +1,8 @@
 import type {TransactionManager} from '@deltic/transaction-manager';
 import type {AggregateRepository, AggregateRoot, AggregateStream} from '@deltic/event-sourcing';
 
-export interface AggregateProjector<
-    Stream extends AggregateStream<Stream>
->{
-    upsert(aggregate: AggregateRoot<Stream>): Promise<void>,
+export interface AggregateProjector<Stream extends AggregateStream<Stream>> {
+    upsert(aggregate: AggregateRoot<Stream>): Promise<void>;
 }
 
 export class AggregateRepositoryWithProjector<
@@ -14,8 +12,7 @@ export class AggregateRepositoryWithProjector<
         private readonly repository: AggregateRepository<Stream>,
         private readonly projector: AggregateProjector<Stream>,
         private readonly transactionManager: TransactionManager,
-    ) {
-    }
+    ) {}
 
     async persist(aggregateRoot: Stream['aggregateRoot']): Promise<void> {
         const alreadyInTransaction = this.transactionManager.inTransaction();
@@ -49,10 +46,7 @@ export class AggregateRepositoryWithProjector<
 }
 
 export class MultiAggregateProjector<Stream extends AggregateStream<Stream>> implements AggregateProjector<Stream> {
-    constructor(
-        private projectors: AggregateProjector<Stream>[],
-    ) {
-    }
+    constructor(private projectors: AggregateProjector<Stream>[]) {}
 
     async upsert(aggregate: AggregateRoot<Stream>): Promise<void> {
         await Promise.all(this.projectors.map(projector => projector.upsert(aggregate)));

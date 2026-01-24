@@ -24,12 +24,13 @@ export interface AggregateRoot<Stream extends AggregateStream<Stream>> {
 }
 
 export interface AggregateRootFactory<Stream extends AggregateStream<Stream>> {
-    reconstituteFromEvents(id: Stream['aggregateRootId'], events: AsyncGenerator<AnyMessageFrom<Stream>>): Promise<Stream['aggregateRoot']>;
+    reconstituteFromEvents(
+        id: Stream['aggregateRootId'],
+        events: AsyncGenerator<AnyMessageFrom<Stream>>,
+    ): Promise<Stream['aggregateRoot']>;
 }
 
-export interface AggregateRepository<
-    Stream extends AggregateStream<Stream>,
-> {
+export interface AggregateRepository<Stream extends AggregateStream<Stream>> {
     retrieve(id: Stream['aggregateRootId']): Promise<Stream['aggregateRoot']>;
     retrieveAtVersion(id: Stream['aggregateRootId'], version: number): Promise<Stream['aggregateRoot']>;
     persist(aggregateRoot: Stream['aggregateRoot']): Promise<void>;
@@ -42,10 +43,11 @@ export class EventSourcedAggregateRepository<
         protected readonly factory: AggregateRootFactory<Stream>,
         protected readonly messageRepository: MessageRepository<Stream>,
         protected readonly messageDispatcher: MessageDispatcher<Stream> | undefined = undefined,
-        protected readonly messageDecorator: MessageDecorator<Stream> = {decorate: (messages) => messages},
+        protected readonly messageDecorator: MessageDecorator<Stream> = {
+            decorate: messages => messages,
+        },
         protected readonly transactionManager: TransactionManager,
-    ) {
-    }
+    ) {}
 
     async retrieve(id: Stream['aggregateRootId']): Promise<Stream['aggregateRoot']> {
         return this.factory.reconstituteFromEvents(id, this.messageRepository.retrieveAllForAggregate(id));
@@ -86,7 +88,7 @@ export class EventSourcedAggregateRepository<
 }
 
 export type AggregateRootOptions = {
-    clock?: Clock,
+    clock?: Clock;
 };
 
 export abstract class AggregateRootBehavior<Stream extends AggregateStream<Stream>> implements AggregateRoot<Stream> {
@@ -101,10 +103,16 @@ export abstract class AggregateRootBehavior<Stream extends AggregateStream<Strea
         this._clock = options.clock ?? GlobalClock;
     }
 
-    protected recordThat<T extends AnyMessageTypeFromStream<Stream>>(type: T, payload: Stream['messages'][T], headers: AdditionalMessageHeaders = {}): void {
+    protected recordThat<T extends AnyMessageTypeFromStream<Stream>>(
+        type: T,
+        payload: Stream['messages'][T],
+        headers: AdditionalMessageHeaders = {},
+    ): void {
         const timeOfRecording = this._clock.date();
         const message: AnyMessageFrom<Stream> = {
-            payload, type, headers: {
+            payload,
+            type,
+            headers: {
                 ...headers,
                 aggregate_root_id: this.aggregateRootId,
                 aggregate_root_version: this.aggregateRootVersionNumber + 1,
@@ -144,4 +152,3 @@ export abstract class AggregateRootBehavior<Stream extends AggregateStream<Strea
         return this.recordedMessages.length !== 0;
     }
 }
-

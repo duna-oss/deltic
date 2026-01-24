@@ -14,17 +14,17 @@ import {createTestTooling} from './test-tooling.js';
 interface ExampleService {
     add_member: {
         payload: {
-            id: ExampleAggregateRootId,
-            member: Member,
-        },
-        response: string,
-    },
+            id: ExampleAggregateRootId;
+            member: Member;
+        };
+        response: string;
+    };
     throw_error: {
         payload: {
-            id: ExampleAggregateRootId,
-        },
-        response: void,
-    },
+            id: ExampleAggregateRootId;
+        };
+        response: void;
+    };
 }
 
 describe.each([
@@ -36,16 +36,23 @@ describe.each([
     type AggregateType = typeof aggregate.prototype;
     const frank: Member = {id: '1234', name: 'Frank', age: 32};
     const renske: Member = {id: '1235', name: 'Renske', age: 29};
-    const {id, given, when, whenAggregate, then, expectError, createMessage, repository, retrieveEntity, emittedEventsWithHeaders, testClock} = createTestTooling<
-        ExampleStream<AggregateType>,
-        ExampleService
-    >('abcde', aggregate, createService);
+    const {
+        id,
+        given,
+        when,
+        whenAggregate,
+        then,
+        expectError,
+        createMessage,
+        repository,
+        retrieveEntity,
+        emittedEventsWithHeaders,
+        testClock,
+    } = createTestTooling<ExampleStream<AggregateType>, ExampleService>('abcde', aggregate, createService);
 
-    function createService(context: {
-        repository: AggregateRepository<ExampleStream<AggregateType>>,
-    }) {
+    function createService(context: {repository: AggregateRepository<ExampleStream<AggregateType>>}) {
         return new ServiceDispatcher<ExampleService>({
-            add_member: async (payload) => {
+            add_member: async payload => {
                 const aggregate = await context.repository.retrieve(payload.id);
 
                 aggregate.addMember(payload.member);
@@ -54,7 +61,7 @@ describe.each([
 
                 return payload.member.id;
             },
-            throw_error: async (payload) => {
+            throw_error: async payload => {
                 const aggregate = await context.repository.retrieve(payload.id);
 
                 try {
@@ -82,16 +89,11 @@ describe.each([
     });
 
     test('adding a member through a command', async () => {
-        await when(
-            'add_member',
-            {
-                id,
-                member: frank,
-            },
-        );
-        then(
-            createMessage('member_was_added', frank),
-        );
+        await when('add_member', {
+            id,
+            member: frank,
+        });
+        then(createMessage('member_was_added', frank));
     });
 
     test('Causing an error with a command', async () => {
@@ -123,19 +125,14 @@ describe.each([
             aggregateRoot.recordInsignificantEvent('something else');
         });
 
-        then(
-            createMessage('nothing_happened', 'something'),
-            createMessage('nothing_happened', 'something else'),
-        );
+        then(createMessage('nothing_happened', 'something'), createMessage('nothing_happened', 'something else'));
     });
 
     test('Adding a member', async () => {
         await whenAggregate(async ({aggregateRoot}) => {
             aggregateRoot.addMember(frank);
         });
-        then(
-            createMessage('member_was_added', frank),
-        );
+        then(createMessage('member_was_added', frank));
 
         const aggregateRoot = await retrieveEntity();
         expect(aggregateRoot.timesMemberWasAdded).toEqual(1);
@@ -147,10 +144,7 @@ describe.each([
             aggregateRoot.addMember(renske);
         });
 
-        then(
-            createMessage('member_was_added', frank),
-            createMessage('member_was_added', renske),
-        );
+        then(createMessage('member_was_added', frank), createMessage('member_was_added', renske));
 
         const aggregateRoot = await retrieveEntity();
         expect(aggregateRoot.timesMemberWasAdded).toEqual(2);
@@ -183,10 +177,7 @@ describe.each([
     });
 
     test('Fetching an entity at a specific version', async () => {
-        given(
-            createMessage('member_was_added', frank),
-            createMessage('member_was_added', renske),
-        );
+        given(createMessage('member_was_added', frank), createMessage('member_was_added', renske));
 
         const entity = await repository.retrieveAtVersion(id, 1);
 
