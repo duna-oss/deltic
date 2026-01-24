@@ -2,15 +2,15 @@ import type {AsyncPgPool} from '@deltic/async-pg-pool';
 import type {OffsetIdType, OffsetRepository, OffsetType} from './index.js';
 
 type OffsetRecord<Offset extends string | number, Id extends OffsetIdType> = {
-    consumer: string,
-    identifier: Id,
-    offset: Offset,
+    consumer: string;
+    identifier: Id;
+    offset: Offset;
 };
 
 export interface OffsetRepositoryUsingPgOptions {
-    tableName: string,
-    consumerName: string,
-    selectForUpdate?: true,
+    tableName: string;
+    consumerName: string;
+    selectForUpdate?: true;
 }
 
 export class OffsetRepositoryUsingPg<

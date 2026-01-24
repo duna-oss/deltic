@@ -11,19 +11,14 @@ let pool: Pool;
 let asyncPool: AsyncPgPool;
 
 describe.each([
-    [
-        'Memory',
-        () => new OffsetRepositoryUsingMemory(),
-    ],
+    ['Memory', () => new OffsetRepositoryUsingMemory()],
     [
         'Pg',
-        () => new OffsetRepositoryUsingPg<number>(
-            asyncPool,
-            {
+        () =>
+            new OffsetRepositoryUsingPg<number>(asyncPool, {
                 tableName: 'test_offsets',
                 consumerName: 'test_consumer',
-            }
-        ),
+            }),
     ],
 ] as const)('OffsetRepositoryUsing%s', (_name, factory) => {
     let repository: OffsetRepository;
