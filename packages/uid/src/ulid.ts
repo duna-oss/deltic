@@ -1,11 +1,10 @@
 import {type IdConversion, type IdValidator, PrefixedBrandedIdGenerator} from '@deltic/uid';
 import {ulid, isValid, type ULID, type UUID, ulidToUUID, uuidToULID} from 'ulid';
 
-export function ulidPrefixedBrandedIdGenerator<Prefix extends string>(prefix: Prefix): PrefixedBrandedIdGenerator<Prefix> {
-    return new PrefixedBrandedIdGenerator(
-        prefix,
-        ulid,
-    );
+export function ulidPrefixedBrandedIdGenerator<Prefix extends string>(
+    prefix: Prefix,
+): PrefixedBrandedIdGenerator<Prefix> {
+    return new PrefixedBrandedIdGenerator(prefix, ulid);
 }
 
 export class UlidToUuidIdConversion implements IdConversion<ULID, UUID> {

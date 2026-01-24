@@ -22,11 +22,10 @@ export class PrefixedBrandedIdGenerator<Prefix extends string> implements IdGene
     constructor(
         private readonly prefix: Prefix,
         private readonly factory: IdFactory<string>,
-    ) {
-    }
+    ) {}
 
     generateId(): PrefixedId<Prefix> {
-        return `${this.prefix}_${(this.factory)()}` as PrefixedId<Prefix>;
+        return `${this.prefix}_${this.factory()}` as PrefixedId<Prefix>;
     }
 }
 
@@ -45,11 +44,14 @@ export class NoIdConversion<Type extends string | number> implements IdConversio
     }
 }
 
-export class PrefixedBrandedIdConversion<Prefix extends string, DatabaseType extends string | number> implements IdConversion<PrefixedId<Prefix>, DatabaseType> {
+export class PrefixedBrandedIdConversion<
+    Prefix extends string,
+    DatabaseType extends string | number,
+> implements IdConversion<PrefixedId<Prefix>, DatabaseType> {
     private readonly prefixLength: number;
     constructor(
         private readonly prefix: Prefix,
-        private readonly conversion: IdConversion<string, DatabaseType>
+        private readonly conversion: IdConversion<string, DatabaseType>,
     ) {
         this.prefixLength = prefix.length + 1;
         this.fromDatabase.bind(this);
@@ -67,14 +69,12 @@ export class PrefixedBrandedIdConversion<Prefix extends string, DatabaseType ext
 
 export function prefixedIdValidator<Prefix extends string>(
     prefix: Prefix,
-    validator: IdValidator<string>
+    validator: IdValidator<string>,
 ): IdValidator<PrefixedId<Prefix>> {
     const fullPrefix = `${prefix}_`;
     const prefixLength = fullPrefix.length;
 
     return (id: unknown): id is PrefixedId<Prefix> => {
-        return typeof id === 'string'
-            && id.startsWith(fullPrefix)
-            && validator(id.substring(prefixLength));
+        return typeof id === 'string' && id.startsWith(fullPrefix) && validator(id.substring(prefixLength));
     };
 }
