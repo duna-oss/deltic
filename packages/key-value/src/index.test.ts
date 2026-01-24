@@ -5,7 +5,7 @@ import {Pool} from 'pg';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
-type ExampleKey = string | {first: number, second: number};
+type ExampleKey = string | {first: number; second: number};
 type ExampleValue = ValueType;
 let store: KeyValueStore<ExampleKey, ExampleValue>;
 
@@ -13,13 +13,10 @@ let pool: Pool;
 let asyncPool: AsyncPgPool;
 
 const makePgStore = () => {
-    return new KeyValueStoreUsingPg<ExampleKey, ExampleValue>(
-        asyncPool,
-        {
-            tableName: 'test__kv_store',
-            keyConversion: key => `prefixed:${key}`,
-        }
-    );
+    return new KeyValueStoreUsingPg<ExampleKey, ExampleValue>(asyncPool, {
+        tableName: 'test__kv_store',
+        keyConversion: key => `prefixed:${key}`,
+    });
 };
 
 const makeInMemoryStore = () => {

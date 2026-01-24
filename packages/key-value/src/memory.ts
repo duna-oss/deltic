@@ -1,7 +1,10 @@
 import objectHash from 'object-hash';
 import type {KeyType, KeyValueStore, ValueType} from '@deltic/key-value';
 
-export class KeyValueStoreUsingMemory<Key extends KeyType, Value extends ValueType> implements KeyValueStore<Key, Value> {
+export class KeyValueStoreUsingMemory<Key extends KeyType, Value extends ValueType> implements KeyValueStore<
+    Key,
+    Value
+> {
     private storage: Map<string, Value> = new Map();
 
     async persist(key: Key, value: Value): Promise<void> {

@@ -10,13 +10,13 @@ import {pgTestCredentials} from '../../pg-credentials.js';
 type PersonId = PrefixedId<'person'>;
 
 type ExampleObject = {
-    name: string,
-    age: number,
-    personId: PersonId,
-    likedLasagna: boolean,
-    likesMushrooms: boolean,
-    anotherUuid: string,
-    myFriend: {email: string},
+    name: string;
+    age: number;
+    personId: PersonId;
+    likedLasagna: boolean;
+    likesMushrooms: boolean;
+    anotherUuid: string;
+    myFriend: {email: string};
 };
 type ExampleIndex = Pick<ExampleObject, 'name' | 'age' | 'personId'>;
 
@@ -63,7 +63,11 @@ const makePgStore = (): KeyValueStoreWithColumnsUsingPg<ExampleIndex, ExampleObj
         [
             'likedLasagna',
             {payloadKey: 'anotherUuid'},
-            {payloadKey: 'myFriend', columnName: 'myFriendsEmail', toDatabaseValue: (friend) => friend.email},
+            {
+                payloadKey: 'myFriend',
+                columnName: 'myFriendsEmail',
+                toDatabaseValue: friend => friend.email,
+            },
         ],
         tenantContext,
         new NoIdConversion(),

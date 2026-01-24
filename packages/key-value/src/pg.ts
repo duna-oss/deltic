@@ -4,9 +4,9 @@ import type {ContextValueReader} from '@deltic/context';
 import type {IdConversion} from '@deltic/uid';
 
 type StoredRecord<V> = {
-    key: string | number,
+    key: string | number;
     // This nesting is needed to store arbitrary values, it requires a top-level array or object
-    value: {value: V},
+    value: {value: V};
 };
 
 export interface KeyValueStoreUsingPgOptions<
@@ -17,8 +17,8 @@ export interface KeyValueStoreUsingPgOptions<
     tableName: string;
     keyConversion?: KeyConversion<Key, DatabaseKey>;
 
-    tenantContext?: ContextValueReader<TenantId>,
-    tenantIdConversion?: IdConversion<TenantId>,
+    tenantContext?: ContextValueReader<TenantId>;
+    tenantIdConversion?: IdConversion<TenantId>;
 }
 
 export class KeyValueStoreUsingPg<
@@ -57,11 +57,14 @@ export class KeyValueStoreUsingPg<
         }
 
         try {
-            await connection.query(`
+            await connection.query(
+                `
                 INSERT INTO ${this.tableName} (${uniqueColumns.join(', ')}, "value")
                 VALUES (${references.join(', ')}) ON CONFLICT (tenant_id, "key") DO
                 UPDATE set "value" = EXCLUDED."value"
-            `, values);
+            `,
+                values,
+            );
         } finally {
             await this.pool.release(connection);
         }
@@ -72,7 +75,8 @@ export class KeyValueStoreUsingPg<
         const resolvedKey = this.keyConversion(key);
 
         try {
-            const result = await conn.query<StoredRecord<Value>>(`
+            const result = await conn.query<StoredRecord<Value>>(
+                `
                 SELECT "value"
                 from ${this.tableName}
                 WHERE "key" = $1

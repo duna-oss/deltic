@@ -6,29 +6,29 @@ import type {IdConversion} from '@deltic/uid';
 export type PropertyType = string | number | boolean | null | undefined | ObjectType | Array<PropertyType>;
 export type ObjectType = {[index: string | number]: PropertyType};
 export type KeyType<Key extends ObjectType> = {
-    [K in keyof Key]: K extends 'deltic_payload' ? never : Key[K]
+    [K in keyof Key]: K extends 'deltic_payload' ? never : Key[K];
 };
 
 type ColumnAndToDatabaseFn<Columns extends ObjectType> = {
     [Key in keyof Columns]: {
-        payloadKey: Key,
-        columnName?: string, // optionally name the column something else
-        toDatabaseValue?: (value: Columns[Key]) => PropertyType,
-    }
+        payloadKey: Key;
+        columnName?: string; // optionally name the column something else
+        toDatabaseValue?: (value: Columns[Key]) => PropertyType;
+    };
 }[keyof Columns];
 type ResolvedColumnAndToDatabaseFn<Columns extends ObjectType> = {
     [Key in keyof Columns]: {
-        payloadKey: Key,
-        columnName: string,
-        toDatabaseValue?: (value: Columns[Key]) => PropertyType,
-    }
+        payloadKey: Key;
+        columnName: string;
+        toDatabaseValue?: (value: Columns[Key]) => PropertyType;
+    };
 }[keyof Columns];
 type Column<Columns extends ObjectType> = keyof Columns | ColumnAndToDatabaseFn<Columns>;
 
 export type StoredRecord<Value extends ObjectType> = {
-    deltic_payload: {value: Value},
+    deltic_payload: {value: Value};
 } & {
-    [index: string | number | symbol]: any,
+    [index: string | number | symbol]: any;
 };
 
 export class KeyValueStoreWithColumnsUsingPg<
@@ -47,8 +47,8 @@ export class KeyValueStoreWithColumnsUsingPg<
         private readonly tenantContext?: ContextValueReader<TenantId>,
         private readonly tenantIdConversion?: IdConversion<TenantId>,
     ) {
-        this.identityColumns = identityKeys.map((key) => this.resolveColumnParameter<Key>(key));
-        this.storedColumns = storedKeys.map((key) => this.resolveColumnParameter<Value>(key));
+        this.identityColumns = identityKeys.map(key => this.resolveColumnParameter<Key>(key));
+        this.storedColumns = storedKeys.map(key => this.resolveColumnParameter<Value>(key));
     }
 
     async persist(key: Key, value: Value): Promise<void> {
@@ -84,12 +84,15 @@ export class KeyValueStoreWithColumnsUsingPg<
         values.push({value});
         references.push(`$${values.length}`);
 
-        await conn.query(`
+        await conn.query(
+            `
             INSERT INTO ${this.tableName} (${[...identityColumns, ...valueColums].map(name => `"${name}"`).join(', ')})
                 VALUES (${references.join(', ')})
             ON CONFLICT (${identityColumns.join(', ')}) DO UPDATE
                 SET ${valueColums.map(name => `"${name}" = EXCLUDED."${name}"`).join(', ')}
-        `, values);
+        `,
+            values,
+        );
     }
 
     async retrieve(key: Key): Promise<Value | undefined> {
@@ -106,17 +109,20 @@ export class KeyValueStoreWithColumnsUsingPg<
         for (const {payloadKey, columnName, toDatabaseValue} of this.identityColumns) {
             values.push(
                 Object.prototype.hasOwnProperty.call(key, payloadKey)
-                    ? toDatabaseValue?.(key[payloadKey]) ?? payloadKey
-                    : null
+                    ? (toDatabaseValue?.(key[payloadKey]) ?? payloadKey)
+                    : null,
             );
             whereClauses.push(`${columnName} = $${values.length}`);
         }
 
-        const {rows} = await conn.query<StoredRecord<Value>>(`
+        const {rows} = await conn.query<StoredRecord<Value>>(
+            `
             SELECT deltic_payload FROM ${this.tableName}
             WHERE ${whereClauses.join(' AND ')}
             LIMIT 1
-        `, values);
+        `,
+            values,
+        );
 
         return rows[0]?.deltic_payload.value;
     }
@@ -135,16 +141,19 @@ export class KeyValueStoreWithColumnsUsingPg<
         for (const {payloadKey, columnName, toDatabaseValue} of this.identityColumns) {
             values.push(
                 Object.prototype.hasOwnProperty.call(key, payloadKey)
-                    ? toDatabaseValue?.(key[payloadKey]) ?? payloadKey
-                    : null
+                    ? (toDatabaseValue?.(key[payloadKey]) ?? payloadKey)
+                    : null,
             );
             whereClauses.push(`${columnName} = $${values.length}`);
         }
 
-        await conn.query(`
+        await conn.query(
+            `
             DELETE FROM ${this.tableName}
             WHERE ${whereClauses.join(' AND ')}
-        `, values);
+        `,
+            values,
+        );
     }
 
     async clear(): Promise<void> {
@@ -152,7 +161,9 @@ export class KeyValueStoreWithColumnsUsingPg<
         await conn.query(`TRUNCATE TABLE ${this.tableName} RESTART IDENTITY CASCADE`);
     }
 
-    private resolveColumnParameter<Columns extends ObjectType>(column: Column<Columns>): ResolvedColumnAndToDatabaseFn<Columns> {
+    private resolveColumnParameter<Columns extends ObjectType>(
+        column: Column<Columns>,
+    ): ResolvedColumnAndToDatabaseFn<Columns> {
         if (typeof column === 'object') {
             return {
                 ...column,
@@ -160,6 +171,10 @@ export class KeyValueStoreWithColumnsUsingPg<
             };
         }
         // allow just a string to be passed, toDatabaseValue does nothing in this case
-        return {payloadKey: column, columnName: column.toString(), toDatabaseValue: (value) => value};
+        return {
+            payloadKey: column,
+            columnName: column.toString(),
+            toDatabaseValue: value => value,
+        };
     }
 }

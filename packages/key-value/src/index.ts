@@ -8,7 +8,7 @@ export interface KeyConversion<Key extends KeyType, DatabaseKey extends string |
     (key: Key): DatabaseKey;
 }
 
-export type ValueType = KeyType
+export type ValueType = KeyType;
 
 export interface KeyValueStore<Key extends KeyType, Value extends ValueType> {
     persist(key: Key, value: Value): Promise<void>;
