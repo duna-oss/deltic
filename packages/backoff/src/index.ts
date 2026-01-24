@@ -6,9 +6,6 @@ export interface BackOffStrategy {
 }
 
 export class MaxAttemptsExceeded extends StandardError {
-    static atAttempt = (attempt: number) => new MaxAttemptsExceeded(
-        'Max attempts exceeded',
-        'backoff_strategy.error.max_attempts_exceeded',
-        {attempt},
-    );
+    static atAttempt = (attempt: number) =>
+        new MaxAttemptsExceeded('Max attempts exceeded', 'backoff_strategy.error.max_attempts_exceeded', {attempt});
 }

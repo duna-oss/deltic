@@ -10,12 +10,7 @@ describe('exponential backoff', () => {
         [6, 3200],
         [7, 6400],
     ])('backs off exponentially', (tryNum, expectedDelay) => {
-        const backoffStrategy = new ExponentialBackoffStrategy(
-            100,
-            25,
-            250000,
-            2.0,
-        );
+        const backoffStrategy = new ExponentialBackoffStrategy(100, 25, 250000, 2.0);
 
         expect(backoffStrategy.backOff(tryNum)).toEqual(expectedDelay);
     });
@@ -29,12 +24,7 @@ describe('exponential backoff', () => {
         [6, 600],
         [7, 600],
     ])('respects max delay', (tryNum, expectedDelay) => {
-        const backoffStrategy = new ExponentialBackoffStrategy(
-            100,
-            25,
-            600,
-            2.0,
-        );
+        const backoffStrategy = new ExponentialBackoffStrategy(100, 25, 600, 2.0);
 
         expect(backoffStrategy.backOff(tryNum)).toEqual(expectedDelay);
     });
@@ -45,10 +35,7 @@ describe('exponential backoff', () => {
         [100, 101],
         [100, 150],
     ])('returns undefined when max tries exceeded', (maxTries, tryNum) => {
-        const backoffStrategy = new ExponentialBackoffStrategy(
-            0,
-            maxTries,
-        );
+        const backoffStrategy = new ExponentialBackoffStrategy(0, maxTries);
 
         expect(() => backoffStrategy.backOff(tryNum)).toThrow();
     });
@@ -59,12 +46,7 @@ describe('exponential backoff', () => {
         [2, 2.5, 250],
         [3, 2.5, 625],
     ])('uses a specified exponent value', (tryNum, exponent, expectedDelay) => {
-        const backoffStrategy = new ExponentialBackoffStrategy(
-            100,
-            100,
-            1000,
-            exponent,
-        );
+        const backoffStrategy = new ExponentialBackoffStrategy(100, 100, 1000, exponent);
 
         expect(backoffStrategy.backOff(tryNum)).toEqual(expectedDelay);
     });
