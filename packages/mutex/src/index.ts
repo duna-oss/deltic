@@ -19,18 +19,20 @@ function hasErrorMessage(error: unknown): error is {message: string} {
 }
 
 export class UnableToAcquireLock extends StandardError {
-    static becauseOfError = (id: LockValue, error: unknown) => new UnableToAcquireLock(
-        `Unable to acquire lock "${id}" because or error: ${hasErrorMessage(error) ? error.message : String(error)}`,
-        'mutex.unable_to_acquire_lock',
-        {id},
-        error,
-    );
+    static becauseOfError = (id: LockValue, error: unknown) =>
+        new UnableToAcquireLock(
+            `Unable to acquire lock "${id}" because or error: ${hasErrorMessage(error) ? error.message : String(error)}`,
+            'mutex.unable_to_acquire_lock',
+            {id},
+            error,
+        );
 }
 export class UnableToReleaseLock extends StandardError {
-    static becauseOfError = (id: LockValue, error: unknown) => new UnableToReleaseLock(
-        `Unable to release lock "${id}" because or error: ${hasErrorMessage(error) ? error.message : String(error)}`,
-        'mutex.unable_to_release_lock',
-        {id},
-        error,
-    );
+    static becauseOfError = (id: LockValue, error: unknown) =>
+        new UnableToReleaseLock(
+            `Unable to release lock "${id}" because or error: ${hasErrorMessage(error) ? error.message : String(error)}`,
+            'mutex.unable_to_release_lock',
+            {id},
+            error,
+        );
 }

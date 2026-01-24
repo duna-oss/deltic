@@ -7,11 +7,11 @@ import {MutexUsingMemory} from '@deltic/mutex/memory';
 export type PostgresMutexMode = 'fresh' | 'primary';
 
 export interface ConnectionStorage {
-    connections: Map<number, Connection>,
+    connections: Map<number, Connection>;
 }
 
 export interface ConnectionStorageProvider {
-    resolve(): ConnectionStorage
+    resolve(): ConnectionStorage;
 }
 
 export class StaticConnectionStorageProvider implements ConnectionStorageProvider {
@@ -25,10 +25,7 @@ export class StaticConnectionStorageProvider implements ConnectionStorageProvide
 }
 
 export class AsyncConnectionStorageProvider implements ConnectionStorageProvider {
-    constructor(
-        private readonly store = new AsyncLocalStorage<ConnectionStorage>(),
-    ) {
-    }
+    constructor(private readonly store = new AsyncLocalStorage<ConnectionStorage>()) {}
 
     resolve(): ConnectionStorage {
         const context = this.store.getStore();
@@ -41,9 +38,12 @@ export class AsyncConnectionStorageProvider implements ConnectionStorageProvider
     }
 
     run<R>(callback: () => R): R {
-        return this.store.run({
-            connections: new Map(),
-        }, callback);
+        return this.store.run(
+            {
+                connections: new Map(),
+            },
+            callback,
+        );
     }
 }
 
@@ -53,8 +53,7 @@ export class MutexUsingPostgres<LockID extends LockValue> implements DynamicMute
         private readonly idConverter: LockIdConverter<LockID>,
         private readonly mode: PostgresMutexMode,
         private readonly connectionStorage: ConnectionStorageProvider = new StaticConnectionStorageProvider(),
-    ) {
-    }
+    ) {}
 
     private connection(): Promise<Connection> {
         if (this.mode === 'fresh') {
@@ -86,7 +85,9 @@ export class MutexUsingPostgres<LockID extends LockValue> implements DynamicMute
         const lockId = this.idConverter.convert(id);
 
         try {
-            const response = await client.query<{locked: boolean}>('select pg_try_advisory_lock($1) as locked', [lockId]);
+            const response = await client.query<{locked: boolean}>('select pg_try_advisory_lock($1) as locked', [
+                lockId,
+            ]);
             const wasLocked = response.rows[0].locked;
 
             if (wasLocked) {
@@ -120,7 +121,10 @@ export class MutexUsingPostgres<LockID extends LockValue> implements DynamicMute
             await this.pool.release(connection);
 
             if (response.rows[0].pg_advisory_unlock === false) {
-                throw UnableToReleaseLock.becauseOfError(id, new Error('Database told us it could not release the lock.'));
+                throw UnableToReleaseLock.becauseOfError(
+                    id,
+                    new Error('Database told us it could not release the lock.'),
+                );
             }
         } catch (e) {
             await this.pool.release(connection, e);
@@ -135,24 +139,20 @@ export class MutexUsingPostgres<LockID extends LockValue> implements DynamicMute
 }
 
 export interface LockIdConverter<LockID> {
-    convert(id: LockID): number,
+    convert(id: LockID): number;
 }
 
 export type LockRange = {
-    base: number,
-    range: number,
+    base: number;
+    range: number;
 };
 
-export function makePostgresMutex<
-    const LockID extends string | number,
->(
-    options: {
-        pool: AsyncPgPool,
-        converter: LockIdConverter<LockID>,
-        mode?: PostgresMutexMode,
-        connectionStorage?: ConnectionStorageProvider,
-    }
-): DynamicMutex<LockID> {
+export function makePostgresMutex<const LockID extends string | number>(options: {
+    pool: AsyncPgPool;
+    converter: LockIdConverter<LockID>;
+    mode?: PostgresMutexMode;
+    connectionStorage?: ConnectionStorageProvider;
+}): DynamicMutex<LockID> {
     const mode: PostgresMutexMode = options.mode ?? 'fresh';
 
     const primaryMutex = new MutexUsingPostgres(
@@ -166,8 +166,5 @@ export function makePostgresMutex<
         return primaryMutex;
     }
 
-    return new MultiMutex([
-        new MutexUsingMemory(),
-        primaryMutex,
-    ]);
+    return new MultiMutex([new MutexUsingMemory(), primaryMutex]);
 }

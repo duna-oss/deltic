@@ -1,15 +1,9 @@
-import {
-    type StaticMutex,
-    UnableToAcquireLock,
-    UnableToReleaseLock,
-} from './index.js';
+import {type StaticMutex, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 import {StaticMutexUsingMemory} from './static-memory.js';
 
 let mutex: StaticMutex;
 
-describe.each([
-    ['Memory', () => new StaticMutexUsingMemory()],
-])('Mutex using %s', (_name, factory) => {
+describe.each([['Memory', () => new StaticMutexUsingMemory()]])('Mutex using %s', (_name, factory) => {
     beforeEach(() => {
         mutex = factory();
     });
@@ -33,9 +27,7 @@ describe.each([
         await mutex.lock(100);
 
         // act
-        await expect(
-            mutex.lock(1),
-        ).rejects.toThrow(UnableToAcquireLock);
+        await expect(mutex.lock(1)).rejects.toThrow(UnableToAcquireLock);
 
         // cleanup
         await mutex.unlock();
@@ -47,7 +39,6 @@ describe.each([
 
         // act
         const locked = await mutex.tryLock();
-
 
         // assert
         expect(locked).toBe(false);
@@ -70,8 +61,6 @@ describe.each([
     });
 
     test('locks that are not acquired cannot be released', async () => {
-        await expect(
-            mutex.unlock(),
-        ).rejects.toThrow(UnableToReleaseLock);
+        await expect(mutex.unlock()).rejects.toThrow(UnableToReleaseLock);
     });
 });

@@ -14,27 +14,26 @@ let pool: Pool;
 let asyncPool: AsyncPgPool;
 
 describe.each([
+    ['Memory', () => new MutexUsingMemory<string>()],
+    ['MultiMutex', () => new MultiMutex<string>([new MutexUsingMemory<string>(), new MutexUsingMemory<string>()])],
     [
-        'Memory',
-        () =>  new MutexUsingMemory<string>(),
+        'MutexUsingPostgres - primary',
+        () =>
+            makePostgresMutex({
+                pool: asyncPool,
+                converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
+                mode: 'primary',
+            }),
     ],
     [
-        'MultiMutex',
-        () => new MultiMutex<string>([
-            new MutexUsingMemory<string>(),
-            new MutexUsingMemory<string>(),
-        ])
+        'MutexUsingPostgres - fresh',
+        () =>
+            makePostgresMutex({
+                pool: asyncPool,
+                converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
+                mode: 'fresh',
+            }),
     ],
-    ['MutexUsingPostgres - primary', () => makePostgresMutex({
-        pool: asyncPool,
-        converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
-        mode: 'primary',
-    })],
-    ['MutexUsingPostgres - fresh', () => makePostgresMutex({
-        pool: asyncPool,
-        converter: new Crc32LockIdConverter({base: 0, range: 10_000}),
-        mode: 'fresh',
-    })],
 ] as const)('Mutex using %s', (_name, factory) => {
     let mutex: DynamicMutex<string>;
 
@@ -46,7 +45,7 @@ describe.each([
         asyncPool = new AsyncPgPool(pool, {
             onRelease: async connection => {
                 await connection.query('RESET ALL');
-            }
+            },
         });
         mutex = factory();
     });
@@ -60,16 +59,17 @@ describe.each([
     });
 
     test('sanity check the locking on postgres', async () => {
-        const createPool = () => new Pool({
-            host: 'localhost',
-            user: 'duna',
-            password: 'duna',
-            port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 20,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
-        });
+        const createPool = () =>
+            new Pool({
+                host: 'localhost',
+                user: 'duna',
+                password: 'duna',
+                port: Number(process.env.POSTGRES_PORT ?? 35432),
+                max: 20,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 2000,
+                maxLifetimeSeconds: 60,
+            });
 
         const p1 = createPool();
         const pool1 = new AsyncPgPool(p1);
@@ -104,13 +104,15 @@ describe.each([
         const promises: Promise<any>[] = [];
 
         for (let i = 0; i < 5; i++) {
-            promises.push((async (index: number) => {
-                await mutex.lock(lockId1, 200 + i);
-                result.push([index]);
-                await setTimeout(10 - i);
-                result.at(-1)!.push(index);
-                await mutex.unlock(lockId1);
-            })(i));
+            promises.push(
+                (async (index: number) => {
+                    await mutex.lock(lockId1, 200 + i);
+                    result.push([index]);
+                    await setTimeout(10 - i);
+                    result.at(-1)!.push(index);
+                    await mutex.unlock(lockId1);
+                })(i),
+            );
         }
 
         await Promise.all(promises);
@@ -141,9 +143,7 @@ describe.each([
         await mutex.lock(lockId1, 50);
 
         // act
-        await expect(
-            mutex.lock(lockId1, 1),
-        ).rejects.toThrow(UnableToAcquireLock);
+        await expect(mutex.lock(lockId1, 1)).rejects.toThrow(UnableToAcquireLock);
 
         // cleanup
         await mutex.unlock(lockId1);
@@ -155,7 +155,6 @@ describe.each([
 
         // act
         const locked = await mutex.tryLock(lockId1);
-
 
         // assert
         expect(locked).toBe(false);
@@ -178,8 +177,6 @@ describe.each([
     });
 
     test('locks that are not acquired cannot be released', async () => {
-        await expect(
-            mutex.unlock(lockId1),
-        ).rejects.toThrow(UnableToReleaseLock);
+        await expect(mutex.unlock(lockId1)).rejects.toThrow(UnableToReleaseLock);
     });
 });

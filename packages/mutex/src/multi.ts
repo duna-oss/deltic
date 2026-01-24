@@ -1,9 +1,7 @@
 import type {LockValue, DynamicMutex} from './index.js';
 
 export class MultiMutex<LockID extends LockValue> implements DynamicMutex<LockID> {
-    constructor(private readonly mutexes: DynamicMutex<LockID>[]) {
-    }
-
+    constructor(private readonly mutexes: DynamicMutex<LockID>[]) {}
 
     async lock(id: LockID, timeout?: number): Promise<void> {
         const start = process.hrtime.bigint();
@@ -67,7 +65,6 @@ export class MultiMutex<LockID extends LockValue> implements DynamicMutex<LockID
             await mutex.unlock(id);
         }
     }
-
 }
 
 export default function hrTimeToMs(hrtime: bigint) {

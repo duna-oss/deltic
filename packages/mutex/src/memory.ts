@@ -36,7 +36,7 @@ export class MutexUsingMemory<LockID extends LockValue> implements DynamicMutex<
             reason => {
                 lockWaiter.done = true;
                 throw UnableToAcquireLock.becauseOfError(id, reason);
-            }
+            },
         );
     }
 
@@ -61,7 +61,7 @@ export class MutexUsingMemory<LockID extends LockValue> implements DynamicMutex<
 
         let waiter = this.waiters.shift();
 
-        while(waiter && waiter.done) {
+        while (waiter && waiter.done) {
             waiter = this.waiters.shift();
         }
 
