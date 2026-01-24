@@ -199,7 +199,7 @@ describe('AsyncPgPool', () => {
         const provider = new AsyncPgPool(pool, {
             keepConnections: 0,
             onRelease: 'RESET app.tenant_id',
-            onClaim: (client) => client.query(`SET app.tenant_id = '${++index}'`),
+            onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
         });
 
         async function fetchTenantId() {
