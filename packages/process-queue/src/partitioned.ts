@@ -48,5 +48,4 @@ export class PartitionedProcessQueue<Task> implements ProcessQueue<Task> {
         await Promise.all(p);
         this.onStop(this);
     }
-
 }

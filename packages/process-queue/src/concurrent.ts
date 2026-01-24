@@ -6,14 +6,12 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
     private stack: ProcessStackItem<Task>[] = [];
     private running: boolean = true;
     private processing: number = 0;
-    private timer: ReturnType<typeof setImmediate>| undefined = undefined;
+    private timer: ReturnType<typeof setImmediate> | undefined = undefined;
     private config: Required<ProcessQueueOptions<Task>>;
     private maxProcessing: number;
     private waitGroup: WaitGroup = new WaitGroup();
 
-    public constructor(
-        options: ProcessQueueOptions<Task>,
-    ) {
+    public constructor(options: ProcessQueueOptions<Task>) {
         this.config = {...ProcessQueueDefaults, ...options};
         this.processNextTask = this.processNextTask.bind(this);
         this.skipCurrentTask = this.skipCurrentTask.bind(this);
@@ -60,11 +58,13 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
             next.processing = true;
             this.processing++;
             const promise = this.config.processor.apply(null, [next.task]);
-            promise.then(() => {
-                this.handleProcessorResult(undefined, next as ProcessStackItem<Task>);
-            }).catch((err: Error) => {
-                this.handleProcessorResult(err, next  as ProcessStackItem<Task>);
-            });
+            promise
+                .then(() => {
+                    this.handleProcessorResult(undefined, next as ProcessStackItem<Task>);
+                })
+                .catch((err: Error) => {
+                    this.handleProcessorResult(err, next as ProcessStackItem<Task>);
+                });
 
             this.scheduleNextTask();
         }
@@ -72,7 +72,7 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
 
     public push(task: Task): Promise<Task> {
         const {reject, resolve, promise} = Promise.withResolvers<Task>();
-        this.stack.push({task, promise, reject, resolve} );
+        this.stack.push({task, promise, reject, resolve});
 
         if (this.stack.length === 1 && this.running) {
             this.scheduleNextTask();
@@ -89,10 +89,15 @@ export class ConcurrentProcessQueue<Task> implements ProcessQueue<Task> {
         if (err) {
             let skipped = false;
 
-            await this.config.onError({error: err, task, queue: this, skipCurrentTask: () => {
-                this.skipCurrentTask(item);
-                skipped = true;
-            }});
+            await this.config.onError({
+                error: err,
+                task,
+                queue: this,
+                skipCurrentTask: () => {
+                    this.skipCurrentTask(item);
+                    skipped = true;
+                },
+            });
             reject(err);
 
             if (skipped === false && this.config.stopOnError) {
