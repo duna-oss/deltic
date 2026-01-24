@@ -2,7 +2,6 @@ import {defineConfig} from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import {join} from 'node:path';
 
-
 export default defineConfig({
     plugins: [tsconfigPaths()],
     resolve: {
@@ -44,7 +43,7 @@ export default defineConfig({
                 },
                 extends: true,
             },
-        ]
+        ],
         // setupFiles: ['dotenv/config'],
 
         // pool: 'threads',
