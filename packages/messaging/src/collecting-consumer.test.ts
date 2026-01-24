@@ -2,13 +2,17 @@ import {type AnyMessageFrom, type StreamDefinition} from './index.js';
 import {CollectingMessageConsumer} from './collecting-consumer.js';
 
 interface ExampleStream extends StreamDefinition {
-    topic: 'example',
+    topic: 'example';
     messages: {
-        ['example']: string,
-    },
+        ['example']: string;
+    };
 }
 
-const create = (payload: string): AnyMessageFrom<ExampleStream> => ({headers: {}, type: 'example', payload});
+const create = (payload: string): AnyMessageFrom<ExampleStream> => ({
+    headers: {},
+    type: 'example',
+    payload,
+});
 
 describe('InMemoryMessageConsumer', () => {
     test('it collects messages it consumes', async () => {

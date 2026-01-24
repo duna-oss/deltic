@@ -2,13 +2,17 @@ import {type AnyMessageFrom, type StreamDefinition} from './index.js';
 import {CollectingMessageDispatcher} from './collecting-dispatcher.js';
 
 interface ExampleStream extends StreamDefinition {
-    topic: 'example',
+    topic: 'example';
     messages: {
-        example: string,
-    },
+        example: string;
+    };
 }
 
-const create = (payload: string): AnyMessageFrom<ExampleStream> => ({headers: {}, type: 'example', payload});
+const create = (payload: string): AnyMessageFrom<ExampleStream> => ({
+    headers: {},
+    type: 'example',
+    payload,
+});
 
 describe('InMemoryMessageDispatcher', () => {
     test('it collects messages it produces', async () => {

@@ -1,6 +1,7 @@
 import type {
     AggregateIdWithStreamOffset,
-    AnyMessageFrom, IdPaginationOptions,
+    AnyMessageFrom,
+    IdPaginationOptions,
     MessageRepository,
     MessagesFrom,
     StreamDefinition,
@@ -10,14 +11,14 @@ import {SyncTenantContext, type ContextValueReader} from '@deltic/context';
 import {messageWithHeaders} from './helpers.js';
 
 export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> implements MessageRepository<Stream> {
-    private messages: Map<string | number | undefined, Map<Stream['aggregateRootId'], MessagesFrom<Stream>>> = new Map();
+    private messages: Map<string | number | undefined, Map<Stream['aggregateRootId'], MessagesFrom<Stream>>> =
+        new Map();
     private _lastCommit: MessagesFrom<Stream> = [];
     private incrementalId: number = 0;
 
     constructor(
-        private readonly tenantContext: ContextValueReader<Stream['aggregateRootId']> = new SyncTenantContext()
-    ) {
-    }
+        private readonly tenantContext: ContextValueReader<Stream['aggregateRootId']> = new SyncTenantContext(),
+    ) {}
 
     async persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void> {
         this.persistSync(id, messages);
@@ -25,11 +26,13 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
 
     persistSync(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): void {
         const tenantId = this.tenantContext.resolve();
-        messages = messages.map(m => messageWithHeaders(m, {
-            aggregate_root_id: id,
-            tenant_id: tenantId,
-            stream_offset: ++this.incrementalId,
-        }));
+        messages = messages.map(m =>
+            messageWithHeaders(m, {
+                aggregate_root_id: id,
+                tenant_id: tenantId,
+                stream_offset: ++this.incrementalId,
+            }),
+        );
         const list = (this.messages.get(tenantId)?.get(id) || []).concat(messages);
         this._lastCommit = messages;
 
@@ -40,7 +43,10 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
         this.messages.get(tenantId)!.set(id, list);
     }
 
-    async* retrieveAllAfterVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    async *retrieveAllAfterVersion(
+        id: Stream['aggregateRootId'],
+        version: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         for await (const m of this.retrieveAllForAggregate(id)) {
             if (Number(m.headers['aggregate_root_version']) > version) {
                 yield m;
@@ -48,11 +54,18 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
         }
     }
 
-    retrieveAllUntilVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    retrieveAllUntilVersion(
+        id: Stream['aggregateRootId'],
+        version: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         return this.retrieveBetweenVersions(id, 0, version);
     }
 
-    async* retrieveBetweenVersions(id: Stream['aggregateRootId'], after: number, before: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    async *retrieveBetweenVersions(
+        id: Stream['aggregateRootId'],
+        after: number,
+        before: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         for await (const m of this.retrieveAllForAggregate(id)) {
             const version = Number(m.headers['aggregate_root_version']);
 
@@ -62,15 +75,15 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
         }
     }
 
-    async* retrieveAllForAggregate(id: Stream['aggregateRootId']): AsyncGenerator<AnyMessageFrom<Stream>> {
+    async *retrieveAllForAggregate(id: Stream['aggregateRootId']): AsyncGenerator<AnyMessageFrom<Stream>> {
         const tenantId = this.tenantContext.resolve();
 
-        for (const m of (this.messages.get(tenantId)?.get(id) || [])) {
+        for (const m of this.messages.get(tenantId)?.get(id) || []) {
             yield m;
         }
     }
 
-    async* paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+    async *paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
         const {limit, afterId, whichMessage = 'last'} = options;
         let left = limit;
         let shouldYield = afterId === undefined;
@@ -78,10 +91,7 @@ export class MessageRepositoryUsingMemory<Stream extends StreamDefinition> imple
 
         for (const group of this.messages.values()) {
             for (const [aggregateId, messages] of group) {
-                if (
-                    collected.has(aggregateId) ||
-                    messages.length === 0
-                ) {
+                if (collected.has(aggregateId) || messages.length === 0) {
                     continue;
                 }
                 collected.add(aggregateId);

@@ -9,17 +9,16 @@ import {
 } from '@deltic/messaging/outbox';
 
 interface OutboxRecordUsingPg<Stream extends StreamDefinition> {
-    id: number,
-    consumed: boolean,
-    payload: AnyMessageFrom<Stream>,
+    id: number;
+    consumed: boolean;
+    payload: AnyMessageFrom<Stream>;
 }
 
 export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements OutboxRepository<Stream> {
     constructor(
         private readonly pool: AsyncPgPool,
         private readonly tableName: string,
-    ) {
-    }
+    ) {}
 
     async cleanupConsumedMessages(limit: number): Promise<number> {
         const connection = await this.pool.claim();
@@ -71,9 +70,7 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
         }
 
         const inTransaction = this.pool.inTransaction();
-        const transaction = inTransaction ?
-            this.pool.withTransaction()
-            : await this.pool.begin();
+        const transaction = inTransaction ? this.pool.withTransaction() : await this.pool.begin();
 
         const values: any[] = [false];
         const references: string[] = [];
@@ -85,11 +82,10 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
         }
 
         try {
-            await transaction
-                .query(
-                    `INSERT INTO ${this.tableName} (consumed, payload) VALUES (${references.join('), (')});`,
-                    values,
-                );
+            await transaction.query(
+                `INSERT INTO ${this.tableName} (consumed, payload) VALUES (${references.join('), (')});`,
+                values,
+            );
             await transaction.query(`NOTIFY outbox_publish__${this.tableName}`);
             await transaction.query(`NOTIFY outbox_publish, '${this.tableName}'`);
 
@@ -104,26 +100,24 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
         }
     }
 
-    async* retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
-        const records = await (await this.pool.primary())
-            .query<OutboxRecordUsingPg<Stream>>(
-                `SELECT id, payload, consumed
+    async *retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
+        const records = await (
+            await this.pool.primary()
+        ).query<OutboxRecordUsingPg<Stream>>(
+            `SELECT id, payload, consumed
                     FROM ${this.tableName}
                     WHERE consumed = $1
                     ORDER BY id ASC
                     LIMIT $2`,
-                [false, size],
-            );
+            [false, size],
+        );
 
         for await (const record of records.rows) {
-            yield messageWithHeaders(
-                record.payload,
-                {
-                    [OUTBOX_ID_HEADER_KEY]: record.id,
-                    [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
-                    [OUTBOX_CONSUMED_HEADER_KEY]: record.consumed,
-                },
-            );
+            yield messageWithHeaders(record.payload, {
+                [OUTBOX_ID_HEADER_KEY]: record.id,
+                [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
+                [OUTBOX_CONSUMED_HEADER_KEY]: record.consumed,
+            });
         }
     }
 
@@ -133,19 +127,21 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
 
     async numberOfConsumedMessages(): Promise<number> {
         return Number(
-            (await
-                    (await this.pool.primary())
-                        .query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = true`)
-            ).rows[0].count
+            (
+                await (
+                    await this.pool.primary()
+                ).query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = true`)
+            ).rows[0].count,
         );
     }
 
     async numberOfPendingMessages(): Promise<number> {
         return Number(
-            (await
-                    (await this.pool.primary())
-                        .query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = false`)
-            ).rows[0].count
+            (
+                await (
+                    await this.pool.primary()
+                ).query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = false`)
+            ).rows[0].count,
         );
     }
 }

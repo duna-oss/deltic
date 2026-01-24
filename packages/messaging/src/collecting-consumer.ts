@@ -3,9 +3,7 @@ import type {AnyMessageFrom, MessageConsumer, MessagesFrom, StreamDefinition} fr
 export class CollectingMessageConsumer<Stream extends StreamDefinition> implements MessageConsumer<Stream> {
     public readonly messages: MessagesFrom<Stream> = [];
 
-    constructor(
-    ) {
-    }
+    constructor() {}
 
     public clear(): void {
         while (this.messages.length > 0) {

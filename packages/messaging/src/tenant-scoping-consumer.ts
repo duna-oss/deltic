@@ -5,8 +5,7 @@ export class TenantScopingMessageConsumer<Stream extends StreamDefinition> imple
     constructor(
         private readonly tenantContext: ContextValueWriter<string>,
         private readonly consumer: MessageConsumer<Stream>,
-    ) {
-    }
+    ) {}
 
     async consume(message: AnyMessageFrom<Stream>): Promise<void> {
         const tenantId = message.headers['tenant_id'] as string | undefined;

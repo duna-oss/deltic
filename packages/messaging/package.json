@@ -82,6 +82,18 @@
       "module-sync": "./dist/collecting-consumer.js",
       "types": "./dist/collecting-consumer.d.ts"
     },
+    "./consuming-dispatcher": {
+      "import": "./dist/consuming-dispatcher.js",
+      "require": "./dist/consuming-dispatcher.cjs",
+      "module-sync": "./dist/consuming-dispatcher.js",
+      "types": "./dist/consuming-dispatcher.d.ts"
+    },
+    "./exactly-once-consumer-decorator": {
+      "import": "./dist/exactly-once-consumer-decorator.js",
+      "require": "./dist/exactly-once-consumer-decorator.cjs",
+      "module-sync": "./dist/exactly-once-consumer-decorator.js",
+      "types": "./dist/exactly-once-consumer-decorator.d.ts"
+    },
     "./pg/outbox-repository": {
       "import": "./dist/pg/outbox-repository.js",
       "require": "./dist/pg/outbox-repository.cjs",

@@ -12,11 +12,11 @@ import {OutboxMessageDispatcher, OutboxRelay} from '@deltic/messaging/outbox';
 const testClock = createTestClock();
 
 interface ExampleStream {
-    aggregateRootId: string | number,
+    aggregateRootId: string | number;
     messages: {
-        ping: number,
-        pong: number,
-    },
+        ping: number;
+        pong: number;
+    };
 }
 
 const createMessage = messageFactory<ExampleStream>();
@@ -72,10 +72,7 @@ describe('Delayed Outbox Repository', () => {
         );
         dispatcher = new OutboxMessageDispatcher(repository);
         collectingDispatcher = new CollectingMessageDispatcher();
-        relay = new OutboxRelay(
-            repository,
-            collectingDispatcher,
-        );
+        relay = new OutboxRelay(repository, collectingDispatcher);
     });
     afterEach(async () => {
         await repository.truncate();

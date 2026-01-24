@@ -1,6 +1,7 @@
 import type {
     AggregateIdWithStreamOffset,
-    AnyMessageFrom, IdPaginationOptions,
+    AnyMessageFrom,
+    IdPaginationOptions,
     MessageRepository,
     MessagesFrom,
     StreamDefinition,
@@ -11,17 +12,17 @@ import {messageWithHeader} from '../helpers.js';
 import type {IdConversion} from '@deltic/uid';
 
 interface MessageRecord<Stream extends StreamDefinition> {
-    id: number,
-    version: number,
-    event_type: string,
-    aggregate_root_id: string,
-    tenant_id: string | null,
-    payload: AnyMessageFrom<Stream>,
+    id: number;
+    version: number;
+    event_type: string;
+    aggregate_root_id: string;
+    tenant_id: string | null;
+    payload: AnyMessageFrom<Stream>;
 }
 
 export interface NotificationConfiguration {
-    style: 'both' | 'channel' | 'central' | 'none',
-    channelName?: string,
+    style: 'both' | 'channel' | 'central' | 'none';
+    channelName?: string;
 }
 
 export interface MessageRepositoryUsingPgOptions<Stream extends StreamDefinition> {
@@ -37,7 +38,6 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
     private readonly tenantContext?: ContextValueReader<string>;
     private readonly notificationConfiguration: NotificationConfiguration;
 
-
     constructor(
         private readonly pool: AsyncPgPool,
         private readonly tableName: string,
@@ -48,15 +48,25 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
         this.notificationConfiguration = options.notificationConfiguration ?? {style: 'none'};
     }
 
-    retrieveAllAfterVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    retrieveAllAfterVersion(
+        id: Stream['aggregateRootId'],
+        version: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         return this.retrieveBetweenVersions(id, version, 0);
     }
 
-    retrieveAllUntilVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    retrieveAllUntilVersion(
+        id: Stream['aggregateRootId'],
+        version: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         return this.retrieveBetweenVersions(id, 0, version);
     }
 
-    async* retrieveBetweenVersions(id: Stream['aggregateRootId'], after: number, before: number): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
+    async *retrieveBetweenVersions(
+        id: Stream['aggregateRootId'],
+        after: number,
+        before: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>, any, unknown> {
         const tenantId = this.tenantContext?.mustResolve();
         const connection = await this.pool.primary();
 
@@ -88,14 +98,17 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
             whereClauses.push(`version < $${values.length}`);
         }
 
-        const records = await connection.query<MessageRecord<Stream>>(`
+        const records = await connection.query<MessageRecord<Stream>>(
+            `
             SELECT id, payload FROM ${this.tableName}
             WHERE ${whereClauses.join(' AND ')}
             ORDER BY version ASC
-        `, values);
+        `,
+            values,
+        );
 
         for (const r of records.rows) {
-            const message = (r.payload as unknown) as AnyMessageFrom<Stream>;
+            const message = r.payload as unknown as AnyMessageFrom<Stream>;
 
             yield messageWithHeader(message, {
                 key: 'stream_offset',
@@ -132,7 +145,8 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
 
         if (style === 'none') {
             const connection = await this.pool.primary();
-            await connection.query(`INSERT INTO ${this.tableName} (
+            await connection.query(
+                `INSERT INTO ${this.tableName} (
                     ${tenantIdColumn}aggregate_root_id, version, event_type, payload
                     ) VALUES (${references.join('), (')});`,
                 values,
@@ -142,17 +156,15 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
         }
 
         const inTransaction = this.pool.inTransaction();
-        const transaction = inTransaction ?
-            this.pool.withTransaction()
-            : await this.pool.begin();
+        const transaction = inTransaction ? this.pool.withTransaction() : await this.pool.begin();
 
         try {
-            await transaction
-                .query(`INSERT INTO ${this.tableName} (
+            await transaction.query(
+                `INSERT INTO ${this.tableName} (
                     ${tenantIdColumn}aggregate_root_id, version, event_type, payload
                     ) VALUES (${references.join('), (')});`,
-                    values,
-                );
+                values,
+            );
 
             if (style !== 'central') {
                 await transaction.query(`NOTIFY ${channelName}__${this.tableName}`);
@@ -177,7 +189,7 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
         return this.retrieveBetweenVersions(id, 0, 0);
     }
 
-    async* paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
+    async *paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>> {
         const {limit, afterId, whichMessage = 'last'} = options;
         const connection = await this.pool.primary();
 
@@ -189,15 +201,20 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
             whereClause = 'WHERE aggregate_root_id > $1';
         }
 
-        const {rows} = await connection.query<MessageRecord<Stream>>(`
+        const {rows} = await connection.query<MessageRecord<Stream>>(
+            `
             SELECT DISTINCT ON (aggregate_root_id) aggregate_root_id, payload, version FROM ${this.tableName} ${whereClause}
             ORDER BY aggregate_root_id, version ${whichMessage === 'last' ? 'DESC' : 'ASC'}
             LIMIT $${values.length}
-        `, values);
+        `,
+            values,
+        );
 
         for (const row of rows) {
             yield {
-                id: this.idConversion?.fromDatabase(row.aggregate_root_id) ?? row.aggregate_root_id as Stream['aggregateRootId'],
+                id:
+                    this.idConversion?.fromDatabase(row.aggregate_root_id) ??
+                    (row.aggregate_root_id as Stream['aggregateRootId']),
                 version: Number(row.version),
                 message: messageWithHeader(row.payload, {
                     key: 'stream_offset',

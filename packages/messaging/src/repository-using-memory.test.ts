@@ -9,17 +9,20 @@ enum ExampleTypes {
 }
 
 interface ExampleEventStream {
-    aggregateRootId: string,
+    aggregateRootId: string;
     messages: {
-        [ExampleTypes.First]: string,
-        [ExampleTypes.Second]: number,
-    },
+        [ExampleTypes.First]: string;
+        [ExampleTypes.Second]: number;
+    };
 }
 
 describe('InMemoryMessageRepository', () => {
     test('it stores and retrieves messages', async () => {
         const repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
-        const firstMessage: AnyMessageFrom<ExampleEventStream> = createMessage<ExampleEventStream>(ExampleTypes.First, 'first');
+        const firstMessage: AnyMessageFrom<ExampleEventStream> = createMessage<ExampleEventStream>(
+            ExampleTypes.First,
+            'first',
+        );
         const secondMessage: AnyMessageFrom<ExampleEventStream> = createMessage(ExampleTypes.Second, 2);
         await repository.persist('this', [firstMessage, secondMessage]);
         const retrievedMessages: AnyMessageFrom<ExampleEventStream>[] = [];
@@ -56,7 +59,11 @@ describe('InMemoryMessageRepository', () => {
 
     test('it can clear itself', async () => {
         const repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
-        const firstMessage: AnyMessageFrom<ExampleEventStream> = {headers: {}, type: ExampleTypes.First, payload: 'first'};
+        const firstMessage: AnyMessageFrom<ExampleEventStream> = {
+            headers: {},
+            type: ExampleTypes.First,
+            payload: 'first',
+        };
         await repository.persist('this', [firstMessage]);
         repository.clear();
         const retrievedMessages: AnyMessageFrom<ExampleEventStream>[] = [];
@@ -69,13 +76,21 @@ describe('InMemoryMessageRepository', () => {
     test('it exposes the last commit', async () => {
         const repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
         const firstMessage: AnyMessageFrom<ExampleEventStream> = createMessage(ExampleTypes.First, 'first');
-        const secondMessage: AnyMessageFrom<ExampleEventStream> = {headers: {}, type: ExampleTypes.Second, payload: 2};
+        const secondMessage: AnyMessageFrom<ExampleEventStream> = {
+            headers: {},
+            type: ExampleTypes.Second,
+            payload: 2,
+        };
         await repository.persist('this', [firstMessage, secondMessage]);
         let lastCommit = repository.lastCommit;
         expect(lastCommit).toHaveLength(2);
         expect(lastCommit.map(m => m.payload)).toEqual([firstMessage.payload, secondMessage.payload]);
 
-        const thirdMessage: AnyMessageFrom<ExampleEventStream> = {headers: {}, type: ExampleTypes.First, payload: 'plus 2'};
+        const thirdMessage: AnyMessageFrom<ExampleEventStream> = {
+            headers: {},
+            type: ExampleTypes.First,
+            payload: 'plus 2',
+        };
         await repository.persist('this', [thirdMessage]);
         lastCommit = repository.lastCommit;
         expect(lastCommit).toHaveLength(1);
@@ -150,13 +165,16 @@ describe('InMemoryMessageRepository', () => {
         beforeEach(async () => {
             repository = new MessageRepositoryUsingMemory<ExampleEventStream>();
             let id = 0;
-            ids = Array(10).fill(0).map(() => String(++id) as ExampleEventStream['aggregateRootId']);
+            ids = Array(10)
+                .fill(0)
+                .map(() => String(++id) as ExampleEventStream['aggregateRootId']);
             const inserts: [ExampleEventStream['aggregateRootId'], MessagesFrom<ExampleEventStream>][] = ids.map(id => {
                 let index = 0;
-                const make = () => createMessage<ExampleEventStream>(ExampleTypes.First, 'first', {
-                    aggregate_root_version: ++index,
-                    aggregate_root_id: id,
-                });
+                const make = () =>
+                    createMessage<ExampleEventStream>(ExampleTypes.First, 'first', {
+                        aggregate_root_version: ++index,
+                        aggregate_root_id: id,
+                    });
 
                 return [id, [make(), make(), make()]];
             });
@@ -166,7 +184,11 @@ describe('InMemoryMessageRepository', () => {
         });
 
         test('it can paginate over ids', async () => {
-            const paginated = repository.paginateIds({limit: 5, afterId: '2', whichMessage: 'last'});
+            const paginated = repository.paginateIds({
+                limit: 5,
+                afterId: '2',
+                whichMessage: 'last',
+            });
             const messages = await collect(paginated);
             const collected: string[] = messages.map(m => m.id);
             const lastVersion = messages.map(m => m.version).at(-1);
@@ -177,7 +199,11 @@ describe('InMemoryMessageRepository', () => {
         });
 
         test('it can paginate over ids, and get the first message', async () => {
-            const paginated = repository.paginateIds({limit: 5, afterId: '2', whichMessage: 'first'});
+            const paginated = repository.paginateIds({
+                limit: 5,
+                afterId: '2',
+                whichMessage: 'first',
+            });
             const messages = await collect(paginated);
             const collected: string[] = messages.map(m => m.id);
             const lastVersion = messages.map(m => m.version).at(-1);

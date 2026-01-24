@@ -3,10 +3,10 @@ import {setTimeout as wait} from 'node:timers/promises';
 import {SequentialMessageConsumer} from './sequential-consumer.js';
 
 interface DelayedResolvingStream extends StreamDefinition {
-    topic: 'delayed',
+    topic: 'delayed';
     messages: {
-        delayed: number,
-    },
+        delayed: number;
+    };
 }
 
 class DelayedConsumer implements MessageConsumer<DelayedResolvingStream> {
@@ -35,7 +35,9 @@ describe('SynchronousMessageConsumer', () => {
         const delayedConsumer = new DelayedConsumer();
         const synchronousConsumer = new SequentialMessageConsumer<DelayedResolvingStream>(delayedConsumer);
         const delays = [50, 1, 25];
-        const promises = delays.map(delay => synchronousConsumer.consume({headers: {}, type: 'delayed', payload: delay}));
+        const promises = delays.map(delay =>
+            synchronousConsumer.consume({headers: {}, type: 'delayed', payload: delay}),
+        );
         await Promise.all(promises);
         expect(delayedConsumer.consumedDelays).toEqual([50, 50, 1, 1, 25, 25]);
     });
@@ -56,9 +58,12 @@ describe('SynchronousMessageConsumer', () => {
 
     test('it bubbles errors up', async () => {
         const exceptionInducingConsumer = new ExceptionInducingMessageConsumer();
-        const synchronousMessageConsumer = new SequentialMessageConsumer<DelayedResolvingStream>(exceptionInducingConsumer);
+        const synchronousMessageConsumer = new SequentialMessageConsumer<DelayedResolvingStream>(
+            exceptionInducingConsumer,
+        );
 
-        await expect(synchronousMessageConsumer.consume({headers: {}, type: 'delayed', payload: 4}))
-            .rejects.toEqual(new Error('something went wrong'));
+        await expect(synchronousMessageConsumer.consume({headers: {}, type: 'delayed', payload: 4})).rejects.toEqual(
+            new Error('something went wrong'),
+        );
     });
 });

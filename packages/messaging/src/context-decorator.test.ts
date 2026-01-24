@@ -5,16 +5,16 @@ import {createMessage} from '@deltic/messaging/helpers';
 
 type TestContext = {
     something: {
-        deep: string,
-        of: boolean,
-    },
+        deep: string;
+        of: boolean;
+    };
 };
 
 interface ExampleStream {
-    aggregateRootId: string,
+    aggregateRootId: string;
     messages: {
-        example: object,
-    }
+        example: object;
+    };
 }
 
 describe('ContextMessageDecorator', () => {

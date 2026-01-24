@@ -3,10 +3,10 @@ import {MessageDecoratorForEventIds} from './decorator-for-event-ids.js';
 
 describe('MessageDecoratorForEventIds', () => {
     interface SomeStream {
-        aggregateRootId: string,
+        aggregateRootId: string;
         messages: {
-            example: 'hello',
-        }
+            example: 'hello';
+        };
     }
     const decorator = new MessageDecoratorForEventIds<SomeStream>(() => 'whatever');
 

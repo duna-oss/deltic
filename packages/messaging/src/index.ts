@@ -5,22 +5,15 @@ export interface StreamDefinition {
     };
 }
 
-export type HeaderValue =
-    undefined
-    | null
-    | string
-    | number
-    | boolean
-    | HeaderValue[]
-    | HeaderValueObject;
+export type HeaderValue = undefined | null | string | number | boolean | HeaderValue[] | HeaderValueObject;
 
 export type HeaderValueObject = {
-    [index: string | number]: HeaderValue,
+    [index: string | number]: HeaderValue;
 };
 
 export interface Header {
-    readonly key: string,
-    readonly value: HeaderValue,
+    readonly key: string;
+    readonly value: HeaderValue;
 }
 
 export interface AdditionalMessageHeaders {
@@ -37,73 +30,86 @@ export interface MessageHeaders<AggregateRootId extends string | number = string
 }
 
 export interface Message<Type, Payload, AggregateRootId extends string | number = string | number> {
-    readonly headers: MessageHeaders<AggregateRootId>,
-    readonly type: Type,
-    readonly payload: Payload,
+    readonly headers: MessageHeaders<AggregateRootId>;
+    readonly type: Type;
+    readonly payload: Payload;
 }
 
 export type MessageHandlers<Stream extends StreamDefinition> = {
-    readonly [K in keyof Stream['messages']]: (message: Message<K, Stream['messages'][K], Stream['aggregateRootId']>) => Promise<void>
+    readonly [K in keyof Stream['messages']]: (
+        message: Message<K, Stream['messages'][K], Stream['aggregateRootId']>,
+    ) => Promise<void>;
 };
 
 export type AnyMessageTypeFromStream<Stream extends StreamDefinition> = keyof Stream['messages'];
 
 export type MessagesPerMessageType<Stream extends StreamDefinition> = {
-    [K in keyof Stream['messages']]: Message<K, Stream['messages'][K], Stream['aggregateRootId']>
+    [K in keyof Stream['messages']]: Message<K, Stream['messages'][K], Stream['aggregateRootId']>;
 };
 
-export type AnyMessageFrom<Stream extends StreamDefinition> = MessagesPerMessageType<Stream>[keyof MessagesPerMessageType<Stream>];
+export type AnyMessageFrom<Stream extends StreamDefinition> =
+    MessagesPerMessageType<Stream>[keyof MessagesPerMessageType<Stream>];
 export type AnyPayloadFromStream<Stream extends StreamDefinition> = AnyMessageFrom<Stream>['payload'];
-export type SpecificMessageFrom<Stream extends StreamDefinition, Type extends keyof MessagesPerMessageType<Stream>> = MessagesPerMessageType<Stream>[Type];
-export type SpecificPayloadFrom<Stream extends StreamDefinition, Type extends keyof Stream['messages']> = Stream['messages'][Type];
+export type SpecificMessageFrom<
+    Stream extends StreamDefinition,
+    Type extends keyof MessagesPerMessageType<Stream>,
+> = MessagesPerMessageType<Stream>[Type];
+export type SpecificPayloadFrom<
+    Stream extends StreamDefinition,
+    Type extends keyof Stream['messages'],
+> = Stream['messages'][Type];
 export type MessagesFrom<Stream extends StreamDefinition> = AnyMessageFrom<Stream>[];
 
 export interface MessageConsumerFunc<Stream extends StreamDefinition> {
-    (message: AnyMessageFrom<Stream>): Promise<void>,
+    (message: AnyMessageFrom<Stream>): Promise<void>;
 }
 
 export interface MessageConsumer<Stream extends StreamDefinition> {
-    consume(message: AnyMessageFrom<Stream>): Promise<void>,
+    consume(message: AnyMessageFrom<Stream>): Promise<void>;
 }
 
 export interface MessageDispatcherFunc<Stream extends StreamDefinition> {
-    (...messages: MessagesFrom<Stream>): Promise<void>,
+    (...messages: MessagesFrom<Stream>): Promise<void>;
 }
 
 export interface MessageDispatcher<Stream extends StreamDefinition> {
-    send(...messages: MessagesFrom<Stream>): Promise<void>,
+    send(...messages: MessagesFrom<Stream>): Promise<void>;
 }
 
 export interface MessageDecorator<Stream extends StreamDefinition> {
-    decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream>,
+    decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream>;
 }
 
 export interface MessageDecoratorFunc<Stream extends StreamDefinition> {
-    <M extends AnyMessageFrom<Stream>>(message: M): M,
+    <M extends AnyMessageFrom<Stream>>(message: M): M;
 }
 
 export interface AggregateIdWithStreamOffset<Stream extends StreamDefinition> {
-    version: number,
-    id: Stream['aggregateRootId'],
-    message: AnyMessageFrom<Stream>,
+    version: number;
+    id: Stream['aggregateRootId'];
+    message: AnyMessageFrom<Stream>;
 }
 
 export interface IdPaginationOptions<Stream extends StreamDefinition> {
-    limit: number,
-    afterId?: Stream['aggregateRootId'],
-    whichMessage?: 'first' | 'last',
+    limit: number;
+    afterId?: Stream['aggregateRootId'];
+    whichMessage?: 'first' | 'last';
 }
 
 export interface MessageRepository<Stream extends StreamDefinition> {
-    persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void>,
+    persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void>;
 
-    retrieveAllForAggregate(id: Stream['aggregateRootId']): AsyncGenerator<AnyMessageFrom<Stream>>,
+    retrieveAllForAggregate(id: Stream['aggregateRootId']): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveAllAfterVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>,
+    retrieveAllAfterVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveAllUntilVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>,
+    retrieveAllUntilVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveBetweenVersions(id: Stream['aggregateRootId'], after: number, before: number): AsyncGenerator<AnyMessageFrom<Stream>>,
+    retrieveBetweenVersions(
+        id: Stream['aggregateRootId'],
+        after: number,
+        before: number,
+    ): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>,
+    paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>;
 }

@@ -3,9 +3,9 @@ import type {AsyncPgPool} from '@deltic/async-pg-pool';
 import type {OutboxRepository} from '@deltic/messaging/outbox';
 
 export type NotificationConfiguration = {
-    channelName?: string,
-    style: 'both' | 'channel' | 'central',
-}
+    channelName?: string;
+    style: 'both' | 'channel' | 'central';
+};
 
 export class NotifyingOutboxDecoratorUsingPg<Stream extends StreamDefinition> implements OutboxRepository<Stream> {
     constructor(
@@ -13,8 +13,7 @@ export class NotifyingOutboxDecoratorUsingPg<Stream extends StreamDefinition> im
         private readonly repository: OutboxRepository<Stream>,
         private readonly tableName: string,
         private readonly config: NotificationConfiguration,
-    ) {
-    }
+    ) {}
 
     async persist(messages: MessagesFrom<Stream>): Promise<void> {
         if (messages.length === 0) {
@@ -22,9 +21,7 @@ export class NotifyingOutboxDecoratorUsingPg<Stream extends StreamDefinition> im
         }
 
         const inTransaction = this.pool.inTransaction();
-        const transaction = inTransaction ?
-            this.pool.withTransaction()
-            : await this.pool.begin();
+        const transaction = inTransaction ? this.pool.withTransaction() : await this.pool.begin();
 
         try {
             await this.repository.persist(messages);

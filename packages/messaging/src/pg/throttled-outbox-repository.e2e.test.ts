@@ -11,13 +11,13 @@ import {pgTestCredentials} from '../../../pg-credentials.js';
 const clock: TestClock = createTestClock();
 
 interface ExampleStream {
-    aggregateRootId: string | number,
+    aggregateRootId: string | number;
     messages: {
         something: {
-            id: string,
-            additional?: number,
-        },
-    },
+            id: string;
+            additional?: number;
+        };
+    };
 }
 
 const TEST_TABLE_NAME = 'test_throttled_outbox';
@@ -56,20 +56,23 @@ afterAll(async () => {
 });
 
 describe.each([
-    ['using Knex', () => {
-        return new NotifyingOutboxDecoratorUsingPg(
-            asyncPool,
-            new ThrottledOutboxRepositoryUsingPg<ExampleStream>(
+    [
+        'using Knex',
+        () => {
+            return new NotifyingOutboxDecoratorUsingPg(
                 asyncPool,
+                new ThrottledOutboxRepositoryUsingPg<ExampleStream>(
+                    asyncPool,
+                    TEST_TABLE_NAME,
+                    secondsToMilliseconds(15),
+                    message => message.payload.id,
+                    clock,
+                ),
                 TEST_TABLE_NAME,
-                secondsToMilliseconds(15),
-                message => message.payload.id,
-                clock,
-            ),
-            TEST_TABLE_NAME,
-            {style: 'both', channelName: TEST_TABLE_NAME},
-        );
-    }],
+                {style: 'both', channelName: TEST_TABLE_NAME},
+            );
+        },
+    ],
 ])('Outbox Repository %s', (_name, provider: () => OutboxRepository<ExampleStream>) => {
     const createMessage = messageFactory<ExampleStream>();
     let repository: OutboxRepository<ExampleStream>;
@@ -86,10 +89,7 @@ describe.each([
         repository = provider();
         dispatcher = new OutboxMessageDispatcher(repository);
         collectingDispatcher = new CollectingMessageDispatcher();
-        relay = new OutboxRelay(
-            repository,
-            collectingDispatcher,
-        );
+        relay = new OutboxRelay(repository, collectingDispatcher);
         await repository.truncate();
     });
 
@@ -102,12 +102,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-            example3,
-            example4,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example1, example2, example3, example4]);
     });
 
     test('dispatching once deduplicates on the idempotency key', async () => {
@@ -118,31 +113,28 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-            example3,
-            example4,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example1, example2, example3, example4]);
     });
 
     test('single dispatch deduplication uses the last payload', async () => {
         // arrange
-        const messages = Array.from(Array(12).keys()).map(index => createMessage('something', {id: 'same', additional: index}));
+        const messages = Array.from(Array(12).keys()).map(index =>
+            createMessage('something', {id: 'same', additional: index}),
+        );
         await dispatcher.send(...messages); // once
 
         // act
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            messages.at(11),
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([messages.at(11)]);
     });
 
     test('multi dispatch deduplication uses the last payload', async () => {
         // arrange
-        const messages = Array.from(Array(12).keys()).map(index => createMessage('something', {id: 'same', additional: index}));
+        const messages = Array.from(Array(12).keys()).map(index =>
+            createMessage('something', {id: 'same', additional: index}),
+        );
 
         for (const message of messages) {
             await dispatcher.send(message);
@@ -152,9 +144,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            messages.at(11),
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([messages.at(11)]);
     });
 
     test('when the same trigger is only dispatched once, it can be consumed once', async () => {
@@ -267,9 +257,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(1));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example1,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example1]);
     });
 
     test('consumed messages are not retrieved', async () => {
@@ -282,10 +270,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example3,
-            example4,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example3, example4]);
     });
 
     test('relayed messages are dispatched onto another dispatcher', async () => {
@@ -297,11 +282,7 @@ describe.each([
 
         // assert
         expect(collectingDispatcher.dispatchCount).toEqual(2);
-        expect(collectingDispatcher.producedMessages().map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-            example3,
-        ]);
+        expect(collectingDispatcher.producedMessages().map(withoutHeaders)).toEqual([example1, example2, example3]);
     });
 
     test('it can give counts of consumed and pending messages', async () => {

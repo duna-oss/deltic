@@ -21,8 +21,7 @@ export const OUTBOX_CONSUMED_HEADER_KEY = '__outbox_consumed';
  * This is what will be called by the original operation within a transaction.
  */
 export class OutboxMessageDispatcher<Stream extends StreamDefinition> implements MessageDispatcher<Stream> {
-    constructor(private readonly outbox: OutboxRepository<Stream>) {
-    }
+    constructor(private readonly outbox: OutboxRepository<Stream>) {}
 
     async send(...messages: MessagesFrom<Stream>): Promise<void> {
         await this.outbox.persist(messages);
@@ -30,13 +29,13 @@ export class OutboxMessageDispatcher<Stream extends StreamDefinition> implements
 }
 
 export interface OutboxRepository<Stream extends StreamDefinition> {
-    persist(messages: MessagesFrom<Stream>): Promise<void>,
-    retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>>,
-    markConsumed(messages: MessagesFrom<Stream>): Promise<void>,
-    cleanupConsumedMessages(limit: number): Promise<number>,
-    truncate(): Promise<void>,
-    numberOfPendingMessages(): Promise<number>,
-    numberOfConsumedMessages(): Promise<number>,
+    persist(messages: MessagesFrom<Stream>): Promise<void>;
+    retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>>;
+    markConsumed(messages: MessagesFrom<Stream>): Promise<void>;
+    cleanupConsumedMessages(limit: number): Promise<number>;
+    truncate(): Promise<void>;
+    numberOfPendingMessages(): Promise<number>;
+    numberOfConsumedMessages(): Promise<number>;
 }
 
 /**
@@ -48,8 +47,7 @@ export class OutboxRelay<Stream extends StreamDefinition> {
     constructor(
         private readonly outbox: OutboxRepository<Stream>,
         private readonly dispatcher: MessageDispatcher<Stream>,
-    ) {
-    }
+    ) {}
 
     async relayBatch(batchSize: number, commitSize: number): Promise<number> {
         let relayedCount = 0;
@@ -105,21 +103,25 @@ export class OutboxRepositoryUsingMemory<Stream extends StreamDefinition> implem
     async markConsumed(messages: MessagesFrom<Stream>): Promise<void> {
         const ids = new Set(messages.map(m => m.headers[OUTBOX_ID_HEADER_KEY]));
 
-        this.messages = this.messages.map(
-            m => ids.has(m.headers[OUTBOX_ID_HEADER_KEY])
+        this.messages = this.messages.map(m =>
+            ids.has(m.headers[OUTBOX_ID_HEADER_KEY])
                 ? messageWithHeader(m, {key: OUTBOX_CONSUMED_HEADER_KEY, value: 'yes'})
                 : m,
         );
     }
 
     async persist(messages: MessagesFrom<Stream>): Promise<void> {
-        this.messages.push(...messages.map(m => messageWithHeaders(m, {
-            [OUTBOX_ID_HEADER_KEY]: ++this.incrementalId,
-            [OUTBOX_CONSUMED_HEADER_KEY]: 'no',
-        })));
+        this.messages.push(
+            ...messages.map(m =>
+                messageWithHeaders(m, {
+                    [OUTBOX_ID_HEADER_KEY]: ++this.incrementalId,
+                    [OUTBOX_CONSUMED_HEADER_KEY]: 'no',
+                }),
+            ),
+        );
     }
 
-    async* retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
+    async *retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
         let count = 0;
         for (const message of this.messages) {
             if (count >= size) {

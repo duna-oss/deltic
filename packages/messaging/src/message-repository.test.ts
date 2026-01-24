@@ -12,11 +12,11 @@ const secondTenantId = uuid.v7();
 const tenantContext = new SyncTenantContext(firstTenantId);
 
 interface ExampleEventStream {
-    aggregateRootId: string,
+    aggregateRootId: string;
     messages: {
-        first: string,
-        second: number,
-    },
+        first: string;
+        second: number;
+    };
 }
 
 const createMessage = messageFactory<ExampleEventStream>();
@@ -47,27 +47,29 @@ afterAll(async () => {
 });
 
 describe.each([
-    ['Pg', {
-        factory: () => {
-            asyncPool = new AsyncPgPool(pgPool);
+    [
+        'Pg',
+        {
+            factory: () => {
+                asyncPool = new AsyncPgPool(pgPool);
 
-            return new MessageRepositoryUsingPg<ExampleEventStream>(
-                asyncPool,
-                'test__message_repository',
-                {
+                return new MessageRepositoryUsingPg<ExampleEventStream>(asyncPool, 'test__message_repository', {
                     tenantContext,
-                }
-            );
+                });
+            },
+            eachCleanup: async () => {
+                await asyncPool.flushSharedContext();
+                await pgPool.query('TRUNCATE TABLE test__message_repository RESTART IDENTITY');
+            },
         },
-        eachCleanup: async () => {
-            await asyncPool.flushSharedContext();
-            await pgPool.query('TRUNCATE TABLE test__message_repository RESTART IDENTITY');
+    ],
+    [
+        'Memory',
+        {
+            factory: () => new MessageRepositoryUsingMemory<ExampleEventStream>(tenantContext),
+            eachCleanup: undefined,
         },
-    }],
-    ['Memory', {
-        factory: () => new MessageRepositoryUsingMemory<ExampleEventStream>(tenantContext),
-        eachCleanup: undefined,
-    }]
+    ],
 ] as const)('MessageRepositoryUsing%s', (_, {factory, eachCleanup}) => {
     let repository: ReturnType<typeof factory>;
 
@@ -116,17 +118,15 @@ describe.each([
         await repository.persist(id, [firstMessage, secondMessage]);
 
         tenantContext.use(secondTenantId);
-        const retrievedPayloads: AnyPayloadFromStream<ExampleEventStream>[] = (await collect(
-            repository.retrieveAllForAggregate(id)
-        )).map(m => m.payload);
+        const retrievedPayloads: AnyPayloadFromStream<ExampleEventStream>[] = (
+            await collect(repository.retrieveAllForAggregate(id))
+        ).map(m => m.payload);
 
         expect(retrievedPayloads).toHaveLength(0);
 
         // fetch as first tenant, get the 2 messages
         tenantContext.use(firstTenantId);
-        retrievedPayloads.push(...(await collect(
-            repository.retrieveAllForAggregate(id)
-        )).map(m => m.payload));
+        retrievedPayloads.push(...(await collect(repository.retrieveAllForAggregate(id))).map(m => m.payload));
         expect(retrievedPayloads).toHaveLength(2);
     });
 
@@ -223,13 +223,21 @@ describe.each([
              * To ensure the retrieval mechanism does not skip IDs, the test data set emulates the sorting of
              * multiple concurrently running processes.
              */
-            ids = Array(10).fill(0).map(() => generateId());
-            const inserts = Array(3).fill(0).map((_value, i) => {
-                return ids.map(id => ({id, message: createMessage('first', 'any message', {
-                        aggregate_root_version: i + 1,
-                        aggregate_root_id: id,
-                    })}));
-            }).flat();
+            ids = Array(10)
+                .fill(0)
+                .map(() => generateId());
+            const inserts = Array(3)
+                .fill(0)
+                .map((_value, i) => {
+                    return ids.map(id => ({
+                        id,
+                        message: createMessage('first', 'any message', {
+                            aggregate_root_version: i + 1,
+                            aggregate_root_id: id,
+                        }),
+                    }));
+                })
+                .flat();
 
             for (const {id, message} of inserts) {
                 await repository.persist(id, [message]);

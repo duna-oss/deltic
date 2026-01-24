@@ -6,10 +6,10 @@ describe('TenantIdMessageDecorator', () => {
     test('it adds the tenant id when it is known in the context', async () => {
         // arrange
         interface Example {
-            aggregateRootId: string,
+            aggregateRootId: string;
             messages: {
-                something: number,
-            }
+                something: number;
+            };
         }
         const context = new SyncTenantContext<string>();
         const decorator = new TenantIdMessageDecorator<Example>(context);

@@ -11,10 +11,10 @@ import {
 } from '@deltic/messaging/outbox';
 
 interface DelayedOutboxRecord<Stream extends StreamDefinition> {
-    id: number,
-    consumed: boolean,
-    payload: AnyMessageFrom<Stream>,
-    delay_until?: Date,
+    id: number;
+    consumed: boolean;
+    payload: AnyMessageFrom<Stream>;
+    delay_until?: Date;
 }
 
 export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> implements OutboxRepository<Stream> {
@@ -23,8 +23,7 @@ export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> imp
         private readonly tableName: string,
         private readonly backoff: BackOffStrategy,
         private readonly clock: Clock = SystemClock,
-    ) {
-    }
+    ) {}
 
     async cleanupConsumedMessages(limit: number): Promise<number> {
         const connection = await this.pool.claim();
@@ -36,7 +35,8 @@ export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> imp
              * in a sub-query and delete the matching records. Knex does
              * not warn you about this, unfortunately.
              */
-            const response = await connection.query(`
+            const response = await connection.query(
+                `
                 DELETE
                 FROM ${this.tableName}
                 WHERE id IN (
@@ -95,33 +95,32 @@ export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> imp
             values.push(message, new Date(+message.headers['delay_until']!));
         }
 
-        await (await this.pool.primary())
-            .query(
-                `INSERT INTO ${this.tableName} (consumed, payload, delay_until) VALUES (${references.join('), (')});`,
-                values,
-            );
+        await (
+            await this.pool.primary()
+        ).query(
+            `INSERT INTO ${this.tableName} (consumed, payload, delay_until) VALUES (${references.join('), (')});`,
+            values,
+        );
     }
 
-    async* retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
-        const records = await (await this.pool.primary())
-            .query<DelayedOutboxRecord<Stream>>(
-                `SELECT id, consumed, payload
+    async *retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
+        const records = await (
+            await this.pool.primary()
+        ).query<DelayedOutboxRecord<Stream>>(
+            `SELECT id, consumed, payload
                     FROM ${this.tableName}
                     WHERE consumed = $1 AND delay_until <= $2
                     ORDER BY id ASC
                     LIMIT $3`,
-                [false, this.clock.date(), size],
-            );
+            [false, this.clock.date(), size],
+        );
 
         for await (const record of records.rows) {
-            yield messageWithHeaders(
-                record.payload,
-                {
-                    [OUTBOX_ID_HEADER_KEY]: record.id,
-                    [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
-                    [OUTBOX_CONSUMED_HEADER_KEY]: record.consumed,
-                },
-            );
+            yield messageWithHeaders(record.payload, {
+                [OUTBOX_ID_HEADER_KEY]: record.id,
+                [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
+                [OUTBOX_CONSUMED_HEADER_KEY]: record.consumed,
+            });
         }
     }
 
@@ -131,19 +130,21 @@ export class DelayedOutboxRepositoryUsingPg<Stream extends StreamDefinition> imp
 
     async numberOfConsumedMessages(): Promise<number> {
         return Number(
-            (await
-                    (await this.pool.primary())
-                        .query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = true`)
-            ).rows[0].count
+            (
+                await (
+                    await this.pool.primary()
+                ).query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = true`)
+            ).rows[0].count,
         );
     }
 
     async numberOfPendingMessages(): Promise<number> {
         return Number(
-            (await
-                (await this.pool.primary())
-                    .query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = false`)
-            ).rows[0].count
+            (
+                await (
+                    await this.pool.primary()
+                ).query(`SELECT count(id) as count FROM ${this.tableName} WHERE consumed = false`)
+            ).rows[0].count,
         );
     }
 }

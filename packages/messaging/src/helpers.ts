@@ -15,15 +15,21 @@ import type {
     StreamDefinition,
 } from './index.js';
 
-export function createMessageDispatcher<Stream extends StreamDefinition>(send: MessageDispatcherFunc<Stream>): MessageDispatcher<Stream> {
+export function createMessageDispatcher<Stream extends StreamDefinition>(
+    send: MessageDispatcherFunc<Stream>,
+): MessageDispatcher<Stream> {
     return {send};
 }
 
-export function createMessageConsumer<Stream extends StreamDefinition>(consume: MessageConsumerFunc<Stream>): MessageConsumer<Stream> {
+export function createMessageConsumer<Stream extends StreamDefinition>(
+    consume: MessageConsumerFunc<Stream>,
+): MessageConsumer<Stream> {
     return {consume};
 }
 
-export function createMessageDecorator<Stream extends StreamDefinition>(decorator: MessageDecoratorFunc<Stream>): MessageDecorator<Stream> {
+export function createMessageDecorator<Stream extends StreamDefinition>(
+    decorator: MessageDecoratorFunc<Stream>,
+): MessageDecorator<Stream> {
     return {
         decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream> {
             return messages.map(decorator);
@@ -31,7 +37,11 @@ export function createMessageDecorator<Stream extends StreamDefinition>(decorato
     };
 }
 
-export function messageFactory<Stream extends StreamDefinition>(): <T extends keyof Stream['messages']>(type: T, payload: Stream['messages'][T], headers?: MessageHeaders) => Message<T, Stream['messages'][T], Stream['aggregateRootId']> {
+export function messageFactory<Stream extends StreamDefinition>(): <T extends keyof Stream['messages']>(
+    type: T,
+    payload: Stream['messages'][T],
+    headers?: MessageHeaders,
+) => Message<T, Stream['messages'][T], Stream['aggregateRootId']> {
     return (type, payload, headers = {}) => ({
         headers: {...headers},
         type,
@@ -39,7 +49,9 @@ export function messageFactory<Stream extends StreamDefinition>(): <T extends ke
     });
 }
 
-export const withoutHeaders = <Stream extends StreamDefinition>(message: AnyMessageFrom<Stream>): AnyMessageFrom<Stream> => ({...message, headers: {}});
+export const withoutHeaders = <Stream extends StreamDefinition>(
+    message: AnyMessageFrom<Stream>,
+): AnyMessageFrom<Stream> => ({...message, headers: {}});
 
 export function timeOfRecordingFromHeaders(headers: MessageHeaders): number {
     return Number(headers['time_of_recording_ms'] ?? new Date(String(headers['time_of_recording'])).getTime());

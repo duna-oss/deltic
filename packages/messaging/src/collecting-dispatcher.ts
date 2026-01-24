@@ -4,10 +4,7 @@ export class CollectingMessageDispatcher<Stream extends StreamDefinition> implem
     private messages: MessagesFrom<Stream> = [];
     private numberOfDispatches = 0;
 
-    constructor(
-        private readonly consumersToRelayTo: MessageConsumer<Stream>[] = [],
-    ) {
-    }
+    constructor(private readonly consumersToRelayTo: MessageConsumer<Stream>[] = []) {}
 
     public clear(): void {
         this.messages = [];

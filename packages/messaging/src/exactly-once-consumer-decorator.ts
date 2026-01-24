@@ -14,10 +14,11 @@ export class ExactlyOnceConsumerDecorator<Stream extends StreamDefinition> imple
         private readonly consumer: MessageConsumer<Stream>,
         private readonly messages: MessageRepository<Stream>,
         private readonly transactions: TransactionManager = new NoopTransactionManager(),
-        private readonly resolveIdentifier: IdentifierResolver<Stream> = message => message.headers['aggregate_root_id']?.toString() ?? 'unknown',
-        private readonly resolveOffset: OffsetResolver = message => Number(message.headers['aggregate_root_version'] ?? 0),
-    ) {
-    }
+        private readonly resolveIdentifier: IdentifierResolver<Stream> = message =>
+            message.headers['aggregate_root_id']?.toString() ?? 'unknown',
+        private readonly resolveOffset: OffsetResolver = message =>
+            Number(message.headers['aggregate_root_version'] ?? 0),
+    ) {}
 
     async consume(message: AnyMessageFrom<Stream>): Promise<void> {
         const messageId = message.headers.aggregate_root_id;
@@ -27,7 +28,7 @@ export class ExactlyOnceConsumerDecorator<Stream extends StreamDefinition> imple
         }
 
         const identifier = this.resolveIdentifier(message);
-        const storedOffset = await this.offsets.retrieve(identifier) ?? 0;
+        const storedOffset = (await this.offsets.retrieve(identifier)) ?? 0;
         const currentOffset = this.resolveOffset(message);
 
         /**
@@ -37,7 +38,7 @@ export class ExactlyOnceConsumerDecorator<Stream extends StreamDefinition> imple
             return;
         }
 
-        if (storedOffset < (currentOffset - 1)) {
+        if (storedOffset < currentOffset - 1) {
             await this.replayBetween(messageId, storedOffset, currentOffset);
         }
 

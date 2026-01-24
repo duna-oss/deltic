@@ -7,14 +7,14 @@ import {KeyValueStoreUsingMemory} from '@deltic/key-value/memory';
 import {ReducingMessageConsumer} from './reducing-message-consumer.js';
 
 interface EventsForAutomaticRebuilds {
-    topic: 'automatic-rebuilds',
-    aggregateRoot: any,
-    aggregateRootId: string,
+    topic: 'automatic-rebuilds';
+    aggregateRoot: any;
+    aggregateRootId: string;
     messages: {
         add: {
-            amount: number,
-        },
-    },
+            amount: number;
+        };
+    };
 }
 
 describe('AutomaticRebuilds for single aggregate projections', () => {
@@ -41,19 +41,29 @@ describe('AutomaticRebuilds for single aggregate projections', () => {
             messages,
         );
         const storedMessages: MessagesFrom<EventsForAutomaticRebuilds> = [
-            ...[25, 15, 10, 50].map((amount, index) => createMessage('add', {
-                amount,
-            }, {
-                aggregate_root_version: index + 1,
-                aggregate_root_id: '1234',
-            })),
+            ...[25, 15, 10, 50].map((amount, index) =>
+                createMessage(
+                    'add',
+                    {
+                        amount,
+                    },
+                    {
+                        aggregate_root_version: index + 1,
+                        aggregate_root_id: '1234',
+                    },
+                ),
+            ),
             // ⬇️ not matching the main aggregate ID on purpose
-            createMessage('add', {
-                amount: 15,
-            }, {
-                aggregate_root_version: 1,
-                aggregate_root_id: '4321',
-            }),
+            createMessage(
+                'add',
+                {
+                    amount: 15,
+                },
+                {
+                    aggregate_root_version: 1,
+                    aggregate_root_id: '4321',
+                },
+            ),
         ];
 
         for (const message of storedMessages) {

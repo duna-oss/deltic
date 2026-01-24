@@ -14,9 +14,9 @@ import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-dispatch
 interface ExampleStream {
     aggregateRootId: string | number;
     messages: {
-        ping: number,
-        pong: number,
-    },
+        ping: number;
+        pong: number;
+    };
 }
 
 let pool: Pool;
@@ -66,10 +66,7 @@ describe.each([
         repository = provider();
         dispatcher = new OutboxMessageDispatcher(repository);
         collectingDispatcher = new CollectingMessageDispatcher<ExampleStream>();
-        relay = new OutboxRelay(
-            repository,
-            collectingDispatcher,
-        );
+        relay = new OutboxRelay(repository, collectingDispatcher);
     });
     afterEach(async () => {
         await repository.truncate();
@@ -84,12 +81,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-            example3,
-            example4,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example1, example2, example3, example4]);
     });
 
     test('batch size must limit the amount of messages fetched', async () => {
@@ -100,10 +92,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(2));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example1, example2]);
     });
 
     test('consumed messages are not retrieved', async () => {
@@ -116,10 +105,7 @@ describe.each([
         const retrieved = await collect(repository.retrieveBatch(10));
 
         // assert
-        expect(retrieved.map(withoutHeaders)).toEqual([
-            example3,
-            example4,
-        ]);
+        expect(retrieved.map(withoutHeaders)).toEqual([example3, example4]);
     });
 
     test('relayed messages are dispatched onto another dispatcher', async () => {
@@ -131,11 +117,7 @@ describe.each([
 
         // assert
         expect(collectingDispatcher.dispatchCount).toEqual(2);
-        expect(collectingDispatcher.producedMessages().map(withoutHeaders)).toEqual([
-            example1,
-            example2,
-            example3,
-        ]);
+        expect(collectingDispatcher.producedMessages().map(withoutHeaders)).toEqual([example1, example2, example3]);
     });
 
     test('it can give counts of consumed and pending messages', async () => {

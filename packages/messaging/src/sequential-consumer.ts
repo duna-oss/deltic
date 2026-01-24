@@ -1,12 +1,12 @@
 import type {AnyMessageFrom, MessageConsumer, StreamDefinition} from './index.js';
 
 interface ProcessFunc {
-    (): Promise<void>,
+    (): Promise<void>;
 }
 
 interface ResolvablePromise<Response> {
-    resolve(response: Response | Promise<Response>): void,
-    reject(reason?: any): void,
+    resolve(response: Response | Promise<Response>): void;
+    reject(reason?: any): void;
 }
 
 /**

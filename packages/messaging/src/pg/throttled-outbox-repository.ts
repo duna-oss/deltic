@@ -5,13 +5,13 @@ import {OUTBOX_ID_HEADER_KEY, OUTBOX_TABLE_HEADER_KEY, type OutboxRepository} fr
 import {messageWithHeaders} from '@deltic/messaging/helpers';
 
 interface ThrottledOutboxRecord<Stream extends StreamDefinition> {
-    id: number,
-    consumed_initially: boolean,
-    should_dispatch_delayed: boolean,
-    consumed_delayed: boolean,
-    idempotency_key: string,
-    payload: AnyMessageFrom<Stream>,
-    delay_until: Date,
+    id: number;
+    consumed_initially: boolean;
+    should_dispatch_delayed: boolean;
+    consumed_delayed: boolean;
+    idempotency_key: string;
+    payload: AnyMessageFrom<Stream>;
+    delay_until: Date;
 }
 
 export type ThrottledOutboxDispatchType = 'initial' | 'delayed';
@@ -38,8 +38,7 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
         private readonly throttleWindowMs: number,
         private readonly keyResolver: IdempotencyKeyResolver<Stream>,
         private readonly clock: Clock = SystemClock,
-    ) {
-    }
+    ) {}
 
     async cleanupConsumedMessages(limit: number): Promise<number> {
         const connection = await this.pool.claim();
@@ -92,11 +91,14 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
 
                 const column = type === 'initial' ? 'consumed_initially' : 'consumed_delayed';
 
-                await transaction.query(`
+                await transaction.query(
+                    `
                     UPDATE ${this.tableName}
                     SET ${column} = true
                     WHERE id = ANY ($1::int[])
-                `, [ids]);
+                `,
+                    [ids],
+                );
             }
         } catch (e) {
             await this.pool.rollback(transaction);
@@ -109,15 +111,16 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
 
     async persist(messages: MessagesFrom<Stream>): Promise<void> {
         const latestPerIdempotencyKey = Array.from(
-            messages.reduce(
-                (map, message, index) => {
+            messages
+                .reduce((map, message, index) => {
                     map.set(this.keyResolver(message), [index, message]);
 
                     return map;
-                },
-                new Map<string, [number, AnyMessageFrom<Stream>]>(),
-            ).values(),
-        ).toSorted((a, b) => a[0] - b[0]).map(item => item[1]);
+                }, new Map<string, [number, AnyMessageFrom<Stream>]>())
+                .values(),
+        )
+            .toSorted((a, b) => a[0] - b[0])
+            .map(item => item[1]);
 
         if (latestPerIdempotencyKey.length === 0) {
             return;
@@ -131,7 +134,7 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
         const nowDate = new Date(now);
         const connection = await this.pool.primary();
 
-        const references: string [] = [];
+        const references: string[] = [];
         const values: any[] = [
             false, // $1
             delayUntil, // $2
@@ -162,7 +165,8 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
          *   - SET delay_until = EXCLUDED.delay_until
          *   - SET should_dispatch_delayed = FALSE
          */
-        await connection.query(`
+        await connection.query(
+            `
             INSERT INTO ${this.tableName} (
                consumed_initially,
                consumed_delayed,
@@ -208,13 +212,16 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
                             ELSE ${this.tableName}.delay_until
                     END
                 )
-        `, values);
+        `,
+            values,
+        );
     }
 
-    async* retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
-        const result = await (await this.pool.primary())
-            .query<ThrottledOutboxRecord<Stream>>(
-                `SELECT id, payload, consumed_initially
+    async *retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
+        const result = await (
+            await this.pool.primary()
+        ).query<ThrottledOutboxRecord<Stream>>(
+            `SELECT id, payload, consumed_initially
                  FROM ${this.tableName}
                  WHERE consumed_initially = false
                     OR (
@@ -224,19 +231,15 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
                      )
                  ORDER BY id ASC
                      LIMIT $2`,
-                [this.clock.date(), size],
-            );
+            [this.clock.date(), size],
+        );
 
         for await (const record of result.rows) {
-            yield messageWithHeaders(
-                record.payload as AnyMessageFrom<Stream>,
-                {
-                    [OUTBOX_ID_HEADER_KEY]: record.id,
-                    [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
-                    [THROTTLED_OUTBOX_DISPATCH_TYPE_KEY]: record.consumed_initially === false
-                        ? 'initial' : 'delayed',
-                },
-            );
+            yield messageWithHeaders(record.payload as AnyMessageFrom<Stream>, {
+                [OUTBOX_ID_HEADER_KEY]: record.id,
+                [OUTBOX_TABLE_HEADER_KEY]: this.tableName,
+                [THROTTLED_OUTBOX_DISPATCH_TYPE_KEY]: record.consumed_initially === false ? 'initial' : 'delayed',
+            });
         }
     }
 
@@ -247,11 +250,13 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
     async numberOfConsumedMessages(): Promise<number> {
         const connection = await this.pool.primary();
         return Number(
-            (await connection.query(`
+            (
+                await connection.query(`
                 SELECT count(id) as count
                 FROM ${this.tableName}
                 WHERE consumed_initially = true
-            `)).rows[0].count,
+            `)
+            ).rows[0].count,
         );
     }
 
@@ -259,12 +264,14 @@ export class ThrottledOutboxRepositoryUsingPg<Stream extends StreamDefinition> i
         const connection = await this.pool.primary();
 
         return Number(
-            (await connection.query(`
+            (
+                await connection.query(`
                 SELECT count(id) as count
                 FROM ${this.tableName}
                 WHERE consumed_initially = false
                 OR (should_dispatch_delayed = true AND consumed_delayed = false)
-            `)).rows[0].count,
+            `)
+            ).rows[0].count,
         );
     }
 }

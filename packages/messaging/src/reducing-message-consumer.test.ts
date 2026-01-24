@@ -4,15 +4,15 @@ import type {MessagesFrom} from '@deltic/messaging';
 import {messageFactory} from '@deltic/messaging/helpers';
 
 interface ReducingProjectionsEvents {
-    aggregateRootId: string,
+    aggregateRootId: string;
     messages: {
         one: {
-            one: number,
-        },
+            one: number;
+        };
         two: {
-            two: number,
-        },
-    },
+            two: number;
+        };
+    };
 }
 
 describe('reducing projections', () => {
@@ -24,7 +24,7 @@ describe('reducing projections', () => {
             storage,
             message => `${message.headers['tenant-id']}:${message.type}`,
             () => 0,
-            async (state) => state + 1,
+            async state => state + 1,
         );
 
         const messages: MessagesFrom<ReducingProjectionsEvents> = [
@@ -82,8 +82,8 @@ describe('reducing projections', () => {
 
     test('using an object as the key', async () => {
         type ProjectionKey = {
-            tenant: string,
-            segment: number,
+            tenant: string;
+            segment: number;
         };
         const storage = new KeyValueStoreUsingMemory<ProjectionKey, number>();
         const projection = new ReducingMessageConsumer<ProjectionKey, number, ReducingProjectionsEvents>(

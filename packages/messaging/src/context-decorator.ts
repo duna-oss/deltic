@@ -4,18 +4,12 @@ import {messageWithHeaders} from '@deltic/messaging/helpers';
 
 export class ContextMessageDecorator<
     Stream extends StreamDefinition,
-    C extends ContextData<C>
+    C extends ContextData<C>,
 > implements MessageDecorator<Stream> {
-    constructor(
-        private readonly context: Context<C>,
-    ) {
-    }
+    constructor(private readonly context: Context<C>) {}
 
     decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream> {
-        return messages.map(m => messageWithHeaders(
-            m,
-            this.contextAsHeaders(),
-        ));
+        return messages.map(m => messageWithHeaders(m, this.contextAsHeaders()));
     }
 
     private contextAsHeaders(): MessageHeaders {
