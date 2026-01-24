@@ -9,7 +9,7 @@ describe('WaitGroup', () => {
         const wg = new WaitGroup();
         let resolved = false;
 
-        await wg.wait().then(() => resolved = true);
+        await wg.wait().then(() => (resolved = true));
 
         expect(resolved).toBe(true);
     });
@@ -20,7 +20,7 @@ describe('WaitGroup', () => {
         wg.add();
 
         setTimeout(() => wg.done(), 10);
-        await wg.wait().then(() => resolved = true);
+        await wg.wait().then(() => (resolved = true));
 
         expect(resolved).toBe(true);
     });
@@ -32,7 +32,7 @@ describe('WaitGroup', () => {
 
         setTimeout(() => wg.done(), 10);
         setTimeout(() => wg.done(), 20);
-        await wg.wait().then(() => resolved = true);
+        await wg.wait().then(() => (resolved = true));
 
         expect(resolved).toBe(true);
     });
@@ -63,13 +63,15 @@ describe('WaitGroup', () => {
         wg.add(1);
 
         setTimeout(() => wg.done(), 40);
-        await wg.wait(0)
-            .then(() => firstResolved = true)
-            .catch(() => firstRejected = true);
+        await wg
+            .wait(0)
+            .then(() => (firstResolved = true))
+            .catch(() => (firstRejected = true));
 
-        await wg.wait({timeout: 50})
-            .then(() => secondResolved = true)
-            .catch(() => secondRejected = true);
+        await wg
+            .wait({timeout: 50})
+            .then(() => (secondResolved = true))
+            .catch(() => (secondRejected = true));
 
         expect(firstRejected).toBe(true);
         expect(firstResolved).toBe(false);
