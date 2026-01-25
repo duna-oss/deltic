@@ -1,4 +1,4 @@
-import type {AnyMessageFrom, AnyPayloadFromStream} from './index.js';
+import type {AnyMessageFrom, AnyPayloadFromStream, MessageRepository} from './index.js';
 import {MessageRepositoryUsingPg} from './pg/message-repository.js';
 import {Pool} from 'pg';
 import * as uuid from 'uuid';
@@ -71,7 +71,7 @@ describe.each([
         },
     ],
 ] as const)('MessageRepositoryUsing%s', (_, {factory, eachCleanup}) => {
-    let repository: ReturnType<typeof factory>;
+    let repository: MessageRepository<ExampleEventStream>;
 
     beforeEach(() => {
         repository = factory();
@@ -88,11 +88,12 @@ describe.each([
         const secondMessage: AnyMessageFrom<ExampleEventStream> = createMessage('second', 2);
         await repository.persist(id, [firstMessage, secondMessage]);
         const retrievedPayloads: AnyPayloadFromStream<ExampleEventStream>[] = [];
+
         for await (const m of repository.retrieveAllForAggregate(id)) {
             retrievedPayloads.push(m.payload);
         }
-        expect(retrievedPayloads).toHaveLength(2);
 
+        expect(retrievedPayloads).toHaveLength(2);
         const [firstRetrievedMessage, secondRetrievedMessage] = retrievedPayloads;
         expect(firstRetrievedMessage).toEqual(firstMessage.payload);
         expect(secondRetrievedMessage).toEqual(secondMessage.payload);

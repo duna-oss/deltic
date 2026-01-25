@@ -98,12 +98,10 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
             whereClauses.push(`version < $${values.length}`);
         }
 
-        const records = await connection.query<MessageRecord<Stream>>(
-            `
+        const records = await connection.query<MessageRecord<Stream>>(`
             SELECT id, payload FROM ${this.tableName}
             WHERE ${whereClauses.join(' AND ')}
-            ORDER BY version ASC
-        `,
+            ORDER BY version ASC`,
             values,
         );
 
@@ -133,7 +131,7 @@ export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implement
             tenantIdColumn = 'tenant_id, ';
             globalReferences = '$1, $2, ';
             index++;
-            values.push(this.tenantIdConversion?.toDatabase(tenantId) ?? tenantId);
+            values.unshift(this.tenantIdConversion?.toDatabase(tenantId) ?? tenantId);
         }
 
         for (const message of messages) {

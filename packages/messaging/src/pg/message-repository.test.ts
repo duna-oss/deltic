@@ -31,7 +31,7 @@ describe('MessageRepositoryUsingPg', () => {
         pgPool = new Pool(pgTestCredentials);
 
         await pgPool.query(`
-            CREATE TABLE IF NOT EXISTS test__message_repository (
+            CREATE TABLE IF NOT EXISTS test__message_repository_pg (
                 id BIGSERIAL PRIMARY KEY,
                 tenant_id UUID,
                 aggregate_root_id UUID NOT NULL,
@@ -44,7 +44,7 @@ describe('MessageRepositoryUsingPg', () => {
 
     beforeEach(async () => {
         asyncPool = new AsyncPgPool(pgPool);
-        repository = new MessageRepositoryUsingPg<ExampleEventStream>(asyncPool, 'test__message_repository');
+        repository = new MessageRepositoryUsingPg<ExampleEventStream>(asyncPool, 'test__message_repository_pg');
     });
 
     afterAll(async () => {
@@ -54,7 +54,7 @@ describe('MessageRepositoryUsingPg', () => {
 
     afterEach(async () => {
         await asyncPool.flushSharedContext();
-        await pgPool.query('TRUNCATE TABLE test__message_repository RESTART IDENTITY');
+        await pgPool.query('TRUNCATE TABLE test__message_repository_pg RESTART IDENTITY');
     });
 
     test('it stores and retrieves messages', async () => {
