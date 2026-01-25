@@ -5,13 +5,16 @@ interface Factory<T = any> {
 type ServiceDefinition<T = any> = {} & {
     factory: Factory<T>;
     lazy?: T extends object ? true : never;
-} & ({
-    cache?: true;
-    cleanup?: (instance: T) => Promise<void> | void;
-} | {
-    cache: false;
-    cleanup?: never;
-});
+} & (
+        | {
+              cache?: true;
+              cleanup?: (instance: T) => Promise<void> | void;
+          }
+        | {
+              cache: false;
+              cleanup?: never;
+          }
+    );
 
 type InstanceDefinition<T = any> = {
     instance: T;
@@ -27,14 +30,14 @@ interface ResolvedService {
     key: string;
     cleanup?: (instance: any) => Promise<void> | void;
     dependencies: Set<string>;
-    instance: any,
+    instance: any;
 }
 
 declare const service: unique symbol;
 
 export type ServiceKey<Service> = string & {
-    [service]: Service,
-}
+    [service]: Service;
+};
 
 class DependencyContainer {
     private cache: Record<string, any> = {};
@@ -46,13 +49,19 @@ class DependencyContainer {
     // Stack to track current resolution chain
     private resolutionStack = new Set<string>();
 
-    register<Service, const Key extends string | ServiceKey<Service> = string>(key: Key, definition: ServiceDefinition<Service>): ServiceKey<Service> {
+    register<Service, const Key extends string | ServiceKey<Service> = string>(
+        key: Key,
+        definition: ServiceDefinition<Service>,
+    ): ServiceKey<Service> {
         if (this.definitions[key] !== undefined) {
             throw new Error(`Dependency ${key} is already registered`);
         }
 
         if (definition.lazy) {
-            const proxy = this.createProxyFor(key as unknown as ServiceKey<Service & object>, definition as ServiceDefinition<Service & object>);
+            const proxy = this.createProxyFor(
+                key as unknown as ServiceKey<Service & object>,
+                definition as ServiceDefinition<Service & object>,
+            );
             definition.factory = () => proxy;
         }
 
@@ -66,15 +75,11 @@ class DependencyContainer {
 
         for (const level of levels) {
             await Promise.all(
-                level.map(
-                    key => {
-                        const resolved = this.resolved.get(key);
+                level.map(key => {
+                    const resolved = this.resolved.get(key);
 
-                        return resolved?.instance === undefined
-                            ? Promise.resolve()
-                            : resolved.cleanup?.(resolved.instance);
-                    }
-                ),
+                    return resolved?.instance === undefined ? Promise.resolve() : resolved.cleanup?.(resolved.instance);
+                }),
             );
         }
 
@@ -126,7 +131,9 @@ class DependencyContainer {
         if (processed.size < resolvedKeys.length) {
             const missing = new Set(resolvedKeys).difference(processed);
 
-            throw new Error(`Circular dependency detected in cleanup routine, could not shut down: ${[...missing].join(', ')}.`);
+            throw new Error(
+                `Circular dependency detected in cleanup routine, could not shut down: ${[...missing].join(', ')}.`,
+            );
         }
 
         return levels;
@@ -150,7 +157,10 @@ class DependencyContainer {
         }
     }
 
-    registerInstance<Service extends object>(key: string, definition: InstanceDefinition<Service>): ServiceKey<Service> {
+    registerInstance<Service extends object>(
+        key: string,
+        definition: InstanceDefinition<Service>,
+    ): ServiceKey<Service> {
         if (this.definitions[key] !== undefined) {
             throw new Error(`Dependency ${key} is already registered`);
         }
@@ -174,7 +184,10 @@ class DependencyContainer {
         return key as unknown as ServiceKey<Service>;
     }
 
-    private createProxyFor<Service extends object>(key: ServiceKey<Service>, definition: ServiceDefinition<Service>): Service {
+    private createProxyFor<Service extends object>(
+        key: ServiceKey<Service>,
+        definition: ServiceDefinition<Service>,
+    ): Service {
         const {factory, cache = true, cleanup} = definition;
         const resolveInstance = () => {
             const cached = this.cache[key];
@@ -274,7 +287,6 @@ class DependencyContainer {
             if (cleanup) {
                 this.resolved.get(key)!.instance = instance;
             }
-
 
             this.cache[key] = instance;
         }
