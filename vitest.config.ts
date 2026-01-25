@@ -17,6 +17,7 @@ export default defineConfig({
         ],
     },
     test: {
+        // retry: 3,
         logHeapUsage: true,
         testTimeout: 10_000,
         // include: ['packages/*/src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
@@ -25,25 +26,25 @@ export default defineConfig({
         env: {
             POSTGRES_PORT: process.env.POSTGRES_PORT ?? '35432',
         },
-        projects: [
-            {
-                test: {
-                    name: 'Context',
-                    isolate: true,
-                    include: ['packages/context/src/**/*.test.ts'],
-                },
-                extends: true,
-            },
-            {
-                test: {
-                    name: 'Other',
-                    isolate: false,
-                    exclude: ['packages/context/src/**/*.test.ts'],
-                    include: ['packages/*/src/**/*.test.ts'],
-                },
-                extends: true,
-            },
-        ],
+        // projects: [
+        //     // {
+        //     //     test: {
+        //     //         name: 'Context',
+        //     //         isolate: true,
+        //     //         include: ['packages/context/src/**/*.test.ts'],
+        //     //     },
+        //     //     extends: true,
+        //     // },
+        //     {
+        //         test: {
+        //             name: 'Other',
+        //             isolate: false,
+        //             // exclude: ['packages/context/src/**/*.test.ts'],
+        //             // include: ['packages/*/src/**/*.test.ts'],
+        //         },
+        //         extends: true,
+        //     },
+        // ],
         // setupFiles: ['dotenv/config'],
 
         // pool: 'threads',

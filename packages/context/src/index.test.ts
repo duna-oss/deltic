@@ -14,11 +14,13 @@ interface MyContext {
     tenant_id: string;
 }
 
-const localStorage = new AsyncLocalStorage<Partial<MyContext>>({defaultValue: {}});
+let localStorage: AsyncLocalStorage<Partial<MyContext>>;
 
 describe.each([
     ['static', () => new StaticContextStore<MyContext>({})],
-    ['async_hooks', () => localStorage],
+    ['async_hooks', () => {
+      return localStorage!;
+    }],
 ] as const)('@deltic/context - %s', (_name, factory) => {
     let contextStore: ContextStore<MyContext>;
     let context: Context<MyContext>;
@@ -26,6 +28,8 @@ describe.each([
     const setTenantId = (id: string | undefined) => tenantContext.use(id);
     const tenantOne = 'one';
     const tenantTwo = 'two';
+    localStorage = new AsyncLocalStorage<Partial<MyContext>>({defaultValue: {}});
+    localStorage.enterWith({});
 
     beforeEach(() => {
         localStorage.enterWith({});
