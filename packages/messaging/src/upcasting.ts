@@ -45,7 +45,7 @@ type UpcastersForMessages<AggregateRootId extends string | number, Messages exte
     [T in keyof Messages]: UpcasterFuncs<T, AggregateRootId, TupleWithoutFirst<Messages[T]>, Messages[T]>;
 };
 
-type UpcastersForVersionedStream<Stream extends VersionedStreamDefinition<Stream>> = UpcastersForMessages<
+export type UpcastersForVersionedStream<Stream extends VersionedStreamDefinition<Stream>> = UpcastersForMessages<
     Stream['aggregateRootId'],
     Stream['upcasters']
 >;
@@ -59,7 +59,8 @@ export type DefineVersionedStream<Stream extends VersionedStreamStructure> = Omi
     upcasters: OnlyMessagesThatNeedUpcasting<Stream['messages']>;
 };
 
-interface VersionedStreamDefinition<Stream extends VersionedStreamDefinition<Stream>> extends StreamDefinition {
+export interface VersionedStreamDefinition<Stream extends VersionedStreamDefinition<Stream>>
+    extends StreamDefinition {
     upcasters: {
         [K in keyof Stream['upcasters']]: [any, any, ...any[]];
     };
