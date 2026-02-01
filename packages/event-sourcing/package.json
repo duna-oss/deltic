@@ -33,6 +33,12 @@
       "require": "./dist/test-tooling.cjs",
       "module-sync": "./dist/test-tooling.js",
       "types": "./dist/test-tooling.d.ts"
+    },
+    "./pg/snapshot-repository": {
+      "import": "./dist/pg/snapshot-repository.js",
+      "require": "./dist/pg/snapshot-repository.cjs",
+      "module-sync": "./dist/pg/snapshot-repository.js",
+      "types": "./dist/pg/snapshot-repository.d.ts"
     }
   },
   "keywords": [],
@@ -52,14 +58,36 @@
   },
   "peerDependencies": {
     "reflect-metadata": "^0.2.2",
-    "@deltic/service-dispatcher": "workspace:^"
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/uid": "workspace:^",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "reflect-metadata": "^0.2.2",
-    "@deltic/service-dispatcher": "workspace:^"
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/uid": "workspace:^",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6",
+    "uuid": "^11.0.3"
   },
   "peerDependenciesMeta": {
     "@deltic/service-dispatcher": {
+      "optional": true
+    },
+    "@deltic/async-pg-pool": {
+      "optional": true
+    },
+    "@deltic/context": {
+      "optional": true
+    },
+    "@deltic/uid": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     }
   }
