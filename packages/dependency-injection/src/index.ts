@@ -158,7 +158,7 @@ class DependencyContainer {
     }
 
     registerInstance<Service extends object>(
-        key: string,
+        key: string | ServiceKey<Service>,
         definition: InstanceDefinition<Service>,
     ): ServiceKey<Service> {
         if (this.definitions[key] !== undefined) {
