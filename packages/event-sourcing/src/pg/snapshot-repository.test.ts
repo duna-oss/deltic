@@ -29,7 +29,7 @@ describe('SnapshotRepositoryUsingPg', () => {
         // Create table without tenant_id for basic tests
         await pgPool.query(`
             CREATE TABLE IF NOT EXISTS test__snapshots (
-                aggregate_root_id VARCHAR(255) NOT NULL,
+                aggregate_root_id UUID NOT NULL,
                 version BIGINT NOT NULL,
                 state JSONB NOT NULL,
                 schema_version INTEGER NOT NULL,
@@ -41,7 +41,7 @@ describe('SnapshotRepositoryUsingPg', () => {
         await pgPool.query(`
             CREATE TABLE IF NOT EXISTS test__snapshots_tenant (
                 tenant_id UUID NOT NULL,
-                aggregate_root_id VARCHAR(255) NOT NULL,
+                aggregate_root_id UUID NOT NULL,
                 version BIGINT NOT NULL,
                 state JSONB NOT NULL,
                 schema_version INTEGER NOT NULL,
@@ -55,6 +55,8 @@ describe('SnapshotRepositoryUsingPg', () => {
     });
 
     afterAll(async () => {
+        await pgPool.query('DROP TABLE IF EXISTS test__snapshots');
+        await pgPool.query('DROP TABLE IF EXISTS test__snapshots_tenant');
         await asyncPool?.flushSharedContext();
         await pgPool.end();
     });
