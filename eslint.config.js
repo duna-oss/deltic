@@ -10,6 +10,7 @@ export default tseslint.config(
     {
         files: ['./packages/**/*.ts', './*.config.*'],
         rules: {
+            '@typescript-eslint/no-unused-vars': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             'object-curly-spacing': ['error', 'never'],
             quotes: [
