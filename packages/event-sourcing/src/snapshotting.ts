@@ -94,11 +94,11 @@ export class AggregateRootRepositoryWithSnapshotting<
             await super.persist(aggregateRoot as any);
 
             if (!alreadyInTransaction) {
-                await this.transactionManager.commit();
+                await this.transactions.commit();
             }
         } catch (error) {
             if (!alreadyInTransaction) {
-                await this.transactionManager.rollback();
+                await this.transactions.rollback();
             }
             throw error;
         }
