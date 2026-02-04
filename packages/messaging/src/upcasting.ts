@@ -17,7 +17,7 @@ interface VersionedMessageDefinition {
 }
 
 export type VersionedStreamStructure = {
-    aggregateRootId: string | number;
+    aggregateRootId: StreamDefinition['aggregateRootId'];
     messages: VersionedMessageDefinition;
 };
 
@@ -52,7 +52,7 @@ export type UpcastersForVersionedStream<Stream extends VersionedStreamDefinition
 
 export type DefineVersionedStream<Stream extends VersionedStreamStructure> = Omit<Stream, 'messages'> & {
     messages: {
-        [T in keyof Stream['messages']]: Stream['messages'][T] extends [any]
+        [T in keyof Stream['messages']]: Stream['messages'][T] extends [...any]
             ? LastTypeOf<Stream['messages'][T]>
             : Stream['messages'][T];
     };
