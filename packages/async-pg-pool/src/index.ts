@@ -166,22 +166,6 @@ export class AsyncPgPool {
         }
     }
 
-    httpMiddleware(): HttpMiddleware {
-        const flush = this.flushSharedContext.bind(this);
-
-        return async (_req, res, next) => {
-            res.on('finish', flush);
-
-            if (this.context.run === undefined) {
-                next();
-            } else {
-                await this.context.run?.(async () => {
-                    next();
-                });
-            }
-        };
-    }
-
     async flushSharedContext(): Promise<void> {
         const context = this.context.resolve();
         await context.exclusiveAccess.lock();
