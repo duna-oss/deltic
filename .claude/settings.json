@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "postEdit": {
+      "command": "npx eslint --fix ${file}",
+      "filePatterns": [
+        "*.ts"
+      ]
+    }
+  }
+}
