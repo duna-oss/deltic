@@ -19,8 +19,11 @@
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "@deltic/context": "workspace:^"
+  },
   "peerDependencies": {
-    "@deltic/error-standard": "workspace:^",
+    "@deltic/context": "workspace:^",
     "@deltic/mutex": "workspace:^",
     "@deltic/transaction-manager": "workspace:^",
     "pg": "^8.16.3"

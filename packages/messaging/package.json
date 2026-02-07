@@ -175,7 +175,6 @@
     "@deltic/async-pg-pool": "workspace:^",
     "@deltic/clock": "workspace:^",
     "@deltic/context": "workspace:^",
-    "@deltic/error-standard": "workspace:^",
     "@deltic/key-value": "workspace:^",
     "@deltic/mutex": "workspace:^",
     "@deltic/offset-tracking": "workspace:^",
@@ -214,9 +213,6 @@
       "optional": true
     },
     "@deltic/context": {
-      "optional": true
-    },
-    "@deltic/error-standard": {
       "optional": true
     },
     "@deltic/mutex": {

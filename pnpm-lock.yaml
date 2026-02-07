@@ -84,9 +84,9 @@ importers:
 
   packages/async-pg-pool:
     dependencies:
-      '@deltic/error-standard':
+      '@deltic/context':
         specifier: workspace:^
-        version: link:../error-standard
+        version: link:../context
       '@deltic/mutex':
         specifier: workspace:^
         version: link:../mutex
@@ -278,33 +278,15 @@ importers:
 
   packages/stack:
     dependencies:
-      '@deltic/clock':
-        specifier: workspace:^
-        version: link:../clock
-      '@deltic/context':
-        specifier: workspace:^
-        version: link:../context
       '@deltic/dependency-injection':
         specifier: workspace:^
         version: link:../dependency-injection
       '@deltic/event-sourcing':
         specifier: workspace:^
         version: link:../event-sourcing
-      '@deltic/key-value':
-        specifier: workspace:^
-        version: link:../key-value
       '@deltic/messaging':
         specifier: workspace:^
         version: link:../messaging
-      '@deltic/mutex':
-        specifier: workspace:^
-        version: link:../mutex
-      '@deltic/offset-tracking':
-        specifier: workspace:^
-        version: link:../offset-tracking
-      '@deltic/service-dispatcher':
-        specifier: workspace:^
-        version: link:../service-dispatcher
       '@deltic/transaction-manager':
         specifier: workspace:^
         version: link:../transaction-manager

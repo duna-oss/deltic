@@ -38,6 +38,7 @@
     "@deltic/branded": "workspace:^"
   },
   "peerDependencies": {
+    "@deltic/branded": "workspace:^",
     "ulid": "^3.0.0",
     "uuid": "^13.0.0"
   },

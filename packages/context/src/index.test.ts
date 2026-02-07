@@ -214,7 +214,7 @@ describe.each([
 
     test('composeContextSlots returns a Context', () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot},
+            [tenantSlot, userSlot],
             storeFactory(),
         );
 
@@ -223,7 +223,7 @@ describe.each([
 
     test('run applies default values', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot, trace: traceSlot},
+            [tenantSlot, userSlot, traceSlot],
             storeFactory(),
         );
 
@@ -236,7 +236,7 @@ describe.each([
 
     test('slots without defaults remain undefined', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot},
+            [tenantSlot, userSlot],
             storeFactory(),
         );
 
@@ -248,7 +248,7 @@ describe.each([
 
     test('nested run inherits parent values', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot, trace: traceSlot},
+            [tenantSlot, userSlot, traceSlot],
             storeFactory(),
         );
 
@@ -270,7 +270,7 @@ describe.each([
         let counter = 0;
         const counterSlot = defineContextSlot<'counter', number>('counter', () => ++counter);
 
-        const ctx = composeContextSlots({counter: counterSlot});
+        const ctx = composeContextSlots([counterSlot]);
 
         await ctx.run(async () => {
             expect(ctx.get('counter')).toEqual(1);
@@ -283,7 +283,7 @@ describe.each([
 
     test('context.get returns value', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot},
+            [tenantSlot],
             storeFactory(),
         );
 
@@ -294,7 +294,7 @@ describe.each([
 
     test('context.attach updates value', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot},
+            [tenantSlot],
             storeFactory(),
         );
 
@@ -306,7 +306,7 @@ describe.each([
 
     test('context.context returns full context snapshot', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot},
+            [tenantSlot, userSlot],
             storeFactory(),
         );
 
@@ -319,7 +319,7 @@ describe.each([
 
     test('TenantContext can be created from composed context', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot},
+            [tenantSlot],
             storeFactory(),
         );
 
@@ -333,7 +333,7 @@ describe.each([
 
     test('explicit values override inherited in nested runs', async () => {
         const ctx = composeContextSlots(
-            {tenant: tenantSlot, user: userSlot},
+            [tenantSlot, userSlot],
             storeFactory(),
         );
 

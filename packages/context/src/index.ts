@@ -225,24 +225,11 @@ export function defineContextSlot<const Key extends string, Value>(
 }
 
 /**
- * Maps a record of named slots to their corresponding value types (using slot names as keys).
+ * Derives the context data structure from an array of context slots,
+ * mapping each slot's key to its value type.
  */
-export type CompositeContextData<Slots extends Record<string, ContextSlot<string, unknown>>> = {
-    [K in keyof Slots]: Slots[K] extends ContextSlot<string, infer V> ? V : never;
-};
-
-/**
- * Maps slot names to their underlying context keys.
- */
-type SlotKeyMapping<Slots extends Record<string, ContextSlot<string, unknown>>> = {
-    [K in keyof Slots]: Slots[K] extends ContextSlot<infer Key, unknown> ? Key : never;
-};
-
-/**
- * The context data structure using slot keys (the actual keys stored in the context).
- */
-export type ContextDataFromSlots<Slots extends Record<string, ContextSlot<string, unknown>>> = {
-    [K in keyof Slots as SlotKeyMapping<Slots>[K]]: CompositeContextData<Slots>[K];
+export type ContextDataFromSlots<Slots extends readonly ContextSlot<string, unknown>[]> = {
+    [S in Slots[number] as S['key']]: S extends ContextSlot<string, infer V> ? V : never;
 };
 
 /**
@@ -256,7 +243,7 @@ export type ContextDataFromSlots<Slots extends Record<string, ContextSlot<string
  * const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
  *
  * const requestContext = composeContextSlots(
- *     {tenant: tenantSlot, user: userSlot},
+ *     [tenantSlot, userSlot],
  *     new AsyncLocalStorage(),
  * );
  *
@@ -266,13 +253,11 @@ export type ContextDataFromSlots<Slots extends Record<string, ContextSlot<string
  * }, {tenant_id: 'acme'});
  */
 export function composeContextSlots<
-    const Slots extends Record<string, ContextSlot<string, unknown>>,
+    const Slots extends readonly ContextSlot<string, unknown>[],
 >(
     slots: Slots,
     store: ContextStore<ContextDataFromSlots<Slots>> = new StaticContextStore<ContextDataFromSlots<Slots>>(),
 ): Context<ContextDataFromSlots<Slots>> {
-    const slotEntries = Object.values(slots) as ContextSlot<string, unknown>[];
-
     function createContextValue(
         inherited: Partial<ContextDataFromSlots<Slots>>,
         provided: Partial<ContextDataFromSlots<Slots>>,
@@ -280,7 +265,7 @@ export function composeContextSlots<
         // Evaluate defaults for slots that have them
         const defaults: Record<string, unknown> = {};
 
-        for (const slot of slotEntries) {
+        for (const slot of slots) {
             if (slot.defaultValue !== undefined) {
                 defaults[slot.key] = slot.defaultValue();
             }

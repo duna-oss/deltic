@@ -1,25 +1,30 @@
 import {Pool} from 'pg';
 import {
     AsyncPgPool,
-    AsyncPgTransactionContextProvider,
+    transactionContextSlot,
     type AsyncPgPoolOptions,
     type Connection,
-    type TransactionContext,
+    type TransactionContextData,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
+import {composeContextSlots, type Context} from '@deltic/context';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
-const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
+const asyncLocalStorage = new AsyncLocalStorage<Partial<TransactionContextData>>();
 
-const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory(), free: []});
+const setupContext = () => asyncLocalStorage.enterWith({pg_transaction: transactionContextSlot.defaultValue!()});
 
 describe('AsyncPgPool', () => {
     let pool: Pool;
     let provider: AsyncPgPool;
     const factoryWithStaticPool = (options: AsyncPgPoolOptions = {}) => new AsyncPgPool(pool, options);
     const factoryWithAsyncPool = (options: AsyncPgPoolOptions = {}) => {
-        return new AsyncPgPool(pool, options, new AsyncPgTransactionContextProvider(asyncLocalStorage));
+        const context = composeContextSlots(
+            [transactionContextSlot],
+            asyncLocalStorage,
+        ) as unknown as Context<TransactionContextData>;
+
+        return new AsyncPgPool(pool, options, context);
     };
 
     beforeAll(async () => {
@@ -240,5 +245,24 @@ describe('AsyncPgPool', () => {
         })();
 
         expect(released).toEqual(true);
+    });
+
+    test('run() creates an isolated transaction context scope', async () => {
+        const context = composeContextSlots(
+            [transactionContextSlot],
+            new AsyncLocalStorage<Partial<TransactionContextData>>(),
+        ) as unknown as Context<TransactionContextData>;
+
+        const provider = new AsyncPgPool(pool, {}, context);
+
+        let innerInTransaction = false;
+
+        await provider.run(async () => {
+            await provider.runInTransaction(async () => {
+                innerInTransaction = provider.inTransaction();
+            });
+        });
+
+        expect(innerInTransaction).toEqual(true);
     });
 });

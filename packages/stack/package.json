@@ -30,19 +30,17 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "dependencies": {
-    "@deltic/clock": "workspace:^",
-    "@deltic/context": "workspace:^",
     "@deltic/dependency-injection": "workspace:^",
     "@deltic/event-sourcing": "workspace:^",
-    "@deltic/key-value": "workspace:^",
     "@deltic/messaging": "workspace:^",
-    "@deltic/mutex": "workspace:^",
-    "@deltic/offset-tracking": "workspace:^",
-    "@deltic/service-dispatcher": "workspace:^",
     "@deltic/transaction-manager": "workspace:^"
   },
   "peerDependencies": {
     "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/dependency-injection": "workspace:^",
+    "@deltic/event-sourcing": "workspace:^",
+    "@deltic/messaging": "workspace:^",
+    "@deltic/transaction-manager": "workspace:^",
     "pg": "^8.16.3"
   },
   "peerDependenciesMeta": {

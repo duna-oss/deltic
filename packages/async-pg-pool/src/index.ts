@@ -1,22 +1,9 @@
 import type {Pool, PoolClient} from 'pg';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
-import {AsyncLocalStorage} from 'async_hooks';
 import type {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
-import {IncomingMessage, ServerResponse} from 'http';
 import type {TransactionManager} from '@deltic/transaction-manager';
-
-export interface NextFunction {
-    (err?: any): void;
-}
-
-interface HttpMiddleware {
-    <Request extends IncomingMessage, Response extends ServerResponse, Next extends NextFunction>(
-        req: Request,
-        res: Response,
-        next: Next,
-    ): unknown;
-}
+import {Context, StaticContextStore, composeContextSlots, defineContextSlot} from '@deltic/context';
 
 const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
 
@@ -31,50 +18,23 @@ export interface TransactionContext {
     free: Array<[Connection, undefined | ReturnType<typeof setTimeout>]>;
 }
 
-export interface TransactionContextProvider {
-    resolve(): TransactionContext;
-    run?: <R>(callback: () => R) => R;
-}
+export type TransactionContextData = {pg_transaction: TransactionContext};
 
-export class StaticPgTransactionContextProvider implements TransactionContextProvider {
-    private context: TransactionContext = {
+export const transactionContextSlot = defineContextSlot<'pg_transaction', TransactionContext>(
+    'pg_transaction',
+    () => ({
         exclusiveAccess: new StaticMutexUsingMemory(),
         sharedTransaction: undefined,
         primaryConnection: undefined,
         free: [],
-    };
+    }),
+);
 
-    resolve(): TransactionContext {
-        return this.context;
-    }
-}
+function createDefaultTransactionContext(): Context<TransactionContextData> {
+    const store = new StaticContextStore<TransactionContextData>();
+    store.enterWith({pg_transaction: transactionContextSlot.defaultValue!()});
 
-export class AsyncPgTransactionContextProvider implements TransactionContextProvider {
-    constructor(
-        private readonly store: AsyncLocalStorage<TransactionContext> = new AsyncLocalStorage<TransactionContext>(),
-    ) {}
-
-    resolve(): TransactionContext {
-        const context = this.store.getStore();
-
-        if (!context) {
-            throw new Error('No transaction context set, did you forget a .run call?');
-        }
-
-        return context;
-    }
-
-    run<R>(callback: () => R): R {
-        return this.store.run(
-            {
-                exclusiveAccess: new StaticMutexUsingMemory(),
-                sharedTransaction: undefined,
-                primaryConnection: undefined,
-                free: [],
-            },
-            callback,
-        );
-    }
+    return composeContextSlots([transactionContextSlot], store) as unknown as Context<TransactionContextData>;
 }
 
 export type OnReleaseCallback = (client: Connection, err?: unknown) => Promise<any> | any;
@@ -99,7 +59,7 @@ export class AsyncPgPool {
     constructor(
         private readonly pool: Pool,
         private readonly options: AsyncPgPoolOptions = {},
-        private readonly context: TransactionContextProvider = new StaticPgTransactionContextProvider(),
+        private readonly context: Context<TransactionContextData> = createDefaultTransactionContext(),
     ) {
         this.keepConnections = options.keepConnections ?? 0;
         this.maxIdleMs = options.maxIdleMs ?? 1000;
@@ -109,8 +69,22 @@ export class AsyncPgPool {
         this.beginQuery = options.beginQuery ?? 'BEGIN';
     }
 
+    private resolveTransactionContext(): TransactionContext {
+        const ctx = this.context.get('pg_transaction');
+
+        if (ctx === undefined) {
+            throw new Error('No transaction context available. Did you forget to call context.run()?');
+        }
+
+        return ctx;
+    }
+
+    async run<R>(fn: () => Promise<R>): Promise<R> {
+        return this.context.run(fn);
+    }
+
     async primary(): Promise<Connection> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
         await context.exclusiveAccess.lock();
 
         try {
@@ -133,13 +107,13 @@ export class AsyncPgPool {
     }
 
     inTransaction(): boolean {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
 
         return context.sharedTransaction !== undefined;
     }
 
     withTransaction(): Connection {
-        const {sharedTransaction} = this.context.resolve();
+        const {sharedTransaction} = this.resolveTransactionContext();
 
         if (sharedTransaction === undefined) {
             throw UnableToProvideActiveTransaction.noTransactionWasActive();
@@ -167,7 +141,7 @@ export class AsyncPgPool {
     }
 
     async flushSharedContext(): Promise<void> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
         await context.exclusiveAccess.lock();
 
         try {
@@ -195,7 +169,7 @@ export class AsyncPgPool {
     }
 
     async claim(): Promise<Connection> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
         const [freeClient, timeout] = context.free.shift() ?? [];
 
         if (freeClient) {
@@ -265,7 +239,7 @@ export class AsyncPgPool {
     }
 
     async begin(query: string = this.beginQuery): Promise<Connection> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
         await context.exclusiveAccess.lock();
 
         if (context.sharedTransaction) {
@@ -307,7 +281,7 @@ export class AsyncPgPool {
         client: Connection,
         error?: unknown,
     ): Promise<void> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
 
         if (context.sharedTransaction !== client) {
             throw new Error(`Trying to ${command} a transaction that is NOT the known transaction.`);
@@ -320,12 +294,12 @@ export class AsyncPgPool {
             await this.doRelease(client, e);
             throw e;
         } finally {
-            this.context.resolve().sharedTransaction = undefined;
+            this.resolveTransactionContext().sharedTransaction = undefined;
         }
     }
 
     async release(connection: Connection, err: unknown = undefined): Promise<void> {
-        const context = this.context.resolve();
+        const context = this.resolveTransactionContext();
 
         if (connection === context.primaryConnection) {
             return;
@@ -336,7 +310,7 @@ export class AsyncPgPool {
                 this.maxIdleMs === undefined
                     ? undefined
                     : setTimeout(() => {
-                          const context = this.context.resolve();
+                          const context = this.resolveTransactionContext();
                           const index = context.free.findIndex(([c]) => c === connection);
 
                           if (index >= 0) {
@@ -392,9 +366,9 @@ class UnableToReleaseConnection extends StandardError {
 
 class UnableToProvideActiveTransaction extends StandardError {
     static noTransactionWasActive = (err?: unknown) =>
-        new UnableToReleaseConnection(
-            `Unable to release connection: ${errorToMessage(err)}`,
-            'async-pg-pool.no_active_transaction_availble',
+        new UnableToProvideActiveTransaction(
+            `Unable to provide active transaction: no transaction was active`,
+            'async-pg-pool.no_active_transaction_available',
             {},
             err,
         );
