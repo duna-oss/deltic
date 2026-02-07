@@ -18,6 +18,14 @@ jobs:
           POSTGRES_DB: 'duna'
           POSTGRES_USER: 'duna'
           POSTGRES_PASSWORD: 'duna'
+      rabbitmq:
+        image: rabbitmq:3.11.20-management-alpine
+        ports:
+          - '35671:5672'
+          - '35672:15672'
+        env:
+          RABBITMQ_DEFAULT_USER: 'admin'
+          RABBITMQ_DEFAULT_PASS: 'admin'
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
