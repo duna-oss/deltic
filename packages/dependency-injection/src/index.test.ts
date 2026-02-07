@@ -48,8 +48,6 @@ describe('@deltic/dependency-injection', () => {
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(false);
         });
-
-        // test('when not caching, you will always get a proxy', )
     });
 
     /**
