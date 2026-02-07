@@ -1,16 +1,19 @@
-import type {MessageRepository, StreamDefinition} from '@deltic/messaging';
-import type {OutboxRepository} from '@deltic/messaging/outbox';
-import type {OffsetIdType, OffsetRepository, OffsetType} from '@deltic/offset-tracking';
+// Main function
+export {setupEventSourcing} from './event-sourcing.js';
 
-export interface PersistenceProvider {
-    messageRepository<Stream extends StreamDefinition>(): MessageRepository<Stream>;
-    outboxRepository<Stream extends StreamDefinition>(): OutboxRepository<Stream>;
-    offsetRepository<Offset extends OffsetType, Id extends OffsetIdType>(): OffsetRepository<Offset, Id>;
-}
+// Types
+export type {
+    EventSourcingConfig,
+    EventSourcingConfigBase,
+    EventSourcingServiceKeys,
+    EventSourcingServices,
+    SnapshotConfig,
+} from './event-sourcing.js';
 
-export class StackProvider {
-    constructor(
-        persistence: PersistenceProvider,
-    ) {
-    }
-}
+// Infrastructure
+export type {
+    InfrastructureProvider,
+    MessageRepositoryOptions,
+    OutboxRepositoryOptions,
+    SnapshotRepositoryOptions,
+} from './infrastructure-provider.js';

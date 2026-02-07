@@ -46,9 +46,15 @@
       "@deltic/key-value/*": [
         "./packages/key-value/src/*.ts"
       ],
+      "@deltic/service-dispatcher/*": [
+        "./packages/service-dispatcher/src/*.ts"
+      ],
+      "@deltic/stack/*": [
+        "./packages/stack/src/*.ts"
+      ],
       "@deltic/*": [
         "./packages/*/src/index.ts"
-      ],
+      ]
     }
   }
 }
