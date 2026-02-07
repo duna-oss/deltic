@@ -1,6 +1,6 @@
 import type {KeyType, KeyValueStore, ValueType, KeyConversion} from './index.js';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import type {ContextValueReader} from '@deltic/context';
+import type {ValueReader} from '@deltic/context';
 import type {IdConversion} from '@deltic/uid';
 
 type StoredRecord<V> = {
@@ -17,7 +17,7 @@ export interface KeyValueStoreUsingPgOptions<
     tableName: string;
     keyConversion?: KeyConversion<Key, DatabaseKey>;
 
-    tenantContext?: ContextValueReader<TenantId>;
+    tenantContext?: ValueReader<TenantId>;
     tenantIdConversion?: IdConversion<TenantId>;
 }
 
@@ -29,7 +29,7 @@ export class KeyValueStoreUsingPg<
 > implements KeyValueStore<Key, Value> {
     private readonly tableName: string;
     private readonly keyConversion: KeyConversion<Key, DatabaseKey>;
-    private readonly tenantContext?: ContextValueReader<TenantId>;
+    private readonly tenantContext?: ValueReader<TenantId>;
     private readonly tenantIdConversion?: IdConversion<TenantId>;
 
     constructor(

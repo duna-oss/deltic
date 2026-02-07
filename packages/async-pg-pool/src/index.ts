@@ -3,7 +3,7 @@ import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 import type {StaticMutex} from '@deltic/mutex';
 import {errorToMessage, StandardError} from '@deltic/error-standard';
 import type {TransactionManager} from '@deltic/transaction-manager';
-import {Context, StaticContextStore, composeContextSlots, defineContextSlot} from '@deltic/context';
+import {Context, ContextStoreUsingMemory, composeContextSlots, defineContextSlot} from '@deltic/context';
 
 const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
 
@@ -31,7 +31,7 @@ export const transactionContextSlot = defineContextSlot<'pg_transaction', Transa
 );
 
 function createDefaultTransactionContext(): Context<TransactionContextData> {
-    const store = new StaticContextStore<TransactionContextData>();
+    const store = new ContextStoreUsingMemory<TransactionContextData>();
     store.enterWith({pg_transaction: transactionContextSlot.defaultValue!()});
 
     return composeContextSlots([transactionContextSlot], store) as unknown as Context<TransactionContextData>;

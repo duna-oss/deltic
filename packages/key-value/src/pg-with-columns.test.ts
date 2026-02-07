@@ -3,7 +3,7 @@ import {KeyValueStoreWithColumnsUsingPg} from './pg-with-columns.js';
 import {Pool} from 'pg';
 import * as uuid from 'uuid';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
-import {SyncTenantContext} from '@deltic/context';
+import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {NoIdConversion, PrefixedBrandedIdConversion, PrefixedBrandedIdGenerator, type PrefixedId} from '@deltic/uid';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
@@ -43,7 +43,7 @@ async function createKeyValueSchema(pool: Pool, tableName: string): Promise<void
 
 const testTableName = 'test__kv_columnized_store';
 const tenantId = uuid.v7();
-const tenantContext = new SyncTenantContext<string>(tenantId);
+const tenantContext = new ValueReadWriterUsingMemory<string>(tenantId);
 const personIds = new PrefixedBrandedIdGenerator('person', uuid.v7);
 const prefixUuidConversion = new PrefixedBrandedIdConversion('person', new NoIdConversion());
 

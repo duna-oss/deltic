@@ -4,12 +4,12 @@ import {Pool} from 'pg';
 import * as uuid from 'uuid';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import {pgTestCredentials} from '../../pg-credentials.js';
-import {SyncTenantContext} from '@deltic/context';
+import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {collect, messageFactory} from '@deltic/messaging/helpers';
 import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
 const firstTenantId = uuid.v7();
 const secondTenantId = uuid.v7();
-const tenantContext = new SyncTenantContext(firstTenantId);
+const tenantContext = new ValueReadWriterUsingMemory(firstTenantId);
 
 interface ExampleEventStream {
     aggregateRootId: string;

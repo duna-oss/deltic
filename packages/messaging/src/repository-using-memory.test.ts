@@ -1,6 +1,6 @@
 import {MessageRepositoryUsingMemory} from './repository-using-memory.js';
 import type {AnyMessageFrom, MessagesFrom} from './index.js';
-import {SyncTenantContext} from '@deltic/context';
+import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {collect, createMessage} from './helpers.js';
 
 enum ExampleTypes {
@@ -40,7 +40,7 @@ describe('InMemoryMessageRepository', () => {
 
     test('it respects tenant context', async () => {
         // Arrange
-        const tenantContext = new SyncTenantContext('abc');
+        const tenantContext = new ValueReadWriterUsingMemory('abc');
         const repository = new MessageRepositoryUsingMemory<ExampleEventStream>(tenantContext);
         const firstMessage: AnyMessageFrom<ExampleEventStream> = createMessage(ExampleTypes.First, 'first');
         const secondMessage: AnyMessageFrom<ExampleEventStream> = createMessage(ExampleTypes.Second, 2);

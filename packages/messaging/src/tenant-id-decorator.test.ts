@@ -1,6 +1,6 @@
 import type {AnyMessageFrom} from './index.js';
 import {TenantIdMessageDecorator} from './tenant-id-decorator.js';
-import {SyncTenantContext} from '@deltic/context';
+import {ValueReadWriterUsingMemory} from '@deltic/context';
 
 describe('TenantIdMessageDecorator', () => {
     test('it adds the tenant id when it is known in the context', async () => {
@@ -11,7 +11,7 @@ describe('TenantIdMessageDecorator', () => {
                 something: number;
             };
         }
-        const context = new SyncTenantContext<string>();
+        const context = new ValueReadWriterUsingMemory<string>();
         const decorator = new TenantIdMessageDecorator<Example>(context);
         const message: AnyMessageFrom<Example> = {
             type: 'something',

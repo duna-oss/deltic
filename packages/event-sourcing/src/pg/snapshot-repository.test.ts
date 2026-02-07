@@ -1,7 +1,7 @@
 import {Pool} from 'pg';
 import * as uuid from 'uuid';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
-import {SyncTenantContext} from '@deltic/context';
+import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {pgTestCredentials} from '../../../pg-credentials.js';
 import type {AggregateStreamWithSnapshotting, Snapshot} from '../snapshotting.js';
 import {SnapshotRepositoryUsingPg} from './snapshot-repository.js';
@@ -178,11 +178,11 @@ describe('SnapshotRepositoryUsingPg', () => {
     });
 
     describe('multi-tenant operations', () => {
-        let tenantContext: SyncTenantContext<string>;
+        let tenantContext: ValueReadWriterUsingMemory<string>;
         let repository: SnapshotRepositoryUsingPg<TestSnapshotStream>;
 
         beforeEach(() => {
-            tenantContext = new SyncTenantContext<string>(firstTenantId);
+            tenantContext = new ValueReadWriterUsingMemory<string>(firstTenantId);
             repository = new SnapshotRepositoryUsingPg<TestSnapshotStream>(
                 asyncPool,
                 'test__snapshots_tenant',

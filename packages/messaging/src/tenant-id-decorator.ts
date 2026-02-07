@@ -1,12 +1,12 @@
 import type {MessageDecorator, MessagesFrom, StreamDefinition} from './index.js';
-import type {ContextValueReader} from '@deltic/context';
+import type {ValueReader} from '@deltic/context';
 import {messageWithHeader} from './helpers.js';
 
 export class TenantIdMessageDecorator<
     Stream extends StreamDefinition,
     TenantId extends string | number = string | number,
 > implements MessageDecorator<Stream> {
-    constructor(private readonly tenantContext: ContextValueReader<TenantId>) {}
+    constructor(private readonly tenantContext: ValueReader<TenantId>) {}
 
     decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream> {
         const tenantId = this.tenantContext.resolve();

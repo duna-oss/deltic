@@ -7,7 +7,7 @@ import type {
     StreamDefinition,
 } from '../index.js';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import {type ContextValueReader} from '@deltic/context';
+import {type ValueReader} from '@deltic/context';
 import {messageWithHeader} from '../helpers.js';
 import type {IdConversion} from '@deltic/uid';
 
@@ -28,14 +28,14 @@ export interface NotificationConfiguration {
 export interface MessageRepositoryUsingPgOptions<Stream extends StreamDefinition> {
     readonly idConversion?: IdConversion<Stream['aggregateRootId']>;
     readonly tenantIdConversion?: IdConversion<string | number>;
-    readonly tenantContext?: ContextValueReader<string>;
+    readonly tenantContext?: ValueReader<string>;
     readonly notificationConfiguration?: NotificationConfiguration;
 }
 
 export class MessageRepositoryUsingPg<Stream extends StreamDefinition> implements MessageRepository<Stream> {
     private readonly idConversion?: IdConversion<Stream['aggregateRootId']>;
     private readonly tenantIdConversion?: IdConversion<string | number>;
-    private readonly tenantContext?: ContextValueReader<string>;
+    private readonly tenantContext?: ValueReader<string>;
     private readonly notificationConfiguration: NotificationConfiguration;
 
     constructor(

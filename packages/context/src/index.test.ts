@@ -2,11 +2,11 @@ import {
     composeContextSlots,
     Context,
     type ContextStore,
-    CrossTenantOperationDetected,
+    ContextMismatchDetected,
     defineContextSlot,
-    StaticContextStore,
-    TenantContext,
-    UnableToResolveTenantContext,
+    ContextStoreUsingMemory,
+    ValueReadWriterUsingContext,
+    UnableToResolveValue,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 
@@ -17,19 +17,19 @@ interface MyContext {
 }
 
 describe.each([
-    ['static', () => new StaticContextStore<MyContext>({})],
+    ['static', () => new ContextStoreUsingMemory<MyContext>({})],
     ['async_hooks', () => new AsyncLocalStorage<Partial<MyContext>>()],
 ] as const)('@deltic/context - %s', (_name, factory) => {
     let contextStore: ContextStore<MyContext>;
     let context: Context<MyContext>;
-    let tenantContext: TenantContext<'tenant_id', string>;
+    let tenantContext: ValueReadWriterUsingContext<'tenant_id', string>;
     const tenantOne = 'one';
     const tenantTwo = 'two';
 
     beforeEach(() => {
         contextStore = factory();
         context = new Context(contextStore);
-        tenantContext = new TenantContext<'tenant_id', string>(context, 'tenant_id');
+        tenantContext = new ValueReadWriterUsingContext<'tenant_id', string>(context, 'tenant_id');
     });
 
     test('running with different scope', async () => {
@@ -138,21 +138,21 @@ describe.each([
 
     test('failing to resolve the tenant identifier', async () => {
         await context.run(async () => {
-            expect(() => tenantContext.mustResolve()).toThrow(UnableToResolveTenantContext);
+            expect(() => tenantContext.mustResolve()).toThrow(UnableToResolveValue);
         });
     });
 
     test('when a valid tenant ID is set, does not throw', async () => {
         await context.run(async () => {
             tenantContext.use(tenantOne);
-            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).not.toThrow();
+            expect(() => tenantContext.preventMismatch(tenantOne)).not.toThrow();
         });
     });
 
     test('when tenant ID is not set, throws UnableToResolveTenantContext', async () => {
         await context.run(async () => {
             tenantContext.use(undefined);
-            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(new UnableToResolveTenantContext());
+            expect(() => tenantContext.preventMismatch(tenantOne)).toThrow(new UnableToResolveValue());
         });
     });
 
@@ -160,8 +160,8 @@ describe.each([
         await context.run(async () => {
             tenantContext.use(tenantTwo);
 
-            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(
-                CrossTenantOperationDetected.forIds({
+            expect(() => tenantContext.preventMismatch(tenantOne)).toThrow(
+                ContextMismatchDetected.forIds({
                     expectedId: tenantTwo,
                     tenantId: tenantOne,
                 }),
@@ -181,7 +181,7 @@ interface CompositeTestContext {
 }
 
 describe.each([
-    ['StaticContextStore', () => new StaticContextStore<CompositeTestContext>({})],
+    ['StaticContextStore', () => new ContextStoreUsingMemory<CompositeTestContext>({})],
     ['AsyncLocalStorage', () => new AsyncLocalStorage<Partial<CompositeTestContext>>()],
 ] as const)('composeContextSlots - %s', (_name, storeFactory) => {
     // Define slots for testing
@@ -311,7 +311,7 @@ describe.each([
             storeFactory(),
         );
 
-        const tenantContext = new TenantContext(ctx, 'tenant_id');
+        const tenantContext = new ValueReadWriterUsingContext(ctx, 'tenant_id');
 
         await ctx.run(async () => {
             expect(tenantContext.resolve()).toEqual('acme');

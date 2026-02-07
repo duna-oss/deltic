@@ -20,7 +20,7 @@ export interface ContextStore<C extends ContextData<C>> {
     run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R>;
 }
 
-export class StaticContextStore<C extends ContextData<C>> implements ContextStore<C> {
+export class ContextStoreUsingMemory<C extends ContextData<C>> implements ContextStore<C> {
     constructor(private context: Partial<C> = {}) {}
 
     enterWith(store: Partial<C>): void {
@@ -86,38 +86,38 @@ export class Context<C extends ContextData<C>> {
     }
 }
 
-export interface ContextValueReader<TenantId> {
-    resolve(): TenantId | undefined;
-    mustResolve(): TenantId;
-    preventCrossTenantUsage(tenantId: TenantId): void;
+export interface ValueReader<Value> {
+    resolve(): Value | undefined;
+    mustResolve(): Value;
+    preventMismatch(value: Value): void;
 }
 
-export interface ContextValueWriter<TenantId> extends ContextValueReader<TenantId> {
-    use(context?: TenantId): void;
+export interface ValueReadWriter<Value> extends ValueReader<Value> {
+    use(context?: Value): void;
     forget(): void;
 }
 
-export class SyncTenantContext<TenantId extends string | number> implements ContextValueWriter<TenantId> {
-    constructor(private tenantContext?: TenantId) {}
+export class ValueReadWriterUsingMemory<Value extends string | number> implements ValueReadWriter<Value> {
+    constructor(private value?: Value) {}
 
-    resolve(): TenantId | undefined {
-        return this.tenantContext;
+    resolve(): Value | undefined {
+        return this.value;
     }
 
-    preventCrossTenantUsage(tenantId: TenantId) {
-        preventCrossTenantUsage({expectedId: this.mustResolve(), tenantId});
+    preventMismatch(value: Value) {
+        preventMismatch(this.mustResolve(), value);
     }
 
-    mustResolve(): TenantId {
-        if (this.tenantContext === undefined) {
-            throw new UnableToResolveTenantContext();
+    mustResolve(): Value {
+        if (this.value === undefined) {
+            throw new UnableToResolveValue();
         }
 
-        return this.tenantContext;
+        return this.value;
     }
 
-    use(context?: TenantId): void {
-        this.tenantContext = context;
+    use(context?: Value): void {
+        this.value = context;
     }
 
     forget(): void {
@@ -129,10 +129,10 @@ type KeyValueToObject<Key extends string, Value extends string | number> = {
     [K in Key]: Value;
 };
 
-export class TenantContext<
+export class ValueReadWriterUsingContext<
     const Key extends string,
     Value extends string | number,
-> implements ContextValueWriter<Value> {
+> implements ValueReadWriter<Value> {
     constructor(
         private readonly context: Context<KeyValueToObject<Key, Value>>,
         private readonly key: Key,
@@ -152,48 +152,45 @@ export class TenantContext<
         } as KeyValueToObject<Key, Value>);
     }
 
-    preventCrossTenantUsage(value: Value) {
-        preventCrossTenantUsage({expectedId: this.mustResolve(), tenantId: value});
+    preventMismatch(value: Value) {
+        preventMismatch(this.mustResolve(), value);
     }
 
     mustResolve(): Value {
         const resolved = this.resolve();
 
         if (resolved === undefined) {
-            throw new UnableToResolveTenantContext();
+            throw new UnableToResolveValue();
         }
 
         return resolved;
     }
 }
 
-export class UnableToResolveTenantContext extends StandardError {
+export class UnableToResolveValue extends StandardError {
     constructor() {
-        super('Tenant ID not found in context. Forgot to set it?', 'context.unable_to_resolve_tenant_context');
+        super('Value is not found. Forgot to set it?', 'context.unable_to_resolve_value');
     }
 }
 
-export function preventCrossTenantUsage<TenantId extends string | number>(context: {
-    expectedId: TenantId;
-    tenantId: TenantId;
-}): void {
-    if (context.tenantId !== context.expectedId) {
-        throw CrossTenantOperationDetected.forIds(context);
+export function preventMismatch<Value extends string | number>(
+    expected: Value,
+    actual: Value,
+): void {
+    if (actual !== expected) {
+        throw ContextMismatchDetected.for(expected, actual);
     }
 }
 
-export class CrossTenantOperationDetected extends StandardError {
-    static forIds<TenantId extends string | number>({
-        expectedId,
-        tenantId,
-    }: {
-        expectedId: TenantId;
-        tenantId: TenantId;
-    }) {
-        return new CrossTenantOperationDetected(
-            `Cross-tenant operation detected. Expected ${String(expectedId)} detected ${String(tenantId)}`,
-            'context.cross_tenant_operation_detected',
-            {expectedId, tenantId},
+export class ContextMismatchDetected extends StandardError {
+    static for<Value extends string | number>(
+        expected: Value,
+        actual: Value,
+    ){
+        return new ContextMismatchDetected(
+            `Context mismatch operation detected. Expected ${String(expected)} detected ${String(actual)}`,
+            'context.mismatch_detected',
+            {expected, actual},
         );
     }
 }
@@ -256,7 +253,7 @@ export function composeContextSlots<
     const Slots extends readonly ContextSlot<string, unknown>[],
 >(
     slots: Slots,
-    store: ContextStore<ContextDataFromSlots<Slots>> = new StaticContextStore<ContextDataFromSlots<Slots>>(),
+    store: ContextStore<ContextDataFromSlots<Slots>> = new ContextStoreUsingMemory<ContextDataFromSlots<Slots>>(),
 ): Context<ContextDataFromSlots<Slots>> {
     function createContextValue(
         inherited: Partial<ContextDataFromSlots<Slots>>,

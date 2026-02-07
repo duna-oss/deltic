@@ -1,5 +1,5 @@
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import type {ContextValueReader} from '@deltic/context';
+import type {ValueReader} from '@deltic/context';
 import type {IdConversion} from '@deltic/uid';
 import type {AggregateStreamWithSnapshotting, Snapshot, SnapshotRepository} from '../snapshotting.js';
 import type {QueryResult} from 'pg';
@@ -13,7 +13,7 @@ interface SnapshotRecord {
 export interface SnapshotRepositoryUsingPgOptions<Stream extends AggregateStreamWithSnapshotting<Stream>> {
     readonly idConversion?: IdConversion<Stream['aggregateRootId']>;
     readonly tenantIdConversion?: IdConversion<string | number>;
-    readonly tenantContext?: ContextValueReader<string>;
+    readonly tenantContext?: ValueReader<string>;
 }
 
 export class SnapshotRepositoryUsingPg<Stream extends AggregateStreamWithSnapshotting<Stream>>
@@ -21,7 +21,7 @@ export class SnapshotRepositoryUsingPg<Stream extends AggregateStreamWithSnapsho
 {
     private readonly idConversion?: IdConversion<Stream['aggregateRootId']>;
     private readonly tenantIdConversion?: IdConversion<string | number>;
-    private readonly tenantContext?: ContextValueReader<string>;
+    private readonly tenantContext?: ValueReader<string>;
 
     constructor(
         private readonly pool: AsyncPgPool,
