@@ -123,6 +123,36 @@
       "require": "./dist/pg/notifying-outbox-decorator.cjs",
       "module-sync": "./dist/pg/notifying-outbox-decorator.js",
       "types": "./dist/pg/notifying-outbox-decorator.d.ts"
+    },
+    "./amqp/connection-provider": {
+      "import": "./dist/amqp/connection-provider.js",
+      "require": "./dist/amqp/connection-provider.cjs",
+      "module-sync": "./dist/amqp/connection-provider.js",
+      "types": "./dist/amqp/connection-provider.d.ts"
+    },
+    "./amqp/channel-pool": {
+      "import": "./dist/amqp/channel-pool.js",
+      "require": "./dist/amqp/channel-pool.cjs",
+      "module-sync": "./dist/amqp/channel-pool.js",
+      "types": "./dist/amqp/channel-pool.d.ts"
+    },
+    "./amqp/message-dispatcher": {
+      "import": "./dist/amqp/message-dispatcher.js",
+      "require": "./dist/amqp/message-dispatcher.cjs",
+      "module-sync": "./dist/amqp/message-dispatcher.js",
+      "types": "./dist/amqp/message-dispatcher.d.ts"
+    },
+    "./amqp/message-relay": {
+      "import": "./dist/amqp/message-relay.js",
+      "require": "./dist/amqp/message-relay.cjs",
+      "module-sync": "./dist/amqp/message-relay.js",
+      "types": "./dist/amqp/message-relay.d.ts"
+    },
+    "./message-delivery-counter": {
+      "import": "./dist/message-delivery-counter.js",
+      "require": "./dist/message-delivery-counter.cjs",
+      "module-sync": "./dist/message-delivery-counter.js",
+      "types": "./dist/message-delivery-counter.d.ts"
     }
   },
   "keywords": [
@@ -141,24 +171,42 @@
     "directory": "packages/messaging"
   },
   "peerDependencies": {
+    "@deltic/backoff": "workspace:^",
     "@deltic/async-pg-pool": "workspace:^",
     "@deltic/clock": "workspace:^",
     "@deltic/context": "workspace:^",
+    "@deltic/error-standard": "workspace:^",
     "@deltic/key-value": "workspace:^",
+    "@deltic/mutex": "workspace:^",
     "@deltic/offset-tracking": "workspace:^",
+    "@deltic/process-queue": "workspace:^",
+    "@deltic/wait-group": "workspace:^",
+    "amqplib": "^0.10.7",
+    "crc": "^4.3.2",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@deltic/backoff": "workspace:^",
     "@deltic/async-pg-pool": "workspace:^",
     "@deltic/clock": "workspace:^",
     "@deltic/context": "workspace:^",
-    "@deltic/offset-tracking": "workspace:^",
+    "@deltic/error-standard": "workspace:^",
     "@deltic/key-value": "workspace:^",
+    "@deltic/mutex": "workspace:^",
+    "@deltic/offset-tracking": "workspace:^",
+    "@deltic/process-queue": "workspace:^",
+    "@deltic/wait-group": "workspace:^",
+    "amqplib": "^0.10.7",
+    "@types/amqplib": "^0.10.7",
+    "crc": "^4.3.2",
     "pg": "^8.16.3",
     "@types/pg": "^8.15.6",
     "uuid": "^13.0.0"
   },
   "peerDependenciesMeta": {
+    "@deltic/backoff": {
+      "optional": true
+    },
     "@deltic/async-pg-pool": {
       "optional": true
     },
@@ -168,7 +216,25 @@
     "@deltic/context": {
       "optional": true
     },
+    "@deltic/error-standard": {
+      "optional": true
+    },
+    "@deltic/mutex": {
+      "optional": true
+    },
     "@deltic/offset-tracking": {
+      "optional": true
+    },
+    "@deltic/process-queue": {
+      "optional": true
+    },
+    "@deltic/wait-group": {
+      "optional": true
+    },
+    "amqplib": {
+      "optional": true
+    },
+    "crc": {
       "optional": true
     },
     "uuid": {
