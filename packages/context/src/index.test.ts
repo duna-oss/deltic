@@ -1,7 +1,9 @@
 import {
+    composeContextSlots,
     Context,
     type ContextStore,
     CrossTenantOperationDetected,
+    defineContextSlot,
     StaticContextStore,
     TenantContext,
     UnableToResolveTenantContext,
@@ -107,7 +109,7 @@ describe.each([
         expect(age).toEqual(37);
     });
 
-    test('running with with less context', async () => {
+    test('nested runs inherit parent context values', async () => {
         let name: string | undefined;
         let age: number | undefined;
 
@@ -130,7 +132,7 @@ describe.each([
         );
 
         expect(name).toEqual('Jane');
-        expect(age).toEqual(undefined);
+        expect(age).toEqual(37); // inherited from parent
     });
 
     test('using tenant context', async () => {
@@ -173,5 +175,173 @@ describe.each([
                 tenantId: tenantOne,
             }),
         );
+    });
+});
+
+// ============================================================================
+// Composite Context Tests
+// ============================================================================
+
+interface CompositeTestContext {
+    tenant_id: string;
+    user_id: string;
+    trace_id: string;
+}
+
+describe.each([
+    ['StaticContextStore', () => new StaticContextStore<CompositeTestContext>({})],
+    ['AsyncLocalStorage', () => {
+        const storage = new AsyncLocalStorage<Partial<CompositeTestContext>>({defaultValue: {}});
+        storage.enterWith({});
+        return storage;
+    }],
+] as const)('composeContextSlots - %s', (_name, storeFactory) => {
+    // Define slots for testing
+    const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
+    const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
+    const traceSlot = defineContextSlot<'trace_id', string>('trace_id', () => 'generated-trace-id');
+
+    test('defineContextSlot creates a slot with key', () => {
+        expect(tenantSlot.key).toEqual('tenant_id');
+        expect(tenantSlot.defaultValue).toBeUndefined();
+    });
+
+    test('defineContextSlot creates a slot with key and default value', () => {
+        expect(userSlot.key).toEqual('user_id');
+        expect(userSlot.defaultValue).toBeDefined();
+        expect(userSlot.defaultValue!()).toEqual('anonymous');
+    });
+
+    test('composeContextSlots returns a Context', () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot},
+            storeFactory(),
+        );
+
+        expect(ctx).toBeInstanceOf(Context);
+    });
+
+    test('run applies default values', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot, trace: traceSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            expect(ctx.get('tenant_id')).toEqual('acme');
+            expect(ctx.get('user_id')).toEqual('anonymous');
+            expect(ctx.get('trace_id')).toEqual('generated-trace-id');
+        }, {tenant_id: 'acme'});
+    });
+
+    test('slots without defaults remain undefined', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            expect(ctx.get('tenant_id')).toBeUndefined();
+            expect(ctx.get('user_id')).toEqual('frank');
+        }, {user_id: 'frank'});
+    });
+
+    test('nested run inherits parent values', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot, trace: traceSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            await ctx.run(async () => {
+                // tenant and trace inherited from parent
+                expect(ctx.get('tenant_id')).toEqual('acme');
+                expect(ctx.get('trace_id')).toEqual('trace-1');
+                // user overridden
+                expect(ctx.get('user_id')).toEqual('frank');
+            }, {user_id: 'frank'});
+
+            // parent context unchanged
+            expect(ctx.get('user_id')).toEqual('admin');
+        }, {tenant_id: 'acme', user_id: 'admin', trace_id: 'trace-1'});
+    });
+
+    test('defaults are re-evaluated on each run', async () => {
+        let counter = 0;
+        const counterSlot = defineContextSlot<'counter', number>('counter', () => ++counter);
+
+        const ctx = composeContextSlots({counter: counterSlot});
+
+        await ctx.run(async () => {
+            expect(ctx.get('counter')).toEqual(1);
+        });
+
+        await ctx.run(async () => {
+            expect(ctx.get('counter')).toEqual(2);
+        });
+    });
+
+    test('context.get returns value', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            expect(ctx.get('tenant_id')).toEqual('acme');
+        }, {tenant_id: 'acme'});
+    });
+
+    test('context.attach updates value', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            ctx.attach({tenant_id: 'other-tenant'});
+            expect(ctx.get('tenant_id')).toEqual('other-tenant');
+        }, {tenant_id: 'acme'});
+    });
+
+    test('context.context returns full context snapshot', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            const snapshot = ctx.context();
+            expect(snapshot).toHaveProperty('tenant_id', 'acme');
+            expect(snapshot).toHaveProperty('user_id', 'anonymous');
+        }, {tenant_id: 'acme'});
+    });
+
+    test('TenantContext can be created from composed context', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot},
+            storeFactory(),
+        );
+
+        const tenantContext = new TenantContext(ctx, 'tenant_id');
+
+        await ctx.run(async () => {
+            expect(tenantContext.resolve()).toEqual('acme');
+            expect(tenantContext.mustResolve()).toEqual('acme');
+        }, {tenant_id: 'acme'});
+    });
+
+    test('explicit values override inherited in nested runs', async () => {
+        const ctx = composeContextSlots(
+            {tenant: tenantSlot, user: userSlot},
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            await ctx.run(async () => {
+                expect(ctx.get('tenant_id')).toEqual('other-tenant');
+                expect(ctx.get('user_id')).toEqual('admin'); // inherited
+            }, {tenant_id: 'other-tenant'});
+        }, {tenant_id: 'acme', user_id: 'admin'});
     });
 });

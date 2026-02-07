@@ -10,6 +10,10 @@ export type ContextData<C> = {
     [K in keyof C]: C[K];
 };
 
+/**
+ * This interface is intended to be compatible with AsyncLocalStorage so that context
+ * can be scoped to HTTP requests and the processing of messages.
+ */
 export interface ContextStore<C extends ContextData<C>> {
     getStore(): Partial<C> | undefined;
     enterWith(store: Partial<C>): void;
@@ -37,11 +41,28 @@ export class StaticContextStore<C extends ContextData<C>> implements ContextStor
     }
 }
 
+/**
+ * Function type for creating context values by merging inherited and provided values.
+ */
+export type CreateContextValue<C> = (inherited: Partial<C>, provided: Partial<C>) => Partial<C>;
+
+/**
+ * Default context value creator that merges inherited values with provided values.
+ */
+function defaultContextValueCreator<C>(inherited: Partial<C>, provided: Partial<C>): Partial<C> {
+    return {...inherited, ...provided};
+}
+
 export class Context<C extends ContextData<C>> {
-    constructor(private readonly storage: ContextStore<Partial<C>>) {}
+    constructor(
+        private readonly storage: ContextStore<Partial<C>>,
+        private readonly createContextValue: CreateContextValue<C> = defaultContextValueCreator,
+    ) {}
 
     async run<R>(fn: () => Promise<R>, context: Partial<C> = {}): Promise<R> {
-        return this.storage.run(context, fn);
+        const inherited = this.storage.getStore() ?? {};
+        const merged = this.createContextValue(inherited, context);
+        return this.storage.run(merged, fn);
     }
 
     attach(context: Partial<C>): void {
@@ -175,4 +196,102 @@ export class CrossTenantOperationDetected extends StandardError {
             {expectedId, tenantId},
         );
     }
+}
+
+// ============================================================================
+// Composite Context
+// ============================================================================
+
+/**
+ * Represents a single slot in a composite context with a typed key and optional default value.
+ */
+export interface ContextSlot<Key extends string, Value> {
+    readonly key: Key;
+    readonly defaultValue?: () => Value;
+}
+
+/**
+ * Creates a context slot definition with a typed key and optional lazy default value.
+ *
+ * @example
+ * const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
+ * const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
+ */
+export function defineContextSlot<const Key extends string, Value>(
+    key: Key,
+    defaultValue?: () => Value,
+): ContextSlot<Key, Value> {
+    return {key, defaultValue};
+}
+
+/**
+ * Maps a record of named slots to their corresponding value types (using slot names as keys).
+ */
+export type CompositeContextData<Slots extends Record<string, ContextSlot<string, unknown>>> = {
+    [K in keyof Slots]: Slots[K] extends ContextSlot<string, infer V> ? V : never;
+};
+
+/**
+ * Maps slot names to their underlying context keys.
+ */
+type SlotKeyMapping<Slots extends Record<string, ContextSlot<string, unknown>>> = {
+    [K in keyof Slots]: Slots[K] extends ContextSlot<infer Key, unknown> ? Key : never;
+};
+
+/**
+ * The context data structure using slot keys (the actual keys stored in the context).
+ */
+export type ContextDataFromSlots<Slots extends Record<string, ContextSlot<string, unknown>>> = {
+    [K in keyof Slots as SlotKeyMapping<Slots>[K]]: CompositeContextData<Slots>[K];
+};
+
+/**
+ * Composes multiple context slots into a single Context with defaults support.
+ *
+ * The slots define the shape of the context and optional default values. After composition,
+ * the result is a standard Context that can be used like any other Context.
+ *
+ * @example
+ * const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
+ * const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
+ *
+ * const requestContext = composeContextSlots(
+ *     {tenant: tenantSlot, user: userSlot},
+ *     new AsyncLocalStorage(),
+ * );
+ *
+ * await requestContext.run(async () => {
+ *     requestContext.get('tenant_id'); // 'acme'
+ *     requestContext.get('user_id');   // 'anonymous' (default)
+ * }, {tenant_id: 'acme'});
+ */
+export function composeContextSlots<
+    const Slots extends Record<string, ContextSlot<string, unknown>>,
+>(
+    slots: Slots,
+    store: ContextStore<ContextDataFromSlots<Slots>> = new StaticContextStore<ContextDataFromSlots<Slots>>(),
+): Context<ContextDataFromSlots<Slots>> {
+    const slotEntries = Object.values(slots) as ContextSlot<string, unknown>[];
+
+    function createContextValue(
+        inherited: Partial<ContextDataFromSlots<Slots>>,
+        provided: Partial<ContextDataFromSlots<Slots>>,
+    ): Partial<ContextDataFromSlots<Slots>> {
+        // Evaluate defaults for slots that have them
+        const defaults: Record<string, unknown> = {};
+
+        for (const slot of slotEntries) {
+            if (slot.defaultValue !== undefined) {
+                defaults[slot.key] = slot.defaultValue();
+            }
+        }
+
+        // Merge: defaults < inherited < provided
+        return {...defaults, ...inherited, ...provided} as Partial<ContextDataFromSlots<Slots>>;
+    }
+
+    return new Context(
+        store as unknown as ContextStore<Partial<ContextDataFromSlots<Slots>>>,
+        createContextValue,
+    );
 }
