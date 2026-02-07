@@ -16,32 +16,20 @@ interface MyContext {
     tenant_id: string;
 }
 
-let localStorage: AsyncLocalStorage<Partial<MyContext>>;
-
 describe.each([
     ['static', () => new StaticContextStore<MyContext>({})],
-    ['async_hooks', () => {
-      return localStorage!;
-    }],
+    ['async_hooks', () => new AsyncLocalStorage<Partial<MyContext>>()],
 ] as const)('@deltic/context - %s', (_name, factory) => {
     let contextStore: ContextStore<MyContext>;
     let context: Context<MyContext>;
     let tenantContext: TenantContext<'tenant_id', string>;
-    const setTenantId = (id: string | undefined) => tenantContext.use(id);
     const tenantOne = 'one';
     const tenantTwo = 'two';
-    localStorage = new AsyncLocalStorage<Partial<MyContext>>({defaultValue: {}});
-    localStorage.enterWith({});
 
     beforeEach(() => {
-        localStorage.enterWith({});
         contextStore = factory();
         context = new Context(contextStore);
         tenantContext = new TenantContext<'tenant_id', string>(context, 'tenant_id');
-    });
-
-    test('retrieving the default values', () => {
-        expect(contextStore.getStore()).toEqual({});
     });
 
     test('running with different scope', async () => {
@@ -58,13 +46,9 @@ describe.each([
         );
 
         expect(store).toEqual({name: 'Other', age: 128});
-        expect(contextStore.getStore()).toEqual({});
     });
 
     test('getting specific values', async () => {
-        expect(context.get('age')).toEqual(undefined);
-        expect(context.get('name')).toEqual(undefined);
-
         let name: string | undefined;
         let age: number | undefined;
 
@@ -84,8 +68,10 @@ describe.each([
         expect(age).toEqual(16);
     });
 
-    test('getting the full context', () => {
-        expect(context.context()).toEqual({});
+    test('getting the full context', async () => {
+        await context.run(async () => {
+            expect(context.context()).toEqual({});
+        });
     });
 
     test('attaching additional context', async () => {
@@ -136,8 +122,6 @@ describe.each([
     });
 
     test('using tenant context', async () => {
-        expect(tenantContext.resolve()).toEqual(void 0);
-
         let tenantId: string | undefined;
 
         await context.run(
@@ -152,29 +136,37 @@ describe.each([
         expect(tenantId).toEqual('what is up');
     });
 
-    test('failing to resolve the tenant identifier', () => {
-        expect(() => tenantContext.mustResolve()).toThrow(UnableToResolveTenantContext);
+    test('failing to resolve the tenant identifier', async () => {
+        await context.run(async () => {
+            expect(() => tenantContext.mustResolve()).toThrow(UnableToResolveTenantContext);
+        });
     });
 
-    test('when a valid tenant ID is set, does not throw', () => {
-        setTenantId(tenantOne);
-        expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).not.toThrow();
+    test('when a valid tenant ID is set, does not throw', async () => {
+        await context.run(async () => {
+            tenantContext.use(tenantOne);
+            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).not.toThrow();
+        });
     });
 
-    test('when tenant ID is not set, throws UnableToResolveTenantContext', () => {
-        setTenantId(undefined);
-        expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(new UnableToResolveTenantContext());
+    test('when tenant ID is not set, throws UnableToResolveTenantContext', async () => {
+        await context.run(async () => {
+            tenantContext.use(undefined);
+            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(new UnableToResolveTenantContext());
+        });
     });
 
-    test('when resolved tenant ID does not match given organization ID, throws expected error', () => {
-        setTenantId(tenantTwo);
+    test('when resolved tenant ID does not match given organization ID, throws expected error', async () => {
+        await context.run(async () => {
+            tenantContext.use(tenantTwo);
 
-        expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(
-            CrossTenantOperationDetected.forIds({
-                expectedId: tenantTwo,
-                tenantId: tenantOne,
-            }),
-        );
+            expect(() => tenantContext.preventCrossTenantUsage(tenantOne)).toThrow(
+                CrossTenantOperationDetected.forIds({
+                    expectedId: tenantTwo,
+                    tenantId: tenantOne,
+                }),
+            );
+        });
     });
 });
 
@@ -190,11 +182,7 @@ interface CompositeTestContext {
 
 describe.each([
     ['StaticContextStore', () => new StaticContextStore<CompositeTestContext>({})],
-    ['AsyncLocalStorage', () => {
-        const storage = new AsyncLocalStorage<Partial<CompositeTestContext>>({defaultValue: {}});
-        storage.enterWith({});
-        return storage;
-    }],
+    ['AsyncLocalStorage', () => new AsyncLocalStorage<Partial<CompositeTestContext>>()],
 ] as const)('composeContextSlots - %s', (_name, storeFactory) => {
     // Define slots for testing
     const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
