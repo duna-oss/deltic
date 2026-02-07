@@ -161,10 +161,10 @@ describe.each([
             tenantContext.use(tenantTwo);
 
             expect(() => tenantContext.preventMismatch(tenantOne)).toThrow(
-                ContextMismatchDetected.forIds({
-                    expectedId: tenantTwo,
-                    tenantId: tenantOne,
-                }),
+                ContextMismatchDetected.for(
+                    tenantTwo,
+                    tenantOne,
+                ),
             );
         });
     });

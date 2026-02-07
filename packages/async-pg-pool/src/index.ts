@@ -367,7 +367,7 @@ class UnableToReleaseConnection extends StandardError {
 class UnableToProvideActiveTransaction extends StandardError {
     static noTransactionWasActive = (err?: unknown) =>
         new UnableToProvideActiveTransaction(
-            `Unable to provide active transaction: no transaction was active`,
+            'Unable to provide active transaction: no transaction was active',
             'async-pg-pool.no_active_transaction_available',
             {},
             err,

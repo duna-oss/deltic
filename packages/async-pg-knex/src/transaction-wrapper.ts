@@ -84,7 +84,6 @@ export function createTransactionWrapper(knex: Knex, pgConnection: PgConnection)
     };
 
     // Use a function as the proxy target so it's callable
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return new Proxy(function () {}, handler) as unknown as Transaction;
 }
 

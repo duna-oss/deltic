@@ -180,7 +180,6 @@ export class ExampleUsingReducerMap extends AggregateRootUsingReducerMap<
             };
         },
         member_was_removed: (state, event) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {[event.id]: _, ...members} = state.members;
             return {
                 ...state,
@@ -301,7 +300,6 @@ export class ExampleUsingReducerFunc extends AggregateRootUsingReducerFunc<
                 addedCounter: 1 + state.addedCounter,
             };
         } else if (message.type === 'member_was_removed') {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {[message.payload.id]: _, ...members} = state.members;
             return {
                 ...state,

@@ -9,8 +9,10 @@ export default tseslint.config(
     tseslint.configs.recommended,
     {
         files: ['./packages/**/*.ts', './*.config.*'],
+        ignores: ['docs/**/*'],
         rules: {
             '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             'object-curly-spacing': ['error', 'never'],
             quotes: [
@@ -24,5 +26,5 @@ export default tseslint.config(
             semi: ['error', 'always'],
         },
     },
-    globalIgnores(['**/dist']),
+    globalIgnores(['**/dist', 'docs/**/*']),
 );

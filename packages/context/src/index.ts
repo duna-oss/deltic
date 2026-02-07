@@ -44,7 +44,7 @@ export class ContextStoreUsingMemory<C extends ContextData<C>> implements Contex
 /**
  * Function type for creating context values by merging inherited and provided values.
  */
-export type CreateContextValue<C> = (inherited: Partial<C>, provided: Partial<C>) => Partial<C>;
+export type ContextValueCreator<C> = (inherited: Partial<C>, provided: Partial<C>) => Partial<C>;
 
 /**
  * Default context value creator that merges inherited values with provided values.
@@ -56,7 +56,7 @@ function defaultContextValueCreator<C>(inherited: Partial<C>, provided: Partial<
 export class Context<C extends ContextData<C>> {
     constructor(
         private readonly storage: ContextStore<Partial<C>>,
-        private readonly createContextValue: CreateContextValue<C> = defaultContextValueCreator,
+        private readonly createContextValue: ContextValueCreator<C> = defaultContextValueCreator,
     ) {}
 
     async run<R>(fn: () => Promise<R>, context: Partial<C> = {}): Promise<R> {

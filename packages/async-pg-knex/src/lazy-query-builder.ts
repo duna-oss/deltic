@@ -62,9 +62,7 @@ export function createLazyConnection(knex: Knex, pool: AsyncPgPool): Connection 
     };
 
     // Use a function as the proxy target so it's callable
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    return new Proxy(function () {
-    }, handler) as unknown as Connection;
+    return new Proxy(function () {}, handler) as unknown as Connection;
 }
 
 /**

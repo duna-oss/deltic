@@ -153,6 +153,12 @@
       "require": "./dist/message-delivery-counter.cjs",
       "module-sync": "./dist/message-delivery-counter.js",
       "types": "./dist/message-delivery-counter.d.ts"
+    },
+    "./context-decorator": {
+      "import": "./dist/context-decorator.js",
+      "require": "./dist/context-decorator.cjs",
+      "module-sync": "./dist/context-decorator.js",
+      "types": "./dist/context-decorator.d.ts"
     }
   },
   "keywords": [

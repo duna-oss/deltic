@@ -34,7 +34,6 @@ export type ServiceFactory<
 
 export function createTestTooling<
     Stream extends AggregateStream<Stream>,
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     ServiceDefinition extends ServiceStructure<ServiceDefinition> = {},
 >(
     id: Stream['aggregateRootId'],

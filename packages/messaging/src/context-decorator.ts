@@ -6,18 +6,25 @@ export class ContextMessageDecorator<
     Stream extends StreamDefinition,
     C extends ContextData<C>,
 > implements MessageDecorator<Stream> {
-    constructor(private readonly context: Context<C>) {}
+    constructor(
+        private readonly context: Context<C>,
+        private readonly keys: (keyof C & string)[],
+    ) {}
 
     decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream> {
-        return messages.map(m => messageWithHeaders(m, this.contextAsHeaders()));
+        const headers = this.contextAsHeaders();
+
+        return messages.map(m => messageWithHeaders(m, headers));
     }
 
     private contextAsHeaders(): MessageHeaders {
         const headers: Mutable<MessageHeaders> = {};
         const context: Partial<C> = this.context.context();
 
-        for (const key in context) {
-            headers[key] = context[key];
+        for (const key of this.keys) {
+            if (key in context) {
+                headers[key] = context[key] as MessageHeaders[string];
+            }
         }
 
         return headers;
