@@ -7,7 +7,7 @@ import {
 } from './snapshotting.js';
 import type {AnyMessageFrom} from '@deltic/messaging';
 import {createTestTooling} from './test-tooling.js';
-import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
 import {AggregateRootUsingReflectMetadata, makeEventHandler} from './using-reflect-metadata.js';
 
 const When = makeEventHandler<SnapshottingTestEvents>();

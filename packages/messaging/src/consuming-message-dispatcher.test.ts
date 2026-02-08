@@ -1,6 +1,6 @@
 import {type AnyMessageFrom, type StreamDefinition} from './index.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
-import {ConsumingMessageDispatcher} from './consuming-dispatcher.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
+import {ConsumingMessageDispatcher} from './consuming-message-dispatcher.js';
 
 enum ExampleTypes {
     First = 'first',

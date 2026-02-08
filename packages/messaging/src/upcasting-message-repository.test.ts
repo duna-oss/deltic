@@ -1,5 +1,5 @@
 import {UpcastingMessageRepository} from './upcasting.js';
-import {MessageRepositoryUsingMemory} from './repository-using-memory.js';
+import {MessageRepositoryUsingMemory} from './message-repository-using-memory.js';
 import type {MessagesFrom} from './index.js';
 import {collect} from './helpers.js';
 import {

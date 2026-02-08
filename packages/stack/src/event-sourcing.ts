@@ -16,9 +16,9 @@ import type {
     MessageDispatcher,
     MessageRepository,
 } from '@deltic/messaging';
-import {MessageConsumerChain} from '@deltic/messaging/consumer-chain';
-import {MessageDispatcherChain} from '@deltic/messaging/dispatcher-chain';
-import {ConsumingMessageDispatcher} from '@deltic/messaging/consuming-dispatcher';
+import {MessageConsumerChain} from '@deltic/messaging/message-consumer-chain';
+import {MessageDispatcherChain} from '@deltic/messaging/message-dispatcher-chain';
+import {ConsumingMessageDispatcher} from '@deltic/messaging/consuming-message-dispatcher';
 import {OutboxMessageDispatcher, type OutboxRepository} from '@deltic/messaging/outbox';
 import {
     SchemaVersionMessageDecorator,

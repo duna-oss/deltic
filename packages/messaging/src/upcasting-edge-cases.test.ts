@@ -4,7 +4,7 @@ import {
     type UpcastersForVersionedStream,
     VersionedMessageConsumer,
 } from './upcasting.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
 import type {AnyMessageFrom} from './index.js';
 import {
     type TestVersionedStream,

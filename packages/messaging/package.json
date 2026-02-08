@@ -10,23 +10,23 @@
       "module-sync": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./decorating-consumer": {
-      "import": "./dist/decorating-consumer.js",
-      "require": "./dist/decorating-consumer.cjs",
-      "module-sync": "./dist/decorating-consumer.js",
-      "types": "./dist/decorating-consumer.d.ts"
+    "./decorating-message-consumer": {
+      "import": "./dist/decorating-message-consumer.js",
+      "require": "./dist/decorating-message-consumer.cjs",
+      "module-sync": "./dist/decorating-message-consumer.js",
+      "types": "./dist/decorating-message-consumer.d.ts"
     },
-    "./dispatching-consumer": {
-      "import": "./dist/dispatching-consumer.js",
-      "require": "./dist/dispatching-consumer.cjs",
-      "module-sync": "./dist/dispatching-consumer.js",
-      "types": "./dist/dispatching-consumer.d.ts"
+    "./dispatching-message-consumer": {
+      "import": "./dist/dispatching-message-consumer.js",
+      "require": "./dist/dispatching-message-consumer.cjs",
+      "module-sync": "./dist/dispatching-message-consumer.js",
+      "types": "./dist/dispatching-message-consumer.d.ts"
     },
-    "./decorating-dispatcher": {
-      "import": "./dist/decorating-dispatcher.js",
-      "require": "./dist/decorating-dispatcher.cjs",
-      "module-sync": "./dist/decorating-dispatcher.js",
-      "types": "./dist/decorating-dispatcher.d.ts"
+    "./decorating-message-dispatcher": {
+      "import": "./dist/decorating-message-dispatcher.js",
+      "require": "./dist/decorating-message-dispatcher.cjs",
+      "module-sync": "./dist/decorating-message-dispatcher.js",
+      "types": "./dist/decorating-message-dispatcher.d.ts"
     },
     "./helpers": {
       "import": "./dist/helpers.js",
@@ -46,53 +46,53 @@
       "module-sync": "./dist/outbox.js",
       "types": "./dist/outbox.d.ts"
     },
-    "./consumer-chain": {
-      "import": "./dist/consumer-chain.js",
-      "require": "./dist/consumer-chain.cjs",
-      "module-sync": "./dist/consumer-chain.js",
-      "types": "./dist/consumer-chain.d.ts"
+    "./message-consumer-chain": {
+      "import": "./dist/message-consumer-chain.js",
+      "require": "./dist/message-consumer-chain.cjs",
+      "module-sync": "./dist/message-consumer-chain.js",
+      "types": "./dist/message-consumer-chain.d.ts"
     },
-    "./decorator-chain": {
-      "import": "./dist/decorator-chain.js",
-      "require": "./dist/decorator-chain.cjs",
-      "module-sync": "./dist/decorator-chain.js",
-      "types": "./dist/decorator-chain.d.ts"
+    "./message-decorator-chain": {
+      "import": "./dist/message-decorator-chain.js",
+      "require": "./dist/message-decorator-chain.cjs",
+      "module-sync": "./dist/message-decorator-chain.js",
+      "types": "./dist/message-decorator-chain.d.ts"
     },
-    "./dispatcher-chain": {
-      "import": "./dist/dispatcher-chain.js",
-      "require": "./dist/dispatcher-chain.cjs",
-      "module-sync": "./dist/dispatcher-chain.js",
-      "types": "./dist/dispatcher-chain.d.ts"
+    "./message-dispatcher-chain": {
+      "import": "./dist/message-dispatcher-chain.js",
+      "require": "./dist/message-dispatcher-chain.cjs",
+      "module-sync": "./dist/message-dispatcher-chain.js",
+      "types": "./dist/message-dispatcher-chain.d.ts"
     },
-    "./repository-using-memory": {
-      "import": "./dist/repository-using-memory.js",
-      "require": "./dist/repository-using-memory.cjs",
-      "module-sync": "./dist/repository-using-memory.js",
-      "types": "./dist/repository-using-memory.d.ts"
+    "./message-repository-using-memory": {
+      "import": "./dist/message-repository-using-memory.js",
+      "require": "./dist/message-repository-using-memory.cjs",
+      "module-sync": "./dist/message-repository-using-memory.js",
+      "types": "./dist/message-repository-using-memory.d.ts"
     },
-    "./collecting-dispatcher": {
-      "import": "./dist/collecting-dispatcher.js",
-      "require": "./dist/collecting-dispatcher.cjs",
-      "module-sync": "./dist/collecting-dispatcher.js",
-      "types": "./dist/collecting-dispatcher.d.ts"
+    "./collecting-message-dispatcher": {
+      "import": "./dist/collecting-message-dispatcher.js",
+      "require": "./dist/collecting-message-dispatcher.cjs",
+      "module-sync": "./dist/collecting-message-dispatcher.js",
+      "types": "./dist/collecting-message-dispatcher.d.ts"
     },
-    "./collecting-consumer": {
-      "import": "./dist/collecting-consumer.js",
-      "require": "./dist/collecting-consumer.cjs",
-      "module-sync": "./dist/collecting-consumer.js",
-      "types": "./dist/collecting-consumer.d.ts"
+    "./collecting-message-consumer": {
+      "import": "./dist/collecting-message-consumer.js",
+      "require": "./dist/collecting-message-consumer.cjs",
+      "module-sync": "./dist/collecting-message-consumer.js",
+      "types": "./dist/collecting-message-consumer.d.ts"
     },
-    "./consuming-dispatcher": {
-      "import": "./dist/consuming-dispatcher.js",
-      "require": "./dist/consuming-dispatcher.cjs",
-      "module-sync": "./dist/consuming-dispatcher.js",
-      "types": "./dist/consuming-dispatcher.d.ts"
+    "./consuming-message-dispatcher": {
+      "import": "./dist/consuming-message-dispatcher.js",
+      "require": "./dist/consuming-message-dispatcher.cjs",
+      "module-sync": "./dist/consuming-message-dispatcher.js",
+      "types": "./dist/consuming-message-dispatcher.d.ts"
     },
-    "./exactly-once-consumer-decorator": {
-      "import": "./dist/exactly-once-consumer-decorator.js",
-      "require": "./dist/exactly-once-consumer-decorator.cjs",
-      "module-sync": "./dist/exactly-once-consumer-decorator.js",
-      "types": "./dist/exactly-once-consumer-decorator.d.ts"
+    "./exactly-once-message-consumer-decorator": {
+      "import": "./dist/exactly-once-message-consumer-decorator.js",
+      "require": "./dist/exactly-once-message-consumer-decorator.cjs",
+      "module-sync": "./dist/exactly-once-message-consumer-decorator.js",
+      "types": "./dist/exactly-once-message-consumer-decorator.d.ts"
     },
     "./pg/outbox-repository": {
       "import": "./dist/pg/outbox-repository.js",
@@ -154,11 +154,23 @@
       "module-sync": "./dist/message-delivery-counter.js",
       "types": "./dist/message-delivery-counter.d.ts"
     },
-    "./context-decorator": {
-      "import": "./dist/context-decorator.js",
-      "require": "./dist/context-decorator.cjs",
-      "module-sync": "./dist/context-decorator.js",
-      "types": "./dist/context-decorator.d.ts"
+    "./context-message-decorator": {
+      "import": "./dist/context-message-decorator.js",
+      "require": "./dist/context-message-decorator.cjs",
+      "module-sync": "./dist/context-message-decorator.js",
+      "types": "./dist/context-message-decorator.d.ts"
+    },
+    "./locking-message-consumer": {
+      "import": "./dist/locking-message-consumer.js",
+      "require": "./dist/locking-message-consumer.cjs",
+      "module-sync": "./dist/locking-message-consumer.js",
+      "types": "./dist/locking-message-consumer.d.ts"
+    },
+    "./context-resolving-message-consumer": {
+      "import": "./dist/context-resolving-message-consumer.js",
+      "require": "./dist/context-resolving-message-consumer.cjs",
+      "module-sync": "./dist/context-resolving-message-consumer.js",
+      "types": "./dist/context-resolving-message-consumer.d.ts"
     }
   },
   "keywords": [

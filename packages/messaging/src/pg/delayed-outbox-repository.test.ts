@@ -6,7 +6,7 @@ import {pgTestCredentials} from '../../../pg-credentials.js';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import type {AnyMessageFrom} from '@deltic/messaging';
 import {LinearBackoffStrategy} from '@deltic/backoff/linear';
-import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-dispatcher';
+import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-message-dispatcher';
 import {OutboxMessageDispatcher, OutboxRelay} from '@deltic/messaging/outbox';
 
 const testClock = createTestClock();

@@ -7,8 +7,8 @@ import {
     type AggregateStream,
     EventSourcedAggregateRepository,
 } from '@deltic/event-sourcing';
-import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
-import {MessageDecoratorChain} from '@deltic/messaging/decorator-chain';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
+import {MessageDecoratorChain} from '@deltic/messaging/message-decorator-chain';
 import {createMessageDecorator, messageWithHeaders} from '@deltic/messaging/helpers';
 import type {
     AnyMessageFrom,

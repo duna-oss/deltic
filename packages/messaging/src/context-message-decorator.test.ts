@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from 'async_hooks';
 import {Context} from '@deltic/context';
-import {ContextMessageDecorator} from './context-decorator.js';
+import {ContextMessageDecorator} from './context-message-decorator.js';
 import {createMessage} from '@deltic/messaging/helpers';
 
 type TestContext = {

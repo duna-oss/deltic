@@ -2,7 +2,7 @@ import {Pool} from 'pg';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import DependencyContainer, {type ServiceKey} from '@deltic/dependency-injection';
 import {messageFactory} from '@deltic/messaging/helpers';
-import {CollectingMessageConsumer} from '@deltic/messaging/collecting-consumer';
+import {CollectingMessageConsumer} from '@deltic/messaging/collecting-message-consumer';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
 import {setupEventSourcing} from './event-sourcing.js';

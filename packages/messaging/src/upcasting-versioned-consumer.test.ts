@@ -1,5 +1,5 @@
 import {VersionedMessageConsumer} from './upcasting.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
 import {
     type TestVersionedStream,
     testUpcasters,

@@ -4,8 +4,8 @@ import {
     UpcastingOutboxRepository,
     VersionedMessageConsumer,
 } from './upcasting.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
-import {MessageRepositoryUsingMemory} from './repository-using-memory.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
+import {MessageRepositoryUsingMemory} from './message-repository-using-memory.js';
 import {OutboxRepositoryUsingMemory} from './outbox.js';
 import type {AnyMessageFrom} from './index.js';
 import {collect} from './helpers.js';

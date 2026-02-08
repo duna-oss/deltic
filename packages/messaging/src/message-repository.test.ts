@@ -6,7 +6,7 @@ import {AsyncPgPool} from '@deltic/async-pg-pool';
 import {pgTestCredentials} from '../../pg-credentials.js';
 import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {collect, messageFactory} from '@deltic/messaging/helpers';
-import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
 const firstTenantId = uuid.v7();
 const secondTenantId = uuid.v7();
 const tenantContext = new ValueReadWriterUsingMemory(firstTenantId);

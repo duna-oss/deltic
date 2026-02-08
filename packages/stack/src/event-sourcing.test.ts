@@ -3,7 +3,7 @@ import DependencyContainer from '@deltic/dependency-injection';
 import {EventSourcedAggregateRepository} from '@deltic/event-sourcing';
 import {AggregateRootRepositoryWithSnapshotting} from '@deltic/event-sourcing/snapshotting';
 import {OutboxMessageDispatcher} from '@deltic/messaging/outbox';
-import {MessageDispatcherChain} from '@deltic/messaging/dispatcher-chain';
+import {MessageDispatcherChain} from '@deltic/messaging/message-dispatcher-chain';
 
 import {setupEventSourcing} from './event-sourcing.js';
 import {InfrastructureProviderUsingMemory} from './memory.js';

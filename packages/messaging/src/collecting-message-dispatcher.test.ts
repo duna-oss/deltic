@@ -1,5 +1,5 @@
 import {type AnyMessageFrom, type StreamDefinition} from './index.js';
-import {CollectingMessageDispatcher} from './collecting-dispatcher.js';
+import {CollectingMessageDispatcher} from './collecting-message-dispatcher.js';
 
 interface ExampleStream extends StreamDefinition {
     topic: 'example';

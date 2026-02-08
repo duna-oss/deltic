@@ -1,8 +1,8 @@
-import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
 import type {MessagesFrom} from '@deltic/messaging';
 import {messageFactory} from '@deltic/messaging/helpers';
 import {OffsetRepositoryUsingMemory} from '@deltic/offset-tracking/memory';
-import {ExactlyOnceConsumerDecorator} from '@deltic/messaging/exactly-once-consumer-decorator';
+import {ExactlyOnceMessageConsumerDecorator} from '@deltic/messaging/exactly-once-message-consumer-decorator';
 import {KeyValueStoreUsingMemory} from '@deltic/key-value/memory';
 import {ReducingMessageConsumer} from './reducing-message-consumer.js';
 
@@ -30,7 +30,7 @@ describe('AutomaticRebuilds for single aggregate projections', () => {
     test('it can automatically rebuild projections', async () => {
         const messages = new MessageRepositoryUsingMemory<EventsForAutomaticRebuilds>();
         const projectionStore = new KeyValueStoreUsingMemory<string, number>();
-        const rebuildingConsumer = new ExactlyOnceConsumerDecorator<EventsForAutomaticRebuilds>(
+        const rebuildingConsumer = new ExactlyOnceMessageConsumerDecorator<EventsForAutomaticRebuilds>(
             new OffsetRepositoryUsingMemory(),
             new ReducingMessageConsumer<string, number, EventsForAutomaticRebuilds>(
                 projectionStore,

@@ -1,6 +1,6 @@
-import {CollectingMessageDispatcher} from './collecting-dispatcher.js';
+import {CollectingMessageDispatcher} from './collecting-message-dispatcher.js';
 import type {MessagesFrom} from './index.js';
-import {MessageDispatcherChain} from './dispatcher-chain.js';
+import {MessageDispatcherChain} from './message-dispatcher-chain.js';
 
 describe('MessageDispatcherChain', () => {
     let dispatcher: MessageDispatcherChain<any>;

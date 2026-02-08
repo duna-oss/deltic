@@ -1,5 +1,5 @@
-import {DecoratingMessageConsumer} from './decorating-consumer.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
+import {DecoratingMessageConsumer} from './decorating-message-consumer.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
 import {type MessageDecorator} from './index.js';
 import {GlobalClock} from '@deltic/clock';
 import {createMessage, messageWithHeader} from './helpers.js';

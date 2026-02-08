@@ -1,6 +1,6 @@
 import type {AnyMessageFrom, MessageConsumer, StreamDefinition} from './index.js';
 import {setTimeout as wait} from 'node:timers/promises';
-import {SequentialMessageConsumer} from './sequential-consumer.js';
+import {SequentialMessageConsumer} from './sequential-message-consumer.js';
 
 interface DelayedResolvingStream extends StreamDefinition {
     topic: 'delayed';

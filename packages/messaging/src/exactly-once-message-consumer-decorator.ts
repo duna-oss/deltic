@@ -8,7 +8,7 @@ export interface IdentifierResolver<Stream extends StreamDefinition> {
 
 export type OffsetResolver = <Stream extends StreamDefinition>(message: AnyMessageFrom<Stream>) => number;
 
-export class ExactlyOnceConsumerDecorator<Stream extends StreamDefinition> implements MessageConsumer<Stream> {
+export class ExactlyOnceMessageConsumerDecorator<Stream extends StreamDefinition> implements MessageConsumer<Stream> {
     constructor(
         private readonly offsets: OffsetRepository,
         private readonly consumer: MessageConsumer<Stream>,

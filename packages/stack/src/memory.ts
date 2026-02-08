@@ -4,7 +4,7 @@ import {SnapshotRepositoryForTesting} from '@deltic/event-sourcing/snapshotting'
 import type {MessageRepository, StreamDefinition} from '@deltic/messaging';
 import type {OutboxRepository} from '@deltic/messaging/outbox';
 import {OutboxRepositoryUsingMemory} from '@deltic/messaging/outbox';
-import {MessageRepositoryUsingMemory} from '@deltic/messaging/repository-using-memory';
+import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
 import {NoopTransactionManager, type TransactionManager} from '@deltic/transaction-manager';
 
 import type {

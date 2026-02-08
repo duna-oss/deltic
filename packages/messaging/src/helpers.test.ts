@@ -1,6 +1,6 @@
-import {CollectingMessageDispatcher} from './collecting-dispatcher.js';
+import {CollectingMessageDispatcher} from './collecting-message-dispatcher.js';
 import {createMessageConsumer, createMessageDispatcher, messageWithHeader} from './helpers.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
 import type {AnyMessageFrom, Message, StreamDefinition} from '@deltic/messaging';
 
 interface ExampleStream extends StreamDefinition {

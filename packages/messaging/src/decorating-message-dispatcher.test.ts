@@ -1,5 +1,5 @@
-import {DecoratingMessageDispatcher} from './decorating-dispatcher.js';
-import {CollectingMessageDispatcher} from './collecting-dispatcher.js';
+import {DecoratingMessageDispatcher} from './decorating-message-dispatcher.js';
+import {CollectingMessageDispatcher} from './collecting-message-dispatcher.js';
 import {messageFactory, messageWithHeader} from './helpers.js';
 
 type ExampleStream = {

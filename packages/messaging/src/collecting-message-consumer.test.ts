@@ -1,5 +1,5 @@
 import {type AnyMessageFrom, type StreamDefinition} from './index.js';
-import {CollectingMessageConsumer} from './collecting-consumer.js';
+import {CollectingMessageConsumer} from './collecting-message-consumer.js';
 
 interface ExampleStream extends StreamDefinition {
     topic: 'example';

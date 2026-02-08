@@ -9,7 +9,7 @@ import {
     OutboxRepositoryUsingMemory,
     OutboxRelay,
 } from '@deltic/messaging/outbox';
-import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-dispatcher';
+import {CollectingMessageDispatcher} from '@deltic/messaging/collecting-message-dispatcher';
 
 interface ExampleStream {
     aggregateRootId: string | number;

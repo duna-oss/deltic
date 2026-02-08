@@ -1,4 +1,4 @@
-import {MessageRepositoryUsingMemory} from './repository-using-memory.js';
+import {MessageRepositoryUsingMemory} from './message-repository-using-memory.js';
 import type {AnyMessageFrom, MessagesFrom} from './index.js';
 import {ValueReadWriterUsingMemory} from '@deltic/context';
 import {collect, createMessage} from './helpers.js';
