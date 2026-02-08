@@ -1,6 +1,6 @@
 # AGENTS.md - Coding Guidelines for LLM/Agentic Coding
 
-This document defines the coding standards, patterns, and conventions used in the Deltic monorepo. Follow these guidelines to ensure consistent, high-quality code that matches the existing codebase.
+This document defines both the agent workflow and the coding standards for the Deltic monorepo. Sections 0 and 00 govern how you work; sections 1–11 define what conventions to follow.
 
 ## Overview
 
@@ -10,6 +10,86 @@ Deltic is a TypeScript monorepo providing event sourcing, messaging, and infrast
 - **ESM-first** with CommonJS compatibility
 - **pnpm workspaces** for package management
 - **Strict TypeScript** with advanced type patterns
+
+---
+
+## 0. Agent Workflow
+
+### 0.1 Core Stance
+
+Prioritize technical accuracy over validating beliefs. Provide direct, objective technical info. Apply the same rigorous standards to all ideas and disagree when necessary — objective guidance and respectful correction are more valuable than false agreement. When uncertain, investigate to find the truth first rather than instinctively confirming assumptions.
+
+### 0.2 Task Planning
+
+Before starting any non-trivial task:
+
+1. **Understand** — Read relevant code. Don't assume structure; verify it.
+2. **Plan** — Identify what changes are needed and in what order. For multi-step tasks (3+ files, new feature, refactor), write the plan explicitly as a checklist before making any changes. Include file paths and a verification section.
+3. **Execute** — Make changes incrementally. One concern per edit.
+4. **Verify** — After each meaningful change, run verification (see 00. Verification Loop).
+
+### 0.3 Code Editing Discipline
+
+- **Read before writing**: Always read a file before editing it. Understand context, patterns, and conventions already in use.
+- **Match existing patterns**: If the codebase uses a particular style, follow it. Don't introduce new patterns without reason.
+- **Minimal diffs**: Change only what's necessary. Don't reformat adjacent code or add unrelated improvements unless asked.
+- **No partial work**: Don't leave TODO comments for things you can resolve now. If something is out of scope, say so explicitly.
+- **Reference locations**: When discussing specific code, include `file_path:line_number` for easy navigation.
+
+### 0.4 Tool Usage
+
+- Prefer specialized tools (read, edit, write) over bash for file operations.
+- Reserve bash for actual system commands: running tests, type checkers, linters, builds, and git operations.
+- Never use bash (echo, cat, sed) to communicate — write output directly in your response.
+- When running a non-trivial bash command, briefly explain what it does and why.
+- Use **pnpm** for all package management (not npm, not yarn).
+- Use the project's own tooling (vitest, tsup, etc.) — don't substitute alternatives.
+
+### 0.5 Communication
+
+- Be concise. State what you're doing, do it, report the result.
+- When something is wrong with the approach, say so directly and explain why.
+- Don't pad responses with encouragement or filler.
+- If a task is ambiguous, ask a focused clarifying question rather than guessing.
+
+### 0.6 Error Handling During Work
+
+- If you encounter an error you don't understand, investigate it — read source code, check types, look at recent changes. Don't guess at fixes.
+- If stuck in a loop (3+ failed attempts at the same fix), stop, explain the issue, and ask for guidance rather than making speculative changes.
+- Never delete or regenerate lockfiles (pnpm-lock.yaml) unless specifically asked.
+
+---
+
+## 00. Verification Loop
+
+**After every file edit or write, verify your work.** This is non-negotiable.
+
+### TypeScript Verification
+
+After editing `.ts` or `.tsx` files, always run type checking:
+
+```bash
+npx tsc --noEmit
+```
+
+If the changed file has a co-located test (`.test.ts`), run it:
+
+```bash
+pnpm vitest run <relevant-test-file>
+```
+
+For changes that affect build output, verify the build succeeds:
+
+```bash
+pnpm turbo build --filter=<affected-package>
+```
+
+### When Verification Fails
+
+- Fix the error in the same turn. Do not defer it.
+- If a fix introduces new errors, keep iterating until clean.
+- If you are stuck in a loop (3+ failed attempts), stop and explain the issue rather than making speculative changes.
+- Never present work that has known type errors, lint violations, or failing tests.
 
 ---
 
