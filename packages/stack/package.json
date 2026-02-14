@@ -23,8 +23,7 @@
       "types": "./dist/pg.d.ts"
     }
   },
-  "keywords": [
-  ],
+  "keywords": ["event-sourcing", "stack", "infrastructure", "deltic"],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

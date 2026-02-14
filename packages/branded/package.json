@@ -13,7 +13,9 @@
   },
   "keywords": [
     "branded",
-    "brand"
+    "brand",
+    "nominal",
+    "type-safety"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

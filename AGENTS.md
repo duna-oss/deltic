@@ -81,7 +81,7 @@ pnpm vitest run <relevant-test-file>
 For changes that affect build output, verify the build succeeds:
 
 ```bash
-pnpm turbo build --filter=<affected-package>
+pnpm run build
 ```
 
 ### When Verification Fails

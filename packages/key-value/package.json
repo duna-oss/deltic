@@ -15,7 +15,8 @@
     "key",
     "value",
     "kv",
-    "key-value"
+    "key-value",
+    "store"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

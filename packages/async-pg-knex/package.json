@@ -15,7 +15,9 @@
     "knex",
     "pg",
     "pool",
-    "async"
+    "async",
+    "postgres",
+    "query-builder"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

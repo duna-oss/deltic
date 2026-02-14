@@ -11,7 +11,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "keywords": [],
+  "keywords": ["context", "async-context", "async-local-storage", "scoping"],
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",

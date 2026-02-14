@@ -35,7 +35,7 @@
       "types": "./dist/locking-decorator.d.ts"
     }
   },
-  "keywords": [],
+  "keywords": ["service", "dispatcher", "command", "middleware"],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

@@ -43,7 +43,9 @@
   },
   "keywords": [
     "mutex",
-    "concurrency"
+    "concurrency",
+    "lock",
+    "locking"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

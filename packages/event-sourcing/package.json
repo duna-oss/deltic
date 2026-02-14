@@ -41,7 +41,7 @@
       "types": "./dist/pg/snapshot-repository.d.ts"
     }
   },
-  "keywords": [],
+  "keywords": ["event-sourcing", "aggregate", "cqrs", "domain-events", "snapshotting"],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

@@ -5,7 +5,7 @@ export type ContextResolver<Stream extends StreamDefinition, C extends ContextDa
     message: AnyMessageFrom<Stream>,
 ) => Partial<C> | Promise<Partial<C>>;
 
-export class ContextResolvingMessageConsumer<
+export class RunMessageConsumerInContext<
     Stream extends StreamDefinition,
     C extends ContextData<C>,
 > implements MessageConsumer<Stream> {

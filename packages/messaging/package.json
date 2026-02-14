@@ -166,18 +166,21 @@
       "module-sync": "./dist/locking-message-consumer.js",
       "types": "./dist/locking-message-consumer.d.ts"
     },
-    "./context-resolving-message-consumer": {
-      "import": "./dist/context-resolving-message-consumer.js",
-      "require": "./dist/context-resolving-message-consumer.cjs",
-      "module-sync": "./dist/context-resolving-message-consumer.js",
-      "types": "./dist/context-resolving-message-consumer.d.ts"
+    "./run-message-consumer-in-context": {
+      "import": "./dist/run-message-consumer-in-context.js",
+      "require": "./dist/run-message-consumer-in-context.cjs",
+      "module-sync": "./dist/run-message-consumer-in-context.js",
+      "types": "./dist/run-message-consumer-in-context.d.ts"
     }
   },
   "keywords": [
     "messaging",
+    "message",
     "outbox",
     "dispatching",
-    "consumer"
+    "consumer",
+    "amqp",
+    "rabbitmq"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

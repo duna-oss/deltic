@@ -27,7 +27,8 @@
     "backoff",
     "back-off",
     "exponential",
-    "linear"
+    "linear",
+    "retry"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

@@ -13,7 +13,9 @@
   },
   "keywords": [
     "errors",
-    "error"
+    "error",
+    "error-code",
+    "standard-error"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

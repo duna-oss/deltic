@@ -13,7 +13,9 @@
   "keywords": [
     "async",
     "pg",
-    "pool"
+    "pool",
+    "postgres",
+    "connection"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

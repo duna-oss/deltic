@@ -1,6 +1,6 @@
 import {Context, ContextStoreUsingMemory} from '@deltic/context';
 import type {MessageConsumer} from './index.js';
-import {ContextResolvingMessageConsumer} from './context-resolving-message-consumer.js';
+import {RunMessageConsumerInContext} from './run-message-consumer-in-context.js';
 import {createMessage} from './helpers.js';
 
 interface ExampleStream {
@@ -15,7 +15,7 @@ interface ExampleContext {
     custom: string;
 }
 
-describe('ContextResolvingMessageConsumer', () => {
+describe('RunMessageConsumerInContext', () => {
     test('it runs the inner consumer within a context scope', async () => {
         const store = new ContextStoreUsingMemory<ExampleContext>();
         const context = new Context<ExampleContext>(store);
@@ -27,7 +27,7 @@ describe('ContextResolvingMessageConsumer', () => {
             },
         };
 
-        const scoping = new ContextResolvingMessageConsumer(consumer, context, (message) => ({
+        const scoping = new RunMessageConsumerInContext(consumer, context, (message) => ({
             aggregate_root_id: String(message.headers.aggregate_root_id ?? ''),
             custom: 'resolved-value',
         }));
@@ -52,7 +52,7 @@ describe('ContextResolvingMessageConsumer', () => {
             },
         };
 
-        const scoping = new ContextResolvingMessageConsumer(consumer, context, (message) => ({
+        const scoping = new RunMessageConsumerInContext(consumer, context, (message) => ({
             aggregate_root_id: String(message.headers.aggregate_root_id ?? ''),
         }));
 
@@ -72,7 +72,7 @@ describe('ContextResolvingMessageConsumer', () => {
             async consume() {},
         };
 
-        const scoping = new ContextResolvingMessageConsumer(consumer, context, () => ({
+        const scoping = new RunMessageConsumerInContext(consumer, context, () => ({
             custom: 'scoped-value',
         }));
 
@@ -92,7 +92,7 @@ describe('ContextResolvingMessageConsumer', () => {
             },
         };
 
-        const scoping = new ContextResolvingMessageConsumer(consumer, context, () => ({
+        const scoping = new RunMessageConsumerInContext(consumer, context, () => ({
             custom: 'scoped-value',
         }));
 
