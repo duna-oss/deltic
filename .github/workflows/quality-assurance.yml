@@ -43,5 +43,5 @@ jobs:
         run: pnpm run test
         env:
           POSTGRES_PORT: 35432
-      - name: Build packages tests
+      - name: Build packages
         run: pnpm run build
