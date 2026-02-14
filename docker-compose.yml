@@ -1,8 +1,6 @@
-version: "3"
-
 services:
   postgres:
-    image: postgres:17.5-alpine3.22
+    image: postgres:18.2-alpine3.23
     restart: unless-stopped
     environment:
       POSTGRES_DB: "duna"
@@ -14,11 +12,9 @@ services:
       postgres
       -c max_connections=200
       -c wal_level=logical
-    volumes:
-      - .data/postgres:/var/lib/postgresql/data
   rabbitmq:
     restart: unless-stopped
-    image: rabbitmq:3.11.20-management-alpine
+    image: rabbitmq:4.2.3-management-alpine
     ports:
       - "35671:5672"
       - "35672:15672"
