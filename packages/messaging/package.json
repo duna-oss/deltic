@@ -106,11 +106,11 @@
       "module-sync": "./dist/pg/message-repository.js",
       "types": "./dist/pg/message-repository.d.ts"
     },
-    "./pg/throttled-outbox": {
-      "import": "./dist/pg/throttled-outbox.js",
-      "require": "./dist/pg/throttled-outbox.cjs",
-      "module-sync": "./dist/pg/throttled-outbox.js",
-      "types": "./dist/pg/throttled-outbox.d.ts"
+    "./pg/throttled-outbox-repository": {
+      "import": "./dist/pg/throttled-outbox-repository.js",
+      "require": "./dist/pg/throttled-outbox-repository.cjs",
+      "module-sync": "./dist/pg/throttled-outbox-repository.js",
+      "types": "./dist/pg/throttled-outbox-repository.d.ts"
     },
     "./pg/delayed-outbox-repository": {
       "import": "./dist/pg/delayed-outbox-repository.js",
