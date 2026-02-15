@@ -6,4 +6,3 @@ Initial release. Provides Knex query builder integration with `AsyncPgPool` for 
 
 - `AsyncKnexConnectionProvider` with lazy connections that only acquire a database connection when a query is awaited.
 - Transaction support with `begin()`, `commit()`, `rollback()`, and `runInTransaction()`.
-- Raw pg `Client` access via `claimClient()` and `releaseClient()`.
