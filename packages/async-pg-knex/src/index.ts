@@ -1,6 +1,5 @@
 import knex, {type Knex} from 'knex';
-import type {Client} from 'pg';
-import type {AsyncPgPool, Connection as PgConnection} from '@deltic/async-pg-pool';
+import type {AsyncPgPool} from '@deltic/async-pg-pool';
 import type {Connection, ConnectionProvider, Transaction} from './types.js';
 import {createLazyConnection} from './lazy-query-builder.js';
 import {createTransactionWrapper, extractPgConnection} from './transaction-wrapper.js';
@@ -69,21 +68,6 @@ export class AsyncKnexConnectionProvider implements ConnectionProvider {
             // Disable pool since we manage connections through AsyncPgPool
             pool: {min: 0, max: 0},
         });
-    }
-
-    /**
-     * Claim a raw pg Client from the pool.
-     * The caller is responsible for releasing it via releaseClient().
-     */
-    async claimClient(): Promise<Client> {
-        return (await this.pool.claim()) as unknown as Client;
-    }
-
-    /**
-     * Release a raw pg Client back to the pool.
-     */
-    async releaseClient(client: Client): Promise<void> {
-        await this.pool.release(client as unknown as PgConnection);
     }
 
     /**

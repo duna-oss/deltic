@@ -1,5 +1,4 @@
 import type {Knex} from 'knex';
-import type {Client} from 'pg';
 
 /**
  * Buffered method call for replay on the real query builder.
@@ -33,16 +32,6 @@ export type Transaction = Omit<Knex.Transaction, 'savepoint' | 'commit' | 'rollb
  * and transactions using Knex query builders.
  */
 export interface ConnectionProvider {
-    /**
-     * Claim a raw pg Client from the pool.
-     */
-    claimClient(): Promise<Client>;
-
-    /**
-     * Release a raw pg Client back to the pool.
-     */
-    releaseClient(client: Client): Promise<void>;
-
     /**
      * Get a Connection for building queries.
      * The connection is lazy - no actual database connection is acquired

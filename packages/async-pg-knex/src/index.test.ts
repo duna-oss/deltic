@@ -451,17 +451,6 @@ describe('AsyncKnexConnectionProvider', () => {
         });
     });
 
-    describe('claimClient and releaseClient', () => {
-        test('can claim and release raw pg client', async () => {
-            const client = await provider.claimClient();
-
-            const result = await client.query('SELECT 1 as num');
-            expect(result.rows[0].num).toBe(1);
-
-            await provider.releaseClient(client);
-        });
-    });
-
     describe('connection lifecycle', () => {
         test('connection is released after await completes', async () => {
             // This test verifies that connections are properly released
