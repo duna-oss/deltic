@@ -31,8 +31,9 @@ export const transactionContextSlot = defineContextSlot<'pg_transaction', Transa
 );
 
 function createDefaultTransactionContext(): Context<TransactionContextData> {
-    const store = new ContextStoreUsingMemory<TransactionContextData>();
-    store.enterWith({pg_transaction: transactionContextSlot.defaultValue!()});
+    const store = new ContextStoreUsingMemory<TransactionContextData>({
+        pg_transaction: transactionContextSlot.defaultValue!(),
+    });
 
     return composeContextSlots([transactionContextSlot], store) as unknown as Context<TransactionContextData>;
 }
