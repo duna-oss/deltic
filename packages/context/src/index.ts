@@ -200,20 +200,23 @@ export class ContextMismatchDetected extends StandardError {
 export interface ContextSlot<Key extends string, Value> {
     readonly key: Key;
     readonly defaultValue?: () => Value;
+    readonly inherited: boolean;
 }
 
 /**
  * Creates a context slot definition with a typed key and optional lazy default value.
  *
  * @example
- * const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
- * const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
+ * const tenantSlot = defineContextSlot<'tenant_id', string>({key: 'tenant_id'});
+ * const userSlot = defineContextSlot({key: 'user_id', defaultValue: () => 'anonymous'});
+ * const txSlot = defineContextSlot({key: 'tx', defaultValue: () => createTx(), inherited: false});
  */
-export function defineContextSlot<const Key extends string, Value>(
-    key: Key,
-    defaultValue?: () => Value,
-): ContextSlot<Key, Value> {
-    return {key, defaultValue};
+export function defineContextSlot<const Key extends string, Value>(options: {
+    key: Key;
+    defaultValue?: () => Value;
+    inherited?: boolean;
+}): ContextSlot<Key, Value> {
+    return {key: options.key, defaultValue: options.defaultValue, inherited: options.inherited ?? true};
 }
 
 /**
@@ -231,8 +234,8 @@ export type ContextDataFromSlots<Slots extends readonly ContextSlot<string, unkn
  * the result is a standard Context that can be used like any other Context.
  *
  * @example
- * const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
- * const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
+ * const tenantSlot = defineContextSlot<'tenant_id', string>({key: 'tenant_id'});
+ * const userSlot = defineContextSlot({key: 'user_id', defaultValue: () => 'anonymous'});
  *
  * const requestContext = composeContextSlots(
  *     [tenantSlot, userSlot],
@@ -262,17 +265,21 @@ function createContextValueCreator<
         inherited: Partial<ContextDataFromSlots<Slots>>,
         provided: Partial<ContextDataFromSlots<Slots>>,
     ): Partial<ContextDataFromSlots<Slots>> => {
-        // Evaluate defaults for slots that have them
-        const defaults: Record<string, unknown> = {};
+        const result: Record<string, unknown> = {};
 
         for (const slot of slots) {
-            if (slot.defaultValue !== undefined) {
-                defaults[slot.key] = slot.defaultValue();
+            const key = slot.key;
+
+            if (key in provided) {
+                result[key] = (provided as Record<string, unknown>)[key];
+            } else if (slot.inherited && key in inherited) {
+                result[key] = (inherited as Record<string, unknown>)[key];
+            } else if (slot.defaultValue !== undefined) {
+                result[key] = slot.defaultValue();
             }
         }
 
-        // Merge: defaults < inherited < provided
-        return {...defaults, ...inherited, ...provided} as Partial<ContextDataFromSlots<Slots>>;
+        return result as Partial<ContextDataFromSlots<Slots>>;
     };
 }
 

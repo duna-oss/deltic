@@ -185,9 +185,9 @@ describe.each([
     ['AsyncLocalStorage', () => new AsyncLocalStorage<Partial<CompositeTestContext>>()],
 ] as const)('composeContextSlots - %s', (_name, storeFactory) => {
     // Define slots for testing
-    const tenantSlot = defineContextSlot<'tenant_id', string>('tenant_id');
-    const userSlot = defineContextSlot<'user_id', string>('user_id', () => 'anonymous');
-    const traceSlot = defineContextSlot<'trace_id', string>('trace_id', () => 'generated-trace-id');
+    const tenantSlot = defineContextSlot<'tenant_id', string>({key: 'tenant_id'});
+    const userSlot = defineContextSlot({key: 'user_id', defaultValue: () => 'anonymous'});
+    const traceSlot = defineContextSlot({key: 'trace_id', defaultValue: () => 'generated-trace-id'});
 
     test('defineContextSlot creates a slot with key', () => {
         expect(tenantSlot.key).toEqual('tenant_id');
@@ -256,7 +256,7 @@ describe.each([
 
     test('defaults are re-evaluated on each run', async () => {
         let counter = 0;
-        const counterSlot = defineContextSlot<'counter', number>('counter', () => ++counter);
+        const counterSlot = defineContextSlot({key: 'counter', defaultValue: () => ++counter});
 
         const ctx = composeContextSlots([counterSlot]);
 
@@ -331,5 +331,100 @@ describe.each([
                 expect(ctx.get('user_id')).toEqual('admin'); // inherited
             }, {tenant_id: 'other-tenant'});
         }, {tenant_id: 'acme', user_id: 'admin'});
+    });
+
+    test('non-inherited slots get fresh defaults in nested runs', async () => {
+        let callCount = 0;
+        const sessionSlot = defineContextSlot({key: 'session', defaultValue: () => ({id: ++callCount}), inherited: false});
+        const ctx = composeContextSlots(
+            [tenantSlot, sessionSlot],
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            const outerSession = ctx.get('session');
+            expect(outerSession).toEqual({id: 1});
+
+            await ctx.run(async () => {
+                const innerSession = ctx.get('session');
+                // non-inherited slot gets a fresh default, not the parent's value
+                expect(innerSession).toEqual({id: 2});
+                // inherited slot still carries over
+                expect(ctx.get('tenant_id')).toEqual('acme');
+            });
+
+            // parent context unchanged
+            expect(ctx.get('session')).toEqual({id: 1});
+        }, {tenant_id: 'acme'});
+    });
+
+    test('non-inherited slots can still be explicitly provided in nested runs', async () => {
+        const sessionSlot = defineContextSlot({key: 'session', defaultValue: () => 'default-session', inherited: false});
+        const ctx = composeContextSlots(
+            [tenantSlot, sessionSlot],
+            storeFactory(),
+        );
+
+        await ctx.run(async () => {
+            expect(ctx.get('session')).toEqual('outer-session');
+
+            await ctx.run(async () => {
+                // explicitly provided overrides even for non-inherited slots
+                expect(ctx.get('session')).toEqual('inner-session');
+            }, {session: 'inner-session'});
+        }, {session: 'outer-session'});
+    });
+
+    test('defaults are only resolved when needed', async () => {
+        let defaultCallCount = 0;
+        const lazySlot = defineContextSlot({key: 'lazy', defaultValue: () => {
+            defaultCallCount++;
+            return 'lazy-default';
+        }});
+        const ctx = composeContextSlots([lazySlot]);
+
+        // when a value is provided, the default should not be resolved
+        await ctx.run(async () => {
+            expect(ctx.get('lazy')).toEqual('provided');
+        }, {lazy: 'provided'});
+
+        expect(defaultCallCount).toEqual(0);
+
+        // when no value is provided, the default should be resolved
+        await ctx.run(async () => {
+            expect(ctx.get('lazy')).toEqual('lazy-default');
+        });
+
+        expect(defaultCallCount).toEqual(1);
+    });
+
+    test('defaults are not resolved when value is inherited', async () => {
+        let defaultCallCount = 0;
+        const lazySlot = defineContextSlot({key: 'lazy', defaultValue: () => {
+            defaultCallCount++;
+            return 'lazy-default';
+        }});
+        const ctx = composeContextSlots([lazySlot]);
+
+        await ctx.run(async () => {
+            expect(defaultCallCount).toEqual(1); // resolved for outer run
+
+            await ctx.run(async () => {
+                // inherited from parent, default should not be called again
+                expect(ctx.get('lazy')).toEqual('lazy-default');
+            });
+
+            expect(defaultCallCount).toEqual(1); // still 1, not called again
+        });
+    });
+
+    test('defineContextSlot defaults inherited to true', () => {
+        const slot = defineContextSlot<'key', string>({key: 'key'});
+        expect(slot.inherited).toEqual(true);
+    });
+
+    test('defineContextSlot respects inherited option', () => {
+        const slot = defineContextSlot<'key', string>({key: 'key', inherited: false});
+        expect(slot.inherited).toEqual(false);
     });
 });

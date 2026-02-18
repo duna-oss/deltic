@@ -20,15 +20,16 @@ export interface TransactionContext {
 
 export type TransactionContextData = {pg_transaction: TransactionContext};
 
-export const transactionContextSlot = defineContextSlot<'pg_transaction', TransactionContext>(
-    'pg_transaction',
-    () => ({
+export const transactionContextSlot = defineContextSlot({
+    key: 'pg_transaction',
+    defaultValue: (): TransactionContext => ({
         exclusiveAccess: new StaticMutexUsingMemory(),
         sharedTransaction: undefined,
         primaryConnection: undefined,
         free: [],
     }),
-);
+    inherited: false,
+});
 
 function createDefaultTransactionContext(): Context<TransactionContextData> {
     const store = new ContextStoreUsingMemory<TransactionContextData>({
