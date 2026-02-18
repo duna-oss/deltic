@@ -44,22 +44,16 @@ function staticMutexFrom<LockID extends LockValue>(mutex: DynamicMutex<LockID>, 
     };
 }
 
-let pgPool: Pool;
-let testPool: AsyncPgPool;
-let activeRunners: MultiOutboxRelayRunner[];
-let activeRunnerPools: AsyncPgPool[];
-
-function createRunnerPool(): AsyncPgPool {
-    const pool = new AsyncPgPool(pgPool);
-    activeRunnerPools.push(pool);
-
-    return pool;
-}
-
-function trackRunner(runner: MultiOutboxRelayRunner): MultiOutboxRelayRunner {
-    activeRunners.push(runner);
-
-    return runner;
+function createNotifyingOutbox<Stream extends {aggregateRootId: string | number; messages: Record<string, any>}>(
+    pool: AsyncPgPool,
+    tableName: string,
+): NotifyingOutboxDecoratorUsingPg<Stream> {
+    return new NotifyingOutboxDecoratorUsingPg<Stream>(
+        pool,
+        new OutboxRepositoryUsingPg<Stream>(pool, tableName),
+        tableName,
+        {style: 'central', channelName},
+    );
 }
 
 function createOutboxTable(tableName: string): string {
@@ -76,6 +70,13 @@ function createOutboxTable(tableName: string): string {
     `;
 }
 
+let pgPool: Pool;
+let testPool: AsyncPgPool;
+let runner: MultiOutboxRelayRunner | undefined;
+let runner2: MultiOutboxRelayRunner | undefined;
+let runnerPool: AsyncPgPool | undefined;
+let runnerPool2: AsyncPgPool | undefined;
+
 beforeAll(async () => {
     pgPool = new Pool(pgTestCredentials);
 
@@ -85,13 +86,17 @@ beforeAll(async () => {
 
 beforeEach(() => {
     testPool = new AsyncPgPool(pgPool);
-    activeRunners = [];
-    activeRunnerPools = [];
 });
 
 afterEach(async () => {
-    await Promise.all(activeRunners.map(r => r.stop()));
-    await Promise.all(activeRunnerPools.map(p => p.flushSharedContext()));
+    await runner?.stop();
+    await runner2?.stop();
+    await runnerPool?.flushSharedContext();
+    await runnerPool2?.flushSharedContext();
+    runner = undefined;
+    runner2 = undefined;
+    runnerPool = undefined;
+    runnerPool2 = undefined;
 
     const outboxA = new OutboxRepositoryUsingPg<StreamA>(testPool, tableA);
     const outboxB = new OutboxRepositoryUsingPg<StreamB>(testPool, tableB);
@@ -103,18 +108,6 @@ afterEach(async () => {
 afterAll(async () => {
     await pgPool.end();
 });
-
-function createNotifyingOutbox<Stream extends {aggregateRootId: string | number; messages: Record<string, any>}>(
-    pool: AsyncPgPool,
-    tableName: string,
-): NotifyingOutboxDecoratorUsingPg<Stream> {
-    return new NotifyingOutboxDecoratorUsingPg<Stream>(
-        pool,
-        new OutboxRepositoryUsingPg<Stream>(pool, tableName),
-        tableName,
-        {style: 'central', channelName},
-    );
-}
 
 describe('MultiOutboxRelayRunner', () => {
     test('messages from multiple outboxes are routed to their respective consumers', async () => {
@@ -132,7 +125,7 @@ describe('MultiOutboxRelayRunner', () => {
             waitGroup.done();
         });
 
-        const runnerPool = createRunnerPool();
+        runnerPool = new AsyncPgPool(pgPool);
         const relayA = new OutboxRelay(
             new OutboxRepositoryUsingPg<StreamA>(runnerPool, tableA),
             new ConsumingMessageDispatcher([consumerA]),
@@ -142,12 +135,12 @@ describe('MultiOutboxRelayRunner', () => {
             new ConsumingMessageDispatcher([consumerB]),
         );
 
-        const runner = trackRunner(new MultiOutboxRelayRunner(
+        runner = new MultiOutboxRelayRunner(
             runnerPool,
             new StaticMutexUsingMemory(),
             {[tableA]: relayA, [tableB]: relayB},
             {channelName, pollIntervalMs: 60_000},
-        ));
+        );
 
         void runner.start();
         await wait(500);
@@ -194,7 +187,7 @@ describe('MultiOutboxRelayRunner', () => {
         await testOutboxB.persist([createMessageB('foo', 'existing'), createMessageB('bar', 'data')]);
 
         // act
-        const runnerPool = createRunnerPool();
+        runnerPool = new AsyncPgPool(pgPool);
         const relayA = new OutboxRelay(
             new OutboxRepositoryUsingPg<StreamA>(runnerPool, tableA),
             new ConsumingMessageDispatcher([consumerA]),
@@ -204,12 +197,12 @@ describe('MultiOutboxRelayRunner', () => {
             new ConsumingMessageDispatcher([consumerB]),
         );
 
-        const runner = trackRunner(new MultiOutboxRelayRunner(
+        runner = new MultiOutboxRelayRunner(
             runnerPool,
             new StaticMutexUsingMemory(),
             {[tableA]: relayA, [tableB]: relayB},
             {channelName, pollIntervalMs: 60_000},
-        ));
+        );
 
         void runner.start();
 
@@ -231,8 +224,8 @@ describe('MultiOutboxRelayRunner', () => {
             lock: async () => {},
             unlock: async () => {},
         };
-        const runnerPool = createRunnerPool();
-        const runner = new MultiOutboxRelayRunner(
+        runnerPool = new AsyncPgPool(pgPool);
+        runner = new MultiOutboxRelayRunner(
             runnerPool,
             neverAcquiresMutex,
             {},
@@ -254,18 +247,18 @@ describe('MultiOutboxRelayRunner', () => {
         const consumer = createMessageConsumer<StreamA>(async () => {
             throw relayError;
         });
-        const runnerPool = createRunnerPool();
+        runnerPool = new AsyncPgPool(pgPool);
         const relay = new OutboxRelay(
             new OutboxRepositoryUsingPg<StreamA>(runnerPool, tableA),
             new ConsumingMessageDispatcher([consumer]),
         );
 
-        const runner = trackRunner(new MultiOutboxRelayRunner(
+        runner = new MultiOutboxRelayRunner(
             runnerPool,
             new StaticMutexUsingMemory(),
             {[tableA]: relay},
             {channelName, pollIntervalMs: 60_000},
-        ));
+        );
 
         const startPromise = runner.start();
         await wait(500);
@@ -293,10 +286,10 @@ describe('MultiOutboxRelayRunner', () => {
             waitGroup.done();
         });
 
-        const runnerPool1 = createRunnerPool();
-        const runnerPool2 = createRunnerPool();
+        runnerPool = new AsyncPgPool(pgPool);
+        runnerPool2 = new AsyncPgPool(pgPool);
         const relay1 = new OutboxRelay(
-            new OutboxRepositoryUsingPg<StreamA>(runnerPool1, tableA),
+            new OutboxRepositoryUsingPg<StreamA>(runnerPool, tableA),
             new ConsumingMessageDispatcher([consumer1]),
         );
         const relay2 = new OutboxRelay(
@@ -306,23 +299,23 @@ describe('MultiOutboxRelayRunner', () => {
 
         const lockId = 999998;
         const converter: LockIdConverter<number> = {convert: () => lockId};
-        const pgMutex1 = new MutexUsingPostgres(runnerPool1, converter, 'fresh');
+        const pgMutex1 = new MutexUsingPostgres(runnerPool, converter, 'fresh');
         const pgMutex2 = new MutexUsingPostgres(runnerPool2, converter, 'fresh');
 
-        const runner1 = trackRunner(new MultiOutboxRelayRunner(
-            runnerPool1,
+        runner = new MultiOutboxRelayRunner(
+            runnerPool,
             staticMutexFrom(pgMutex1, lockId),
             {[tableA]: relay1},
             {channelName, pollIntervalMs: 100, lockRetryMs: 100},
-        ));
-        const runner2 = trackRunner(new MultiOutboxRelayRunner(
+        );
+        runner2 = new MultiOutboxRelayRunner(
             runnerPool2,
             staticMutexFrom(pgMutex2, lockId),
             {[tableA]: relay2},
             {channelName, pollIntervalMs: 100, lockRetryMs: 100},
-        ));
+        );
 
-        void runner1.start();
+        void runner.start();
         void runner2.start();
         await wait(500);
 
@@ -357,19 +350,19 @@ describe('MultiOutboxRelayRunner', () => {
             waitGroup.done();
         });
 
-        const runnerPool = createRunnerPool();
+        runnerPool = new AsyncPgPool(pgPool);
         const relay = new OutboxRelay(
             new OutboxRepositoryUsingPg<StreamA>(runnerPool, tableA),
             new ConsumingMessageDispatcher([consumer]),
         );
 
         // Only register tableA — tableB is NOT registered
-        const runner = trackRunner(new MultiOutboxRelayRunner(
+        runner = new MultiOutboxRelayRunner(
             runnerPool,
             new StaticMutexUsingMemory(),
             {[tableA]: relay},
             {channelName, pollIntervalMs: 60_000},
-        ));
+        );
 
         void runner.start();
         await wait(500);
