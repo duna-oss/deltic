@@ -16,16 +16,11 @@ export type ContextData<C> = {
  */
 export interface ContextStore<C extends ContextData<C>> {
     getStore(): Partial<C> | undefined;
-    enterWith(store: Partial<C>): void;
     run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R>;
 }
 
 export class ContextStoreUsingMemory<C extends ContextData<C>> implements ContextStore<C> {
     constructor(private context: Partial<C> = {}) {}
-
-    enterWith(store: Partial<C>): void {
-        this.context = {...this.context, ...store};
-    }
 
     getStore(): Partial<C> | undefined {
         return this.context;
@@ -255,10 +250,18 @@ export function composeContextSlots<
     slots: Slots,
     store: ContextStore<ContextDataFromSlots<Slots>> = new ContextStoreUsingMemory<ContextDataFromSlots<Slots>>(),
 ): Context<ContextDataFromSlots<Slots>> {
-    function createContextValue(
+    return new Context(store, createContextValueCreator(slots));
+}
+
+function createContextValueCreator<
+    const Slots extends readonly ContextSlot<string, unknown>[],
+>(
+    slots: Slots,
+): ContextValueCreator<ContextDataFromSlots<Slots>> {
+    return (
         inherited: Partial<ContextDataFromSlots<Slots>>,
         provided: Partial<ContextDataFromSlots<Slots>>,
-    ): Partial<ContextDataFromSlots<Slots>> {
+    ): Partial<ContextDataFromSlots<Slots>> => {
         // Evaluate defaults for slots that have them
         const defaults: Record<string, unknown> = {};
 
@@ -270,10 +273,16 @@ export function composeContextSlots<
 
         // Merge: defaults < inherited < provided
         return {...defaults, ...inherited, ...provided} as Partial<ContextDataFromSlots<Slots>>;
-    }
+    };
+}
 
-    return new Context(
-        store as unknown as ContextStore<Partial<ContextDataFromSlots<Slots>>>,
-        createContextValue,
-    );
+export function composeContextSlotsForTesting<
+    const Slots extends readonly ContextSlot<string, unknown>[],
+>(
+    slots: Slots,
+): Context<ContextDataFromSlots<Slots>> {
+    const creator = createContextValueCreator(slots);
+    const store = new ContextStoreUsingMemory(creator({}, {}));
+
+    return new Context(store, creator);
 }
