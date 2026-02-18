@@ -36,9 +36,13 @@ function staticMutexFrom<LockID extends LockValue>(mutex: DynamicMutex<LockID>, 
 let pgPool: Pool;
 let testPool: AsyncPgPool;
 let activeRunners: OutboxRelayRunner<ExampleStream>[];
+let activeRunnerPools: AsyncPgPool[];
 
 function createRunnerPool(): AsyncPgPool {
-    return new AsyncPgPool(pgPool);
+    const pool = new AsyncPgPool(pgPool);
+    activeRunnerPools.push(pool);
+
+    return pool;
 }
 
 function trackRunner(runner: OutboxRelayRunner<ExampleStream>): OutboxRelayRunner<ExampleStream> {
@@ -66,10 +70,12 @@ beforeAll(async () => {
 beforeEach(() => {
     testPool = new AsyncPgPool(pgPool);
     activeRunners = [];
+    activeRunnerPools = [];
 });
 
 afterEach(async () => {
     await Promise.all(activeRunners.map(r => r.stop()));
+    await Promise.all(activeRunnerPools.map(p => p.flushSharedContext()));
 
     const testOutbox = new OutboxRepositoryUsingPg<ExampleStream>(testPool, tableName);
     await testOutbox.truncate();
