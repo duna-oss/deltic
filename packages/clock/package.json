@@ -13,7 +13,9 @@
   },
   "keywords": [
     "clock",
-    "time"
+    "time",
+    "testing",
+    "date"
   ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",

@@ -1,51 +1,56 @@
 import {ServiceDispatcher} from './index.js';
 
 interface NumberToNumber {
-    value: number,
+    value: number;
 }
 
 interface UppercaseResponse {
-    value: string,
+    value: string;
 }
 
 interface ExampleServiceDispatcher {
     number_to_number: {
-        payload: NumberToNumber,
-        response: number,
-    },
+        payload: NumberToNumber;
+        response: number;
+    };
     string_to_string: {
-        payload: string,
-        response: UppercaseResponse,
-    },
+        payload: string;
+        response: UppercaseResponse;
+    };
 }
 
 describe('@deltic/service-dispatcher', () => {
     let lastType: any = undefined;
     let callOrder: string[];
-    const exampleServiceDispatcher = new ServiceDispatcher<ExampleServiceDispatcher>({
-        number_to_number: async (input: NumberToNumber): Promise<number> => input.value,
-        string_to_string: async (input: string): Promise<UppercaseResponse> => ({value: input.toUpperCase()}),
-    }, [
-        (type, payload, next) => {
-            lastType = type;
-            callOrder.push('first');
-
-            return next(type, payload);
+    const exampleServiceDispatcher = new ServiceDispatcher<ExampleServiceDispatcher>(
+        {
+            number_to_number: async (input: NumberToNumber): Promise<number> => input.value,
+            string_to_string: async (input: string): Promise<UppercaseResponse> => ({
+                value: input.toUpperCase(),
+            }),
         },
-        async (type, payload, next) => {
-            const response = await next(type, payload);
+        [
+            (type, payload, next) => {
+                lastType = type;
+                callOrder.push('first');
 
-            callOrder.push('last');
+                return next(type, payload);
+            },
+            async (type, payload, next) => {
+                const response = await next(type, payload);
 
-            return response;
-        },
-        (type, payload, next) => {
-            lastType = type;
-            callOrder.push('second');
+                callOrder.push('last');
 
-            return next(type, payload);
-        },
-    ]);
+                return response;
+            },
+            (type, payload, next) => {
+                lastType = type;
+                callOrder.push('second');
+
+                return next(type, payload);
+            },
+        ],
+    );
 
     beforeEach(() => {
         lastType = undefined;
@@ -75,6 +80,6 @@ describe('@deltic/service-dispatcher', () => {
     });
 
     test('a bus throws when input is not supported', async () => {
-        await (expect(exampleServiceDispatcher.handle('unknown' as any, true as any))).rejects.toThrow();
+        await expect(exampleServiceDispatcher.handle('unknown' as any, true as any)).rejects.toThrow();
     });
 });

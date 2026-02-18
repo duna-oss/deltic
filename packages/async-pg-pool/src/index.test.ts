@@ -1,47 +1,37 @@
 import {Pool} from 'pg';
 import {
     AsyncPgPool,
-    AsyncPgPoolOptions,
-    AsyncPgTransactionContextProvider,
-    Connection,
-    TransactionContext,
+    transactionContextSlot,
+    type AsyncPgPoolOptions,
+    type Connection,
+    type TransactionContextData,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
-
-const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
-
-const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory(), free: []});
+import {composeContextSlotsForTesting, composeContextSlots, type Context} from '@deltic/context';
+import {pgTestCredentials} from '../../pg-credentials.js';
 
 describe('AsyncPgPool', () => {
     let pool: Pool;
     let provider: AsyncPgPool;
     const factoryWithStaticPool = (options: AsyncPgPoolOptions = {}) => new AsyncPgPool(pool, options);
     const factoryWithAsyncPool = (options: AsyncPgPoolOptions = {}) => {
-        return new AsyncPgPool(
-            pool,
-            options,
-            new AsyncPgTransactionContextProvider(
-                asyncLocalStorage,
-            ),
-        );
+        const context = composeContextSlotsForTesting([transactionContextSlot]);
+
+        return new AsyncPgPool(pool, options, context);
     };
 
     beforeAll(async () => {
-        pool = new Pool({
-            host: 'localhost',
-            user: 'duna',
-            password: 'duna',
-            port: Number(process.env.POSTGRES_PORT ?? 35432),
-            max: 5,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000,
-            maxLifetimeSeconds: 60,
-        });
+        pool = new Pool(pgTestCredentials);
     });
 
     afterAll(async () => {
         await pool.end();
+    });
+
+    afterEach(async () => {
+        if (provider) {
+            await provider.flushSharedContext();
+        }
     });
 
     describe.each([
@@ -55,8 +45,6 @@ describe('AsyncPgPool', () => {
         });
 
         test('smoketest, claiming a client', async () => {
-            setupContext();
-
             const client = await provider.claim();
 
             try {
@@ -69,8 +57,6 @@ describe('AsyncPgPool', () => {
         });
 
         test('smoketest, using a plain transaction', async () => {
-            setupContext();
-
             expect(provider.inTransaction()).toEqual(false);
 
             const client = await provider.begin();
@@ -87,19 +73,25 @@ describe('AsyncPgPool', () => {
 
             expect(provider.inTransaction()).toEqual(false);
         });
+
+        test('smoketest, using an encapsulated transaction', async () => {
+            let wasInTransaction: boolean = false;
+
+            expect(provider.inTransaction()).toEqual(false);
+
+            await provider.runInTransaction(async () => {
+                wasInTransaction = provider.inTransaction();
+            });
+
+            expect(wasInTransaction).toEqual(true);
+        });
     });
 
     describe('primary connections and flushing async context', () => {
-        let provider: AsyncPgPool;
-
         beforeEach(() => {
             provider = factoryWithStaticPool({
                 freshResetQuery: 'RESET ALL',
             });
-        });
-
-        afterEach(async () => {
-            await provider.flushSharedContext();
         });
 
         test('primary connections are re-used', async () => {
@@ -110,7 +102,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.primary();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
 
             expect(result.rows[0].value).toEqual('something');
         });
@@ -123,7 +115,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.claim();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
             await provider.release(connection);
 
             expect(result.rows[0].value).toEqual('something');
@@ -137,7 +129,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             connection = await provider.claimFresh();
-            const result = await connection.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await connection.query("SELECT current_setting('app.custom_value') as value");
             await provider.release(connection);
 
             expect(result.rows[0].value).toEqual('');
@@ -151,7 +143,7 @@ describe('AsyncPgPool', () => {
             await provider.release(connection);
 
             const transaction = await provider.begin();
-            const result = await transaction.query('SELECT current_setting(\'app.custom_value\') as value');
+            const result = await transaction.query("SELECT current_setting('app.custom_value') as value");
             await provider.rollback(transaction);
 
             expect(result.rows[0].value).toEqual('something');
@@ -166,9 +158,7 @@ describe('AsyncPgPool', () => {
         });
     });
 
-    describe.each([
-        ['pool', factoryWithStaticPool],
-    ] as const)('transactional behaviour using %s', (name, factory) => {
+    describe.each([['pool', factoryWithStaticPool]] as const)('transactional behaviour using %s', (name, factory) => {
         const tableName = `transactions_test_for_${name.toLowerCase().replace(/ /g, '_')}`;
 
         beforeAll(async () => {
@@ -184,8 +174,6 @@ describe('AsyncPgPool', () => {
         });
 
         test('beginning and committing a transaction', async () => {
-            setupContext();
-
             const connection = await provider.begin();
 
             await provider.commit(connection);
@@ -199,18 +187,15 @@ describe('AsyncPgPool', () => {
     test('being able to set a setting for a connection', async () => {
         let index = 0;
         let usedConnection: Connection | undefined = undefined;
-        const provider = new AsyncPgPool(
-            pool,
-            {
-                keepConnections: 0,
-                onRelease: 'RESET app.tenant_id',
-                onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
-            },
-        );
+        const provider = new AsyncPgPool(pool, {
+            keepConnections: 0,
+            onRelease: 'RESET app.tenant_id',
+            onClaim: client => client.query(`SET app.tenant_id = '${++index}'`),
+        });
 
         async function fetchTenantId() {
             await using connection = await provider.claim();
-            const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+            const result = await connection.query("SELECT current_setting('app.tenant_id') as num");
             usedConnection = connection;
 
             return Number(result.rows[0].num);
@@ -219,12 +204,11 @@ describe('AsyncPgPool', () => {
         expect(await fetchTenantId()).toEqual(1);
         expect(await fetchTenantId()).toEqual(2);
 
-
         // Verify the tenant ID does not leak when the connection is
         const connection = await pool.connect();
         // Strict equal check to ensure the connection was the same as used before.
         expect(usedConnection).toStrictEqual(connection);
-        const result = await connection.query('SELECT current_setting(\'app.tenant_id\') as num');
+        const result = await connection.query("SELECT current_setting('app.tenant_id') as num");
         connection.release();
 
         expect(result.rows[0].num).toEqual('');
@@ -232,17 +216,14 @@ describe('AsyncPgPool', () => {
 
     test('using async dispose to close a connection', async () => {
         let released = false;
-        const provider = new AsyncPgPool(
-            pool,
-            {
-                onRelease: () => {
-                    released = true;
-                },
+        const provider = new AsyncPgPool(pool, {
+            onRelease: () => {
+                released = true;
             },
-        );
+        });
 
         await (async () => {
-                await using connection = await provider.claim();
+            await using connection = await provider.claim();
 
             const result = await connection.query('SELECT 1 as num');
             expect(result.rowCount).toEqual(1);
@@ -250,5 +231,21 @@ describe('AsyncPgPool', () => {
         })();
 
         expect(released).toEqual(true);
+    });
+
+    test('run() creates an isolated transaction context scope', async () => {
+        const context = composeContextSlots([transactionContextSlot], new AsyncLocalStorage());
+
+        const provider = new AsyncPgPool(pool, {}, context);
+
+        let innerInTransaction = false;
+
+        await provider.run(async () => {
+            await provider.runInTransaction(async () => {
+                innerInTransaction = provider.inTransaction();
+            });
+        });
+
+        expect(innerInTransaction).toEqual(true);
     });
 });

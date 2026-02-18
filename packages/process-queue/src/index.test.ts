@@ -18,7 +18,12 @@ const createConcurrentProcessor = <T>(options: ProcessQueueOptions<T>): ProcessQ
 const createPartitionedProcessor = <T>(options: ProcessQueueOptions<T>): ProcessQueue<T> => {
     const {onStop, ...rest} = options;
 
-    return new PartitionedProcessQueue<T>(() => new SequentialProcessQueue<T>(rest), () => 0, 1, onStop);
+    return new PartitionedProcessQueue<T>(
+        () => new SequentialProcessQueue<T>(rest),
+        () => 0,
+        1,
+        onStop,
+    );
 };
 
 describe.each([
@@ -109,8 +114,7 @@ describe.each([
             },
             processor: () => Promise.reject(new Error('reason')),
         });
-        processQueue.push('a').catch(() => {
-        });
+        processQueue.push('a').catch(() => {});
         await promise.promise;
         expect(errors).toEqual(1);
     });
@@ -170,8 +174,7 @@ describe.each([
     test('purging prevents the next task(s) from being handled', async () => {
         let tries = 0;
         const processQueue = factory({
-            onError: async () => {
-            },
+            onError: async () => {},
             processor: async () => {
                 tries++;
             },
@@ -186,14 +189,12 @@ describe.each([
         let called = false;
         const {promise, resolve} = Promise.withResolvers<void>();
         const processQueue = factory({
-            onError: async () => {
-            },
+            onError: async () => {},
             onFinish: async () => {
                 called = true;
                 resolve();
             },
-            processor: async () => {
-            },
+            processor: async () => {},
         });
         processQueue.push('something');
         await promise;

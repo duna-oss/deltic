@@ -1,0 +1,58 @@
+{
+  "name": "@deltic/uid",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Rich UID layer",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./uuid": {
+      "import": "./dist/uuid.js",
+      "require": "./dist/uuid.cjs",
+      "module-sync": "./dist/uuid.js",
+      "types": "./dist/uuid.d.ts"
+    },
+    "./ulid": {
+      "import": "./dist/ulid.js",
+      "require": "./dist/ulid.cjs",
+      "module-sync": "./dist/ulid.js",
+      "types": "./dist/ulid.d.ts"
+    }
+  },
+  "keywords": [
+    "ids",
+    "uid",
+    "uuid",
+    "ulid",
+    "conversion"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "@deltic/branded": "workspace:^"
+  },
+  "peerDependencies": {
+    "@deltic/branded": "workspace:^",
+    "ulid": "^3.0.0",
+    "uuid": "^13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ulid": {
+      "optional": true
+    },
+    "uuid": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/id-conversion"
+  }
+}

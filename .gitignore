@@ -1,7 +1,10 @@
 # root ignores
 /.idea
 /.data
+/docs
 /packages/*/dist
+
+/.ai
 
 # ignore patterns
 node_modules

@@ -1,11 +1,16 @@
-import DependencyContainer, {reflectMethods, container as exportedContainer, ServiceKey} from './index.js';
+import DependencyContainer, {
+    reflectMethods,
+    container as exportedContainer,
+    forgeServiceKey,
+    type ServiceKey,
+} from './index.js';
 import {isProxy} from 'node:util/types';
 import {setTimeout as wait} from 'node:timers/promises';
 
 describe('@deltic/dependency-injection', () => {
     let container: DependencyContainer;
 
-    beforeEach(() => container = new DependencyContainer());
+    beforeEach(() => (container = new DependencyContainer()));
 
     test('the exported container is a Dependency', () => {
         expect(exportedContainer).toBeInstanceOf(DependencyContainer);
@@ -43,8 +48,6 @@ describe('@deltic/dependency-injection', () => {
             expect(something).toBeInstanceOf(Dependency);
             expect(isProxy(something)).toEqual(false);
         });
-
-        // test('when not caching, you will always get a proxy', )
     });
 
     /**
@@ -59,10 +62,10 @@ describe('@deltic/dependency-injection', () => {
 
         interface Inner {
             lol: string;
-        };
+        }
         interface Outer {
             dependency: Inner;
-        };
+        }
         let innerKey: ServiceKey<Inner>;
         let outerKey: ServiceKey<Outer>;
 
@@ -78,7 +81,6 @@ describe('@deltic/dependency-injection', () => {
             });
 
             outerKey = container.register('outer', {
-
                 factory: container => ({
                     dependency: container.resolve(innerKey),
                 }),
@@ -156,7 +158,7 @@ describe('@deltic/dependency-injection', () => {
                 },
             });
 
-            middleNormalKey =container.register('middle-normal', {
+            middleNormalKey = container.register('middle-normal', {
                 factory: c => {
                     return new Middle('middle-normal', c.resolve<Dependency>(innerKey));
                 },
@@ -204,12 +206,7 @@ describe('@deltic/dependency-injection', () => {
 
             await container.cleanup();
 
-            expect(segments).toEqual([
-                'outer-normal',
-                'outer-normal',
-                'inner',
-                'inner',
-            ]);
+            expect(segments).toEqual(['outer-normal', 'outer-normal', 'inner', 'inner']);
         });
 
         test('resolving outer lazy', async () => {
@@ -221,12 +218,7 @@ describe('@deltic/dependency-injection', () => {
 
             await container.cleanup();
 
-            expect(segments).toEqual([
-                'outer-lazy',
-                'outer-lazy',
-                'inner',
-                'inner',
-            ]);
+            expect(segments).toEqual(['outer-lazy', 'outer-lazy', 'inner', 'inner']);
         });
 
         test('resolving and use both (and trigger lazy proxy)', async () => {
@@ -237,14 +229,7 @@ describe('@deltic/dependency-injection', () => {
 
             await container.cleanup();
 
-            expect(segments).toEqual([
-                'outer-normal',
-                'outer-lazy',
-                'outer-normal',
-                'outer-lazy',
-                'inner',
-                'inner',
-            ]);
+            expect(segments).toEqual(['outer-normal', 'outer-lazy', 'outer-normal', 'outer-lazy', 'inner', 'inner']);
         });
 
         test('cleanups are no invoked for lazy services that are not used', async () => {
@@ -272,7 +257,7 @@ describe('@deltic/dependency-injection', () => {
             set: true,
             setPrototypeOf: true,
         } as const satisfies {
-            [K in keyof Required<ProxyHandler<any>>]: true
+            [K in keyof Required<ProxyHandler<any>>]: true;
         };
 
         const expected = Object.keys(allReflectMethods).toSorted();
@@ -281,7 +266,7 @@ describe('@deltic/dependency-injection', () => {
     });
 
     test('being able to lazily resolve a dependency', () => {
-        const  someKey: ServiceKey<{index: number}> = container.register('some', {
+        const someKey: ServiceKey<{index: number}> = container.register('some', {
             factory: () => {
                 // eslint-disable-next-line @typescript-eslint/no-require-imports
                 const {SomeDependency} = require('./index.stub.js');
@@ -338,8 +323,7 @@ describe('@deltic/dependency-injection', () => {
             constructor(
                 public readonly name: string,
                 private readonly collection: SomeCollection,
-            ) {
-            }
+            ) {}
 
             allNames(): string[] {
                 return this.collection.allNames();
@@ -350,8 +334,7 @@ describe('@deltic/dependency-injection', () => {
             constructor(
                 public readonly name: string,
                 private readonly members: Something[],
-            ) {
-            }
+            ) {}
 
             allNames(): string[] {
                 return this.members.map(m => m.name);
@@ -363,10 +346,7 @@ describe('@deltic/dependency-injection', () => {
 
         const somethingToken = container.register('something', {
             factory: c => {
-                return new Something(
-                    'main',
-                    c.resolve<SomeCollection>(collectionToken),
-                );
+                return new Something('main', c.resolve<SomeCollection>(collectionToken));
             },
             cleanup: async instance => {
                 segments.push(instance.name);
@@ -377,10 +357,7 @@ describe('@deltic/dependency-injection', () => {
 
         collectionToken = container.register('collection', {
             factory: c => {
-                return new SomeCollection(
-                    'collection',
-                    [c.resolve<Something>(somethingToken)],
-                );
+                return new SomeCollection('collection', [c.resolve<Something>(somethingToken)]);
             },
             cleanup: async instance => {
                 segments.push(instance.name);
@@ -399,6 +376,24 @@ describe('@deltic/dependency-injection', () => {
 
         expect(segments).toHaveLength(0);
     });
+
+    test('resolving a dependency using a forged key', () => {
+        class SomeThing {
+            constructor(public readonly name: string) {}
+        }
+
+        const key = forgeServiceKey<SomeThing>('key');
+
+        expect(() => container.resolve(key)).toThrow();
+
+        container.register(key, {
+            factory: () => new SomeThing('lol'),
+        });
+
+        const instance = container.resolve(key);
+
+        expect(instance).toEqual(new SomeThing('lol'));
+    });
 });
 
 class Dependency {
@@ -406,9 +401,10 @@ class Dependency {
 }
 
 class Middle {
-    constructor(public readonly name: string, public readonly inner: Dependency) {
-
-    }
+    constructor(
+        public readonly name: string,
+        public readonly inner: Dependency,
+    ) {}
 }
 
 class Outer {

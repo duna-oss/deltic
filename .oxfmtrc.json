@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "*.json",
+    "*.yml",
+    "*.yaml",
+    "*.md"
+  ],
+  "semi": true,
+  "experimentalSortImports": null,
+  "singleQuote": true,
+  "tabWidth": 4,
+  "bracketSpacing": false,
+  "printWidth": 120,
+  "arrowParens": "avoid"
+}

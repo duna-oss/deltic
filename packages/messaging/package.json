@@ -1,0 +1,276 @@
+{
+  "name": "@deltic/messaging",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A rich messaging abstraction",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./decorating-message-consumer": {
+      "import": "./dist/decorating-message-consumer.js",
+      "require": "./dist/decorating-message-consumer.cjs",
+      "module-sync": "./dist/decorating-message-consumer.js",
+      "types": "./dist/decorating-message-consumer.d.ts"
+    },
+    "./dispatching-message-consumer": {
+      "import": "./dist/dispatching-message-consumer.js",
+      "require": "./dist/dispatching-message-consumer.cjs",
+      "module-sync": "./dist/dispatching-message-consumer.js",
+      "types": "./dist/dispatching-message-consumer.d.ts"
+    },
+    "./decorating-message-dispatcher": {
+      "import": "./dist/decorating-message-dispatcher.js",
+      "require": "./dist/decorating-message-dispatcher.cjs",
+      "module-sync": "./dist/decorating-message-dispatcher.js",
+      "types": "./dist/decorating-message-dispatcher.d.ts"
+    },
+    "./helpers": {
+      "import": "./dist/helpers.js",
+      "require": "./dist/helpers.cjs",
+      "module-sync": "./dist/helpers.js",
+      "types": "./dist/helpers.d.ts"
+    },
+    "./upcasting": {
+      "import": "./dist/upcasting.js",
+      "require": "./dist/upcasting.cjs",
+      "module-sync": "./dist/upcasting.js",
+      "types": "./dist/upcasting.d.ts"
+    },
+    "./outbox": {
+      "import": "./dist/outbox.js",
+      "require": "./dist/outbox.cjs",
+      "module-sync": "./dist/outbox.js",
+      "types": "./dist/outbox.d.ts"
+    },
+    "./message-consumer-chain": {
+      "import": "./dist/message-consumer-chain.js",
+      "require": "./dist/message-consumer-chain.cjs",
+      "module-sync": "./dist/message-consumer-chain.js",
+      "types": "./dist/message-consumer-chain.d.ts"
+    },
+    "./message-decorator-chain": {
+      "import": "./dist/message-decorator-chain.js",
+      "require": "./dist/message-decorator-chain.cjs",
+      "module-sync": "./dist/message-decorator-chain.js",
+      "types": "./dist/message-decorator-chain.d.ts"
+    },
+    "./message-dispatcher-chain": {
+      "import": "./dist/message-dispatcher-chain.js",
+      "require": "./dist/message-dispatcher-chain.cjs",
+      "module-sync": "./dist/message-dispatcher-chain.js",
+      "types": "./dist/message-dispatcher-chain.d.ts"
+    },
+    "./message-repository-using-memory": {
+      "import": "./dist/message-repository-using-memory.js",
+      "require": "./dist/message-repository-using-memory.cjs",
+      "module-sync": "./dist/message-repository-using-memory.js",
+      "types": "./dist/message-repository-using-memory.d.ts"
+    },
+    "./collecting-message-dispatcher": {
+      "import": "./dist/collecting-message-dispatcher.js",
+      "require": "./dist/collecting-message-dispatcher.cjs",
+      "module-sync": "./dist/collecting-message-dispatcher.js",
+      "types": "./dist/collecting-message-dispatcher.d.ts"
+    },
+    "./collecting-message-consumer": {
+      "import": "./dist/collecting-message-consumer.js",
+      "require": "./dist/collecting-message-consumer.cjs",
+      "module-sync": "./dist/collecting-message-consumer.js",
+      "types": "./dist/collecting-message-consumer.d.ts"
+    },
+    "./consuming-message-dispatcher": {
+      "import": "./dist/consuming-message-dispatcher.js",
+      "require": "./dist/consuming-message-dispatcher.cjs",
+      "module-sync": "./dist/consuming-message-dispatcher.js",
+      "types": "./dist/consuming-message-dispatcher.d.ts"
+    },
+    "./exactly-once-message-consumer-decorator": {
+      "import": "./dist/exactly-once-message-consumer-decorator.js",
+      "require": "./dist/exactly-once-message-consumer-decorator.cjs",
+      "module-sync": "./dist/exactly-once-message-consumer-decorator.js",
+      "types": "./dist/exactly-once-message-consumer-decorator.d.ts"
+    },
+    "./pg/outbox-repository": {
+      "import": "./dist/pg/outbox-repository.js",
+      "require": "./dist/pg/outbox-repository.cjs",
+      "module-sync": "./dist/pg/outbox-repository.js",
+      "types": "./dist/pg/outbox-repository.d.ts"
+    },
+    "./pg/message-repository": {
+      "import": "./dist/pg/message-repository.js",
+      "require": "./dist/pg/message-repository.cjs",
+      "module-sync": "./dist/pg/message-repository.js",
+      "types": "./dist/pg/message-repository.d.ts"
+    },
+    "./pg/throttled-outbox-repository": {
+      "import": "./dist/pg/throttled-outbox-repository.js",
+      "require": "./dist/pg/throttled-outbox-repository.cjs",
+      "module-sync": "./dist/pg/throttled-outbox-repository.js",
+      "types": "./dist/pg/throttled-outbox-repository.d.ts"
+    },
+    "./pg/delayed-outbox-repository": {
+      "import": "./dist/pg/delayed-outbox-repository.js",
+      "require": "./dist/pg/delayed-outbox-repository.cjs",
+      "module-sync": "./dist/pg/delayed-outbox-repository.js",
+      "types": "./dist/pg/delayed-outbox-repository.d.ts"
+    },
+    "./pg/notifying-outbox-decorator": {
+      "import": "./dist/pg/notifying-outbox-decorator.js",
+      "require": "./dist/pg/notifying-outbox-decorator.cjs",
+      "module-sync": "./dist/pg/notifying-outbox-decorator.js",
+      "types": "./dist/pg/notifying-outbox-decorator.d.ts"
+    },
+    "./pg/outbox-relay-runner": {
+      "import": "./dist/pg/outbox-relay-runner.js",
+      "require": "./dist/pg/outbox-relay-runner.cjs",
+      "module-sync": "./dist/pg/outbox-relay-runner.js",
+      "types": "./dist/pg/outbox-relay-runner.d.ts"
+    },
+    "./pg/multi-outbox-relay-runner": {
+      "import": "./dist/pg/multi-outbox-relay-runner.js",
+      "require": "./dist/pg/multi-outbox-relay-runner.cjs",
+      "module-sync": "./dist/pg/multi-outbox-relay-runner.js",
+      "types": "./dist/pg/multi-outbox-relay-runner.d.ts"
+    },
+    "./amqp/connection-provider": {
+      "import": "./dist/amqp/connection-provider.js",
+      "require": "./dist/amqp/connection-provider.cjs",
+      "module-sync": "./dist/amqp/connection-provider.js",
+      "types": "./dist/amqp/connection-provider.d.ts"
+    },
+    "./amqp/channel-pool": {
+      "import": "./dist/amqp/channel-pool.js",
+      "require": "./dist/amqp/channel-pool.cjs",
+      "module-sync": "./dist/amqp/channel-pool.js",
+      "types": "./dist/amqp/channel-pool.d.ts"
+    },
+    "./amqp/message-dispatcher": {
+      "import": "./dist/amqp/message-dispatcher.js",
+      "require": "./dist/amqp/message-dispatcher.cjs",
+      "module-sync": "./dist/amqp/message-dispatcher.js",
+      "types": "./dist/amqp/message-dispatcher.d.ts"
+    },
+    "./amqp/message-relay": {
+      "import": "./dist/amqp/message-relay.js",
+      "require": "./dist/amqp/message-relay.cjs",
+      "module-sync": "./dist/amqp/message-relay.js",
+      "types": "./dist/amqp/message-relay.d.ts"
+    },
+    "./message-delivery-counter": {
+      "import": "./dist/message-delivery-counter.js",
+      "require": "./dist/message-delivery-counter.cjs",
+      "module-sync": "./dist/message-delivery-counter.js",
+      "types": "./dist/message-delivery-counter.d.ts"
+    },
+    "./context-message-decorator": {
+      "import": "./dist/context-message-decorator.js",
+      "require": "./dist/context-message-decorator.cjs",
+      "module-sync": "./dist/context-message-decorator.js",
+      "types": "./dist/context-message-decorator.d.ts"
+    },
+    "./locking-message-consumer": {
+      "import": "./dist/locking-message-consumer.js",
+      "require": "./dist/locking-message-consumer.cjs",
+      "module-sync": "./dist/locking-message-consumer.js",
+      "types": "./dist/locking-message-consumer.d.ts"
+    },
+    "./run-message-consumer-in-context": {
+      "import": "./dist/run-message-consumer-in-context.js",
+      "require": "./dist/run-message-consumer-in-context.cjs",
+      "module-sync": "./dist/run-message-consumer-in-context.js",
+      "types": "./dist/run-message-consumer-in-context.d.ts"
+    }
+  },
+  "keywords": [
+    "messaging",
+    "message",
+    "outbox",
+    "dispatching",
+    "consumer",
+    "amqp",
+    "rabbitmq"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/messaging"
+  },
+  "peerDependencies": {
+    "@deltic/backoff": "workspace:^",
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/clock": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/key-value": "workspace:^",
+    "@deltic/mutex": "workspace:^",
+    "@deltic/offset-tracking": "workspace:^",
+    "@deltic/process-queue": "workspace:^",
+    "@deltic/wait-group": "workspace:^",
+    "amqplib": "^0.10.7",
+    "crc": "^4.3.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@deltic/backoff": "workspace:^",
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/clock": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/error-standard": "workspace:^",
+    "@deltic/key-value": "workspace:^",
+    "@deltic/mutex": "workspace:^",
+    "@deltic/offset-tracking": "workspace:^",
+    "@deltic/process-queue": "workspace:^",
+    "@deltic/wait-group": "workspace:^",
+    "amqplib": "^0.10.7",
+    "@types/amqplib": "^0.10.7",
+    "crc": "^4.3.2",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6",
+    "uuid": "^13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@deltic/backoff": {
+      "optional": true
+    },
+    "@deltic/async-pg-pool": {
+      "optional": true
+    },
+    "@deltic/clock": {
+      "optional": true
+    },
+    "@deltic/context": {
+      "optional": true
+    },
+    "@deltic/mutex": {
+      "optional": true
+    },
+    "@deltic/offset-tracking": {
+      "optional": true
+    },
+    "@deltic/process-queue": {
+      "optional": true
+    },
+    "@deltic/wait-group": {
+      "optional": true
+    },
+    "amqplib": {
+      "optional": true
+    },
+    "crc": {
+      "optional": true
+    },
+    "uuid": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  }
+}

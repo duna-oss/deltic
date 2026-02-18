@@ -1,0 +1,97 @@
+{
+  "name": "@deltic/event-sourcing",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A rich event-sourcing implementation",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./aggregate-projection": {
+      "import": "./dist/aggregate-projection.js",
+      "require": "./dist/aggregate-projection.cjs",
+      "module-sync": "./dist/aggregate-projection.js",
+      "types": "./dist/aggregate-projection.d.ts"
+    },
+    "./using-reflect-metadata": {
+      "import": "./dist/using-reflect-metadata.js",
+      "require": "./dist/using-reflect-metadata.cjs",
+      "module-sync": "./dist/using-reflect-metadata.js",
+      "types": "./dist/using-reflect-metadata.d.ts"
+    },
+    "./snapshotting": {
+      "import": "./dist/snapshotting.js",
+      "require": "./dist/snapshotting.cjs",
+      "module-sync": "./dist/snapshotting.js",
+      "types": "./dist/snapshotting.d.ts"
+    },
+    "./test-tooling": {
+      "import": "./dist/test-tooling.js",
+      "require": "./dist/test-tooling.cjs",
+      "module-sync": "./dist/test-tooling.js",
+      "types": "./dist/test-tooling.d.ts"
+    },
+    "./pg/snapshot-repository": {
+      "import": "./dist/pg/snapshot-repository.js",
+      "require": "./dist/pg/snapshot-repository.cjs",
+      "module-sync": "./dist/pg/snapshot-repository.js",
+      "types": "./dist/pg/snapshot-repository.d.ts"
+    }
+  },
+  "keywords": ["event-sourcing", "aggregate", "cqrs", "domain-events", "snapshotting"],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/event-sourcing"
+  },
+  "dependencies": {
+    "@deltic/clock": "workspace:^",
+    "@deltic/messaging": "workspace:^",
+    "@deltic/transaction-manager": "workspace:^"
+  },
+  "peerDependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/clock": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/messaging": "workspace:^",
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/transaction-manager": "workspace:^",
+    "@deltic/uid": "workspace:^",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "reflect-metadata": "^0.2.2",
+    "@deltic/service-dispatcher": "workspace:^",
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/context": "workspace:^",
+    "@deltic/uid": "workspace:^",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6",
+    "uuid": "^11.0.3"
+  },
+  "peerDependenciesMeta": {
+    "@deltic/service-dispatcher": {
+      "optional": true
+    },
+    "@deltic/async-pg-pool": {
+      "optional": true
+    },
+    "@deltic/context": {
+      "optional": true
+    },
+    "@deltic/uid": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  }
+}

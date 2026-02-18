@@ -10,9 +10,7 @@ describe('linear backoff', () => {
         [6, 600],
         [7, 700],
     ])('backs off linearly', (tryNum, expectedDelay) => {
-        const backoffStrategy = new LinearBackoffStrategy(
-            100,
-        );
+        const backoffStrategy = new LinearBackoffStrategy(100);
 
         expect(backoffStrategy.backOff(tryNum)).toEqual(expectedDelay);
     });

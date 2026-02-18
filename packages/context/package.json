@@ -1,0 +1,26 @@
+{
+  "name": "@deltic/context",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Context tracking for async processes",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": ["context", "async-context", "async-local-storage", "scoping"],
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/context"
+  },
+  "dependencies": {
+    "@deltic/error-standard": "workspace:^"
+  }
+}

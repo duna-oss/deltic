@@ -1,0 +1,44 @@
+{
+  "name": "@deltic/async-pg-kysely",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Kysely query builder integration with @deltic/async-pg-pool",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": [
+    "kysely",
+    "pg",
+    "pool",
+    "async",
+    "postgres",
+    "query-builder"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/error-standard": "workspace:^",
+    "kysely": "^0.28.0"
+  },
+  "peerDependencies": {
+    "@deltic/async-pg-pool": "workspace:^",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/async-pg-kysely"
+  }
+}

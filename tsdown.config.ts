@@ -12,38 +12,40 @@ const packageDirectories: string[] = Array.from(
 const aliases: Record<string, string> = {};
 const sources: Record<string, string[]> = {};
 
-await Promise.all(packageDirectories.map(async name => {
-    const packageFile = JSON.parse(await readFile(resolve(import.meta.dirname, 'packages', name, 'package.json'), 'utf8'));
-    const exportDeclarations = packageFile['exports'] ?? {};
-    const sourceFiles: string[] = [];
+await Promise.all(
+    packageDirectories.map(async name => {
+        const packageFile = JSON.parse(
+            await readFile(resolve(import.meta.dirname, 'packages', name, 'package.json'), 'utf8'),
+        );
+        const exportDeclarations = packageFile['exports'] ?? {};
+        const sourceFiles: string[] = [];
 
-    for (const key in exportDeclarations) {
-        const sourceFile = exportDeclarations[key]['import'].replace('dist', 'src').replace('.js', '.ts');
-        sourceFiles.push(sourceFile);
-        const destination = resolve(import.meta.dirname, 'packages', name, sourceFile);
+        for (const key in exportDeclarations) {
+            const sourceFile = exportDeclarations[key]['import'].replace('dist', 'src').replace('.js', '.ts');
+            sourceFiles.push(sourceFile);
+            const destination = resolve(import.meta.dirname, 'packages', name, sourceFile);
 
-        if (key === '.') {
-            aliases[`@deltic/${name}`] = destination;
-        } else if (key.startsWith('./')) {
-            aliases[`@deltic/${name}/${key.substring(2)}`] = destination;
+            if (key === '.') {
+                aliases[`@deltic/${name}`] = destination;
+            } else if (key.startsWith('./')) {
+                aliases[`@deltic/${name}/${key.substring(2)}`] = destination;
+            }
         }
-    }
 
-    sources[name] = sourceFiles.map(file => `packages/${name}/${file}`);
-}));
-
-export default [
-    ...packageDirectories.map(dirname => {
-        return defineConfig({
-            dts: true,
-            format: ['esm', 'cjs'],
-            external: [/^@deltic\//],
-            alias: aliases,
-            skipNodeModulesBundle: true,
-            entry: sources[dirname] ?? [],
-            outDir: resolve(import.meta.dirname, `packages/${dirname}/dist`),
-            platform: 'node',
-            unbundle: true,
-        });
+        sources[name] = sourceFiles.map(file => `packages/${name}/${file}`);
     }),
-];
+);
+
+export default packageDirectories.map(dirname => {
+    return defineConfig({
+        dts: true,
+        format: ['esm', 'cjs'],
+        external: [/^@deltic\//],
+        alias: aliases,
+        skipNodeModulesBundle: true,
+        entry: sources[dirname] ?? [],
+        outDir: resolve(import.meta.dirname, `packages/${dirname}/dist`),
+        platform: 'node',
+        unbundle: true,
+    });
+});

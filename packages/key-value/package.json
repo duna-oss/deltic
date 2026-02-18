@@ -1,0 +1,52 @@
+{
+  "name": "@deltic/key-value",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A key-value store abstraction",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "module-sync": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": [
+    "key",
+    "value",
+    "kv",
+    "key-value",
+    "store"
+  ],
+  "scripts": {},
+  "author": "Frank de Jonge (https://frankdejonge.nl)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duna-oss/deltic.git",
+    "directory": "packages/key-value"
+  },
+  "peerDependencies": {
+    "object-hash": "^3.0.0",
+    "pg": "^8.16.3",
+    "@deltic/context": "workspace:^",
+    "@deltic/uid": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/object-hash": "^3.0.6",
+    "@types/pg": "^8.15.6",
+    "uuid": "^13.0.0"
+  },
+  "peerDependenciesMeta": {
+    "object-hash": {
+      "optional": true
+    },
+    "@deltic/context": {
+      "optional": true
+    },
+    "@deltic/uid": {
+      "optional": true
+    }
+  }
+}

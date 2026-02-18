@@ -9,25 +9,22 @@ export default tseslint.config(
     tseslint.configs.recommended,
     {
         files: ['./packages/**/*.ts', './*.config.*'],
+        ignores: ['docs/**/*'],
         rules: {
+            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
-            'object-curly-spacing': [
-                'error',
-                'never'
-            ],
-            'quotes': [
+            'object-curly-spacing': ['error', 'never'],
+            quotes: [
                 'error',
                 'single',
                 {
-                    'allowTemplateLiterals': false,
-                    'avoidEscape': true
-                }
+                    allowTemplateLiterals: false,
+                    avoidEscape: true,
+                },
             ],
-            'semi': [
-                'error',
-                'always'
-            ],
+            semi: ['error', 'always'],
         },
     },
-    globalIgnores(['**/dist']),
+    globalIgnores(['**/dist', 'docs/**/*']),
 );

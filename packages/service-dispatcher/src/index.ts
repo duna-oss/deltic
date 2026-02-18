@@ -1,16 +1,20 @@
 export type ServiceStructure<D> = {
-    [K in keyof D]: {payload: any, response: any}
+    [K in keyof D]: {payload: any; response: any};
 };
 
 export type AnyInputForService<Service extends ServiceStructure<Service>> = {
     [Type in keyof Service]: {
-        readonly type: Type,
-        readonly payload: Service[Type]['payload'],
-    }
+        readonly type: Type;
+        readonly payload: Service[Type]['payload'];
+    };
 }[keyof Service];
 
 export interface ServiceMiddleware<Service extends ServiceStructure<Service>> {
-    <T extends keyof Service>(type: T, payload: Service[T]['payload'], next: NextFunction<Service>): Promise<Service[T]['response']>;
+    <T extends keyof Service>(
+        type: T,
+        payload: Service[T]['payload'],
+        next: NextFunction<Service>,
+    ): Promise<Service[T]['response']>;
 }
 
 export interface NextFunction<Service extends ServiceStructure<Service>> {
@@ -18,22 +22,23 @@ export interface NextFunction<Service extends ServiceStructure<Service>> {
 }
 
 export type ServiceHandlers<Service extends ServiceStructure<Service>> = {
-    readonly [T in keyof Service]: (input: Service[T]['payload']) => Promise<Service[T]['response']>
+    readonly [T in keyof Service]: (input: Service[T]['payload']) => Promise<Service[T]['response']>;
 };
 
-export class InputNotSupported extends Error {
+export class InputNotSupported extends Error {}
+
+export interface Service<Structure extends ServiceStructure<Structure>> {
+    handle<T extends keyof Structure>(
+        type: T,
+        payload: Structure[T]['payload'],
+    ): Promise<Structure[T]['response']> | Structure[T]['response'];
 }
 
-export interface Service<
-    Structure extends ServiceStructure<Structure>,
-> {
-    handle<T extends keyof Structure>(type: T, payload: Structure[T]['payload']): Promise<Structure[T]['response']> | Structure[T]['response'],
-}
-
-interface ChainHandler<
-    Service extends ServiceStructure<Service>,
-> {
-    <T extends keyof Service>(type: T, payload: Service[T]['payload']): Promise<Service[T]['response']> | Service[T]['response'],
+interface ChainHandler<Service extends ServiceStructure<Service>> {
+    <T extends keyof Service>(
+        type: T,
+        payload: Service[T]['payload'],
+    ): Promise<Service[T]['response']> | Service[T]['response'];
 }
 
 export class ServiceDispatcher<Definition extends ServiceStructure<Definition>> implements Service<Definition> {
@@ -47,17 +52,23 @@ export class ServiceDispatcher<Definition extends ServiceStructure<Definition>> 
         for (let index = this.middlewares.length - 1; index >= 0; index -= 1) {
             const m = this.middlewares[index];
             const n = next;
-            next = async(type, input) => await m(type, input, n);
+            next = async (type, input) => await m(type, input, n);
         }
 
         this.chain = next;
     }
 
-    public handle<T extends keyof Definition>(type: T, payload: Definition[T]['payload']): Promise<Definition[T]['response']> {
-        return (this.chain)(type, payload);
+    public handle<T extends keyof Definition>(
+        type: T,
+        payload: Definition[T]['payload'],
+    ): Promise<Definition[T]['response']> {
+        return this.chain(type, payload);
     }
 
-    private async process<T extends keyof Definition>(type: T, payload: Definition[T]['payload']): Promise<Definition[T]['response']> {
+    private async process<T extends keyof Definition>(
+        type: T,
+        payload: Definition[T]['payload'],
+    ): Promise<Definition[T]['response']> {
         const handler = this.handlers[type];
 
         if (!handler) {

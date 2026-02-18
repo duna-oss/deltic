@@ -1,15 +1,15 @@
-import {AnyStagedResponse, errorForMissingMockedResponseForInput, MockedService} from './test-tooling.js';
-import {AnyInputForService} from './index.js';
+import {type AnyStagedResponse, errorForMissingMockedResponseForInput, MockedService} from './test-tooling.js';
+import type {AnyInputForService} from './index.js';
 
 interface MockedServiceDefinition {
     ping: {
-        payload: 'ping' | 'lol',
-        response: 'pong' | 'nope',
-    },
+        payload: 'ping' | 'lol';
+        response: 'pong' | 'nope';
+    };
     other: {
-        payload: 'other',
-        response: 'other',
-    },
+        payload: 'other';
+        response: 'other';
+    };
 }
 
 describe('mocked service bus', () => {
@@ -59,10 +59,12 @@ describe('mocked service bus', () => {
 
         await service.handle('ping', 'ping');
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(errorForMissingMockedResponseForInput({
-            type: 'ping',
-            payload: 'ping',
-        }));
+        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+            errorForMissingMockedResponseForInput({
+                type: 'ping',
+                payload: 'ping',
+            }),
+        );
     });
 
     test('it can respond multiple times with the same response configuration', async () => {
@@ -100,10 +102,12 @@ describe('mocked service bus', () => {
 
         service.reset();
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(errorForMissingMockedResponseForInput({
-            type: 'ping',
-            payload: 'ping',
-        }));
+        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+            errorForMissingMockedResponseForInput({
+                type: 'ping',
+                payload: 'ping',
+            }),
+        );
     });
 
     test('calls are removed when reset', async () => {
@@ -128,33 +132,38 @@ describe('mocked service bus', () => {
         [{type: 'other', payload: 'other'}, 1, false],
         [{type: 'other', payload: 'other'}, 2, false],
         [{type: 'other', payload: 'other'}, 3, false],
-    ] satisfies [AnyInputForService<MockedServiceDefinition>, number, boolean][])('it can tell if it was or was not called with a command', async (inputCheck, times, expectToBeCalled) => {
-        const service = new MockedService<MockedServiceDefinition>();
-        service.stageResponse({
-            type: 'ping',
-            response: 'pong',
-        });
-        service.stageResponse({
-            type: 'ping',
-            response: 'pong',
-        });
+    ] satisfies [AnyInputForService<MockedServiceDefinition>, number, boolean][])(
+        'it can tell if it was or was not called with a command',
+        async (inputCheck, times, expectToBeCalled) => {
+            const service = new MockedService<MockedServiceDefinition>();
+            service.stageResponse({
+                type: 'ping',
+                response: 'pong',
+            });
+            service.stageResponse({
+                type: 'ping',
+                response: 'pong',
+            });
 
-        await service.handle('ping', 'ping');
+            await service.handle('ping', 'ping');
 
-        await service.handle('ping', 'ping');
+            await service.handle('ping', 'ping');
 
-        expect(service.wasCalledWith(inputCheck, times)).toEqual(expectToBeCalled);
-        expect(service.timesCalled()).toEqual(2);
-        expect(service.wasCalled()).toEqual(true);
-    });
+            expect(service.wasCalledWith(inputCheck, times)).toEqual(expectToBeCalled);
+            expect(service.timesCalled()).toEqual(2);
+            expect(service.wasCalled()).toEqual(true);
+        },
+    );
 
     test('it errors when no mock response is prepared for an input', async () => {
         const service = new MockedService<MockedServiceDefinition>();
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(errorForMissingMockedResponseForInput({
-            type: 'ping',
-            payload: 'ping',
-        }));
+        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+            errorForMissingMockedResponseForInput({
+                type: 'ping',
+                payload: 'ping',
+            }),
+        );
     });
 
     test.each([
@@ -177,15 +186,17 @@ describe('mocked service bus', () => {
         },
     ] satisfies AnyStagedResponse<MockedServiceDefinition>[])(
         'it errors when no mock response is prepared for a specific command',
-        async (stagedResponse) => {
+        async stagedResponse => {
             const service = new MockedService<MockedServiceDefinition>();
 
             service.stageResponse(stagedResponse);
 
-            await expect(service.handle('ping', 'ping')).rejects.toThrow(errorForMissingMockedResponseForInput({
-                type: 'ping',
-                payload: 'ping',
-            }));
+            await expect(service.handle('ping', 'ping')).rejects.toThrow(
+                errorForMissingMockedResponseForInput({
+                    type: 'ping',
+                    payload: 'ping',
+                }),
+            );
         },
     );
 });

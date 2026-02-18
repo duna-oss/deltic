@@ -1,6 +1,6 @@
 export interface Clock {
-    now(): number,
-    date(): Date,
+    now(): number;
+    date(): Date;
 }
 
 export const SystemClock: Clock = {
@@ -9,14 +9,14 @@ export const SystemClock: Clock = {
 };
 
 export interface TestClock extends Clock {
-    tick(): void,
-    advance(increment: number): void,
-    travelTo(laterTime: number | string): void,
-    reset(): void,
+    tick(): void;
+    advance(increment: number): void;
+    travelTo(laterTime: number | string): void;
+    reset(): void;
 }
 
 export const GlobalClock = process.env.NODE_ENV === 'test' ? createTestClock() : SystemClock;
-export const GlobalTestClock = process.env.NODE_ENV === 'test' ? GlobalClock as TestClock : createTestClock();
+export const GlobalTestClock = process.env.NODE_ENV === 'test' ? (GlobalClock as TestClock) : createTestClock();
 
 export function createTestClock(start: number | string = Date.now()): TestClock {
     let now = typeof start === 'number' ? start : Date.parse(start);
@@ -24,7 +24,7 @@ export function createTestClock(start: number | string = Date.now()): TestClock 
 
     return {
         now: () => now,
-        advance: (increment: number) => now += increment,
+        advance: (increment: number) => (now += increment),
         date: () => new Date(now),
         tick: () => ++now,
         travelTo: (newTime: number | string) => {
@@ -32,7 +32,7 @@ export function createTestClock(start: number | string = Date.now()): TestClock 
         },
         reset: () => {
             now = originalNow;
-        }
+        },
     };
 }
 
