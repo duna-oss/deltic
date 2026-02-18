@@ -124,6 +124,12 @@
       "module-sync": "./dist/pg/notifying-outbox-decorator.js",
       "types": "./dist/pg/notifying-outbox-decorator.d.ts"
     },
+    "./pg/outbox-relay-runner": {
+      "import": "./dist/pg/outbox-relay-runner.js",
+      "require": "./dist/pg/outbox-relay-runner.cjs",
+      "module-sync": "./dist/pg/outbox-relay-runner.js",
+      "types": "./dist/pg/outbox-relay-runner.d.ts"
+    },
     "./amqp/connection-provider": {
       "import": "./dist/amqp/connection-provider.js",
       "require": "./dist/amqp/connection-provider.cjs",
