@@ -30,24 +30,24 @@ describe('@deltic/service-dispatcher', () => {
             }),
         },
         [
-            (type, payload, next) => {
-                lastType = type;
+            (input, next) => {
+                lastType = input.type;
                 callOrder.push('first');
 
-                return next(type, payload);
+                return next(input);
             },
-            async (type, payload, next) => {
-                const response = await next(type, payload);
+            async (input, next) => {
+                const response = await next(input);
 
                 callOrder.push('last');
 
                 return response;
             },
-            (type, payload, next) => {
-                lastType = type;
+            (input, next) => {
+                lastType = input.type;
                 callOrder.push('second');
 
-                return next(type, payload);
+                return next(input);
             },
         ],
     );
@@ -58,28 +58,28 @@ describe('@deltic/service-dispatcher', () => {
     });
 
     test('a bus forwards to the correct handler', async () => {
-        const n = await exampleServiceDispatcher.handle('number_to_number', {value: 10});
+        const n = await exampleServiceDispatcher.handle({type: 'number_to_number', payload: {value: 10}});
         expect(lastType).toBe('number_to_number');
         expect(n).toEqual(10);
-        const s = await exampleServiceDispatcher.handle('string_to_string', 'frank');
+        const s = await exampleServiceDispatcher.handle({type: 'string_to_string', payload: 'frank'});
         expect(s).toEqual({value: 'FRANK'});
         expect(lastType).toBe('string_to_string');
     });
 
     test('middleware is invoked during handling', async () => {
-        await exampleServiceDispatcher.handle('number_to_number', {value: 10});
+        await exampleServiceDispatcher.handle({type: 'number_to_number', payload: {value: 10}});
         expect(lastType).toBe('number_to_number');
-        await exampleServiceDispatcher.handle('string_to_string', 'frank');
+        await exampleServiceDispatcher.handle({type: 'string_to_string', payload: 'frank'});
         expect(lastType).toBe('string_to_string');
     });
 
     test('middleware is invoked in order of declaratin', async () => {
-        await exampleServiceDispatcher.handle('number_to_number', {value: 10});
+        await exampleServiceDispatcher.handle({type: 'number_to_number', payload: {value: 10}});
 
         expect(callOrder).toEqual(['first', 'second', 'last']);
     });
 
     test('a bus throws when input is not supported', async () => {
-        await expect(exampleServiceDispatcher.handle('unknown' as any, true as any)).rejects.toThrow();
+        await expect(exampleServiceDispatcher.handle({type: 'unknown', payload: true} as any)).rejects.toThrow();
     });
 });

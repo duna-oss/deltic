@@ -35,17 +35,17 @@ export interface AggregateStreamWithSnapshotting<
 export interface AggregateRootWithSnapshotting<
     Stream extends AggregateStreamWithSnapshotting<Stream> & AggregateStream<Stream>,
 > extends AggregateRoot<Stream> {
-    createSnapshot(): Stream['snapshot'];
+    createSnapshot: () => Stream['snapshot'];
 }
 
 export interface AggregateRootWithFactorySnapshotting<
     Stream extends AggregateStreamWithSnapshotting<Stream>,
 > extends AggregateRootFactory<Stream> {
-    reconstituteFromSnapshot(
+    reconstituteFromSnapshot: (
         id: Stream['aggregateRootId'],
         snapshot: Snapshot<Stream>,
         events?: AsyncGenerator<AnyMessageFrom<Stream>>,
-    ): Promise<Stream['aggregateRoot']>;
+    ) => Promise<Stream['aggregateRoot']>;
 }
 
 export class AggregateRootRepositoryWithSnapshotting<
@@ -122,11 +122,11 @@ export class AggregateRootRepositoryWithSnapshotting<
 }
 
 export interface SnapshotRepository<Stream extends AggregateStreamWithSnapshotting<Stream>> {
-    store(snapshot: Snapshot<Stream>): Promise<void>;
+    store: (snapshot: Snapshot<Stream>) => Promise<void>;
 
-    retrieve(id: Stream['aggregateRootId']): Promise<Snapshot<Stream> | undefined>;
+    retrieve: (id: Stream['aggregateRootId']) => Promise<Snapshot<Stream> | undefined>;
 
-    clear(): Promise<void>;
+    clear: () => Promise<void>;
 }
 
 export class SnapshotRepositoryForTesting<

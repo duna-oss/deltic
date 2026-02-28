@@ -15,7 +15,7 @@ export interface IdValidator<Type extends string | number> {
 }
 
 export interface IdGenerator<Type extends string | number> {
-    generateId(): Type;
+    generateId: () => Type;
 }
 
 export class PrefixedBrandedIdGenerator<Prefix extends string> implements IdGenerator<PrefixedId<Prefix>> {
@@ -30,8 +30,8 @@ export class PrefixedBrandedIdGenerator<Prefix extends string> implements IdGene
 }
 
 export interface IdConversion<From extends string | number, To extends string | number = string | number> {
-    toDatabase(from: From): To;
-    fromDatabase(to: To): From;
+    toDatabase: (from: From) => To;
+    fromDatabase: (to: To) => From;
 }
 
 export class NoIdConversion<Type extends string | number> implements IdConversion<Type, Type> {

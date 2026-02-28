@@ -332,9 +332,18 @@ importers:
       '@deltic/async-pg-pool':
         specifier: workspace:^
         version: link:../async-pg-pool
+      '@deltic/mutex':
+        specifier: workspace:^
+        version: link:../mutex
+      '@types/amqplib':
+        specifier: ^0.10.7
+        version: 0.10.8
       '@types/pg':
         specifier: ^8.15.6
         version: 8.15.6
+      amqplib:
+        specifier: ^0.10.7
+        version: 0.10.9
       pg:
         specifier: ^8.16.3
         version: 8.16.3

@@ -88,14 +88,14 @@ describe.each([
 
     test('dispatching two different commands at the same time for the same lock', async () => {
         await Promise.all([
-            service.handle('ping', {
+            service.handle({type: 'ping', payload: {
                 id: 'one',
                 returnThis: 'first',
-            }),
-            service.handle('pong', {
+            }}),
+            service.handle({type: 'pong', payload: {
                 id: 'one',
                 returnWhat: 'second',
-            }),
+            }}),
         ]);
 
         expect(segments).toEqual(['first', 'first', 'second', 'second']);
@@ -103,14 +103,14 @@ describe.each([
 
     test('dispatching two different commands at the same time for a different lock', async () => {
         await Promise.all([
-            service.handle('ping', {
+            service.handle({type: 'ping', payload: {
                 id: 'two',
                 returnThis: 'first',
-            }),
-            service.handle('pong', {
+            }}),
+            service.handle({type: 'pong', payload: {
                 id: 'three',
                 returnWhat: 'second',
-            }),
+            }}),
         ]);
 
         expect(segments).toEqual(['first', 'second', 'first', 'second']);
@@ -118,14 +118,14 @@ describe.each([
 
     test('dispatching concurrently on the same lock, but locking is skipped', async () => {
         await Promise.all([
-            service.handle('excluded', {
+            service.handle({type: 'excluded', payload: {
                 id: 'two',
                 value: 'first',
-            }),
-            service.handle('pong', {
+            }}),
+            service.handle({type: 'pong', payload: {
                 id: 'three',
                 returnWhat: 'second',
-            }),
+            }}),
         ]);
 
         expect(segments).toEqual(['first', 'second', 'first', 'second']);

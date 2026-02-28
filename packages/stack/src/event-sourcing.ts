@@ -1,4 +1,5 @@
-import DependencyContainer, {forgeServiceKey, type ServiceKey} from '@deltic/dependency-injection';
+import type DependencyContainer from '@deltic/dependency-injection';
+import {forgeServiceKey, type ServiceKey} from '@deltic/dependency-injection';
 import {
     EventSourcedAggregateRepository,
     type AggregateRepository,
@@ -103,6 +104,13 @@ export interface EventSourcingConfigBase<Stream extends AggregateStream<Stream>>
      * when events are dispatched (before the transaction commits).
      */
     synchronousConsumers?: ServiceKey<MessageConsumer<Stream>>[];
+
+    /**
+     * Prefix used for auto-generated service keys.
+     * Prevents key conflicts when setupEventSourcing is used multiple times.
+     * Defaults to 'event-sourcing'.
+     */
+    prefix?: string;
 }
 
 /**
@@ -194,15 +202,16 @@ function hasUpcasters(config: {upcasters?: unknown}): config is {upcasters: NonN
  * in the dependency container.
  *
  * @param container - The dependency container to register services in
- * @param provider - The infrastructure provider for creating repositories
+ * @param providerKey - Service key for the infrastructure provider
  * @param config - Configuration for event sourcing setup
  * @returns Service keys for all registered services
  *
  * @example
  * ```typescript
- * const services = setupEventSourcing(container, postgresProvider, {
+ * const services = setupEventSourcing(container, infrastructureProviderKey, {
  *     eventTable: 'order_events',
  *     outboxTable: 'order_outbox',
+ *     prefix: 'orders',
  *     factory: (c) => new OrderFactory(),
  *     synchronousConsumers: [orderProjectorKey],
  * });
@@ -213,21 +222,23 @@ function hasUpcasters(config: {upcasters?: unknown}): config is {upcasters: NonN
  */
 export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
     container: DependencyContainer,
-    provider: InfrastructureProvider,
+    providerKey: ServiceKey<InfrastructureProvider>,
     config: EventSourcingConfig<Stream>,
 ): EventSourcingServices<Stream> {
+    const prefix = config.prefix ?? DEFAULT_KEY_PREFIX;
+
     // Generate or use provided service keys
     const keys: EventSourcingServices<Stream> = {
         aggregateRepository:
-            config.serviceKeys?.aggregateRepository ?? generateKey<AggregateRepository<Stream>>('aggregateRepository'),
+            config.serviceKeys?.aggregateRepository ?? generateKey<AggregateRepository<Stream>>('aggregateRepository', prefix),
         messageRepository:
-            config.serviceKeys?.messageRepository ?? generateKey<MessageRepository<Stream>>('messageRepository'),
+            config.serviceKeys?.messageRepository ?? generateKey<MessageRepository<Stream>>('messageRepository', prefix),
         outboxRepository:
-            config.serviceKeys?.outboxRepository ?? generateKey<OutboxRepository<Stream>>('outboxRepository'),
+            config.serviceKeys?.outboxRepository ?? generateKey<OutboxRepository<Stream>>('outboxRepository', prefix),
         messageDispatcher:
-            config.serviceKeys?.messageDispatcher ?? generateKey<MessageDispatcher<Stream>>('messageDispatcher'),
+            config.serviceKeys?.messageDispatcher ?? generateKey<MessageDispatcher<Stream>>('messageDispatcher', prefix),
         messageDecorator:
-            config.serviceKeys?.messageDecorator ?? generateKey<MessageDecorator<Stream>>('messageDecorator'),
+            config.serviceKeys?.messageDecorator ?? generateKey<MessageDecorator<Stream>>('messageDecorator', prefix),
     };
 
     // Cast config to access optional properties that may exist based on Stream type
@@ -244,7 +255,7 @@ export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
     // Register message repository
     container.register(keys.messageRepository, {
         factory: c => {
-            const baseRepo = provider.createMessageRepository<Stream>(c, {
+            const baseRepo = c.resolve(providerKey).createMessageRepository<Stream>(c, {
                 tableName: config.eventTable,
             });
 
@@ -263,7 +274,7 @@ export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
     // Register outbox repository
     container.register(keys.outboxRepository, {
         factory: c => {
-            const baseRepo = provider.createOutboxRepository<Stream>(c, {
+            const baseRepo = c.resolve(providerKey).createOutboxRepository<Stream>(c, {
                 tableName: config.outboxTable,
             });
 
@@ -319,6 +330,7 @@ export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
     // Register aggregate repository
     container.register(keys.aggregateRepository, {
         factory: c => {
+            const provider = c.resolve(providerKey);
             const transactionManager = provider.createTransactionManager(c);
             const messageRepository = c.resolve(keys.messageRepository);
             const messageDispatcher = c.resolve(keys.messageDispatcher);

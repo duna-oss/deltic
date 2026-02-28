@@ -13,6 +13,10 @@ import type {EventSourcingConfig, EventSourcingServices, SnapshotConfig} from '.
 import type {TestSnapshotStream, TestStream} from './test-stream.stubs.js';
 import {TestAggregateRootFactory, TestSnapshottedAggregateRootFactory} from './test-stream.stubs.js';
 
+function uniqueProviderKey(): string {
+    return `test:provider:${Date.now()}:${Math.random()}`;
+}
+
 // ============ Provider Setup Types ============
 
 export interface ProviderTestSetup {
@@ -102,11 +106,15 @@ export function createTestContext(
 ): TestContext {
     const collector = new CollectingMessageConsumer<TestStream>();
 
+    const providerKey = container.register(uniqueProviderKey(), {
+        factory: () => provider,
+    });
+
     const collectorKey = container.register('test:collector', {
         factory: () => collector,
     });
 
-    const services = setupEventSourcing<TestStream>(container, provider, {
+    const services = setupEventSourcing<TestStream>(container, providerKey, {
         eventTable: 'test_stack_events',
         outboxTable: 'test_stack_outbox',
         factory: () => new TestAggregateRootFactory(),
@@ -148,7 +156,11 @@ export function createSnapshotTestContext(
         factory: () => collector,
     });
 
-    const services = setupEventSourcing<TestSnapshotStream>(container, provider, {
+    const providerKey = container.register(uniqueProviderKey(), {
+        factory: () => provider,
+    });
+
+    const services = setupEventSourcing<TestSnapshotStream>(container, providerKey, {
         eventTable: 'test_stack_events',
         outboxTable: 'test_stack_outbox',
         factory: () => new TestSnapshottedAggregateRootFactory(),

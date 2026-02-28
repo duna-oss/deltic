@@ -2,7 +2,7 @@ import type {TransactionManager} from '@deltic/transaction-manager';
 import type {AggregateRepository, AggregateRoot, AggregateStream} from '@deltic/event-sourcing';
 
 export interface AggregateProjector<Stream extends AggregateStream<Stream>> {
-    upsert(aggregate: AggregateRoot<Stream>): Promise<void>;
+    upsert: (aggregate: AggregateRoot<Stream>) => Promise<void>;
 }
 
 export class AggregateRepositoryWithProjector<

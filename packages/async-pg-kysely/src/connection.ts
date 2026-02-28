@@ -43,7 +43,7 @@ export class AsyncPgConnection implements DatabaseConnection {
         };
     }
 
-    async *streamQuery<R>(_compiledQuery: CompiledQuery, _chunkSize?: number): AsyncIterableIterator<QueryResult<R>> {
+    async streamQuery<R>(_compiledQuery: CompiledQuery, _chunkSize?: number): AsyncIterableIterator<QueryResult<R>> {
         throw new Error('Streaming queries are not supported by AsyncPgConnection');
     }
 }

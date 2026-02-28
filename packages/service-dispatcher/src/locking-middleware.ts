@@ -1,4 +1,4 @@
-import type {NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
+import type {InputForServiceOfType, NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
 import type {DynamicMutex, LockValue} from '@deltic/mutex';
 import type {LockIDResolver, LockSkipDetector} from './shared-for-locking.js';
 
@@ -16,21 +16,19 @@ export function createServiceLockingMiddleware<S extends ServiceStructure<S>, Lo
     timeoutMs?: number;
 }) {
     return async <T extends keyof S>(
-        type: T,
-        payload: S[T]['payload'],
+        input: InputForServiceOfType<S, T>,
         next: NextFunction<S>,
     ): Promise<S[T]['response']> => {
-        const input = {type, payload};
 
         if (shouldSkip(input)) {
-            return next(type, payload);
+            return next(input);
         }
 
         const lockID = lockResolver(input);
         await mutex.lock(lockID, timeoutMs);
 
         try {
-            return await next(type, payload);
+            return await next(input);
         } finally {
             await mutex.unlock(lockID);
         }

@@ -4,10 +4,9 @@ import {
     transactionContextSlot,
     type AsyncPgPoolOptions,
     type Connection,
-    type TransactionContextData,
 } from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {composeContextSlotsForTesting, composeContextSlots, type Context} from '@deltic/context';
+import {composeContextSlotsForTesting, composeContextSlots} from '@deltic/context';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
 describe('AsyncPgPool', () => {

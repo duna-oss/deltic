@@ -37,31 +37,31 @@ export interface ConnectionProvider {
      * The connection is lazy - no actual database connection is acquired
      * until the query is awaited.
      */
-    connection(): Connection;
+    connection: () => Connection;
 
     /**
      * Begin a transaction and return a Transaction object.
      * @param beginQuery Optional custom BEGIN query (e.g., 'BEGIN ISOLATION LEVEL SERIALIZABLE')
      */
-    begin(beginQuery?: string): Promise<Transaction>;
+    begin: (beginQuery?: string) => Promise<Transaction>;
 
     /**
      * Get the current transaction. Throws if not in a transaction.
      */
-    withTransaction(): Transaction;
+    withTransaction: () => Transaction;
 
     /**
      * Check if currently inside a transaction.
      */
-    inTransaction(): boolean;
+    inTransaction: () => boolean;
 
     /**
      * Commit a transaction.
      */
-    commit(trx: Transaction): Promise<void>;
+    commit: (trx: Transaction) => Promise<void>;
 
     /**
      * Rollback a transaction.
      */
-    rollback(trx: Transaction): Promise<void>;
+    rollback: (trx: Transaction) => Promise<void>;
 }

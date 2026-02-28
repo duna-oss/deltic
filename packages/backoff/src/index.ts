@@ -2,7 +2,7 @@ import {StandardError} from '@deltic/error-standard';
 
 export interface BackOffStrategy {
     // Returns the delay to use for the next try, or undefined if max tries has been exceeded
-    backOff(attempt: number): number;
+    backOff: (attempt: number) => number;
 }
 
 export class MaxAttemptsExceeded extends StandardError {

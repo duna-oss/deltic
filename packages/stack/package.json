@@ -21,9 +21,21 @@
       "require": "./dist/pg.cjs",
       "module-sync": "./dist/pg.js",
       "types": "./dist/pg.d.ts"
+    },
+    "./rabbitmq": {
+      "import": "./dist/rabbitmq.js",
+      "require": "./dist/rabbitmq.cjs",
+      "module-sync": "./dist/rabbitmq.js",
+      "types": "./dist/rabbitmq.d.ts"
+    },
+    "./outbox-relay": {
+      "import": "./dist/outbox-relay.js",
+      "require": "./dist/outbox-relay.cjs",
+      "module-sync": "./dist/outbox-relay.js",
+      "types": "./dist/outbox-relay.d.ts"
     }
   },
-  "keywords": ["event-sourcing", "stack", "infrastructure", "deltic"],
+  "keywords": ["event-sourcing", "stack", "infrastructure", "deltic", "rabbitmq", "outbox"],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",
@@ -39,11 +51,19 @@
     "@deltic/dependency-injection": "workspace:^",
     "@deltic/event-sourcing": "workspace:^",
     "@deltic/messaging": "workspace:^",
+    "@deltic/mutex": "workspace:^",
     "@deltic/transaction-manager": "workspace:^",
+    "amqplib": "^0.10.7",
     "pg": "^8.16.3"
   },
   "peerDependenciesMeta": {
     "@deltic/async-pg-pool": {
+      "optional": true
+    },
+    "@deltic/mutex": {
+      "optional": true
+    },
+    "amqplib": {
       "optional": true
     },
     "pg": {
@@ -52,6 +72,9 @@
   },
   "devDependencies": {
     "@deltic/async-pg-pool": "workspace:^",
+    "@deltic/mutex": "workspace:^",
+    "amqplib": "^0.10.7",
+    "@types/amqplib": "^0.10.7",
     "pg": "^8.16.3",
     "@types/pg": "^8.15.6",
     "uuid": "^11.0.3"

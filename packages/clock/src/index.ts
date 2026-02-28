@@ -1,6 +1,6 @@
 export interface Clock {
-    now(): number;
-    date(): Date;
+    now: () => number;
+    date: () => Date;
 }
 
 export const SystemClock: Clock = {
@@ -9,10 +9,10 @@ export const SystemClock: Clock = {
 };
 
 export interface TestClock extends Clock {
-    tick(): void;
-    advance(increment: number): void;
-    travelTo(laterTime: number | string): void;
-    reset(): void;
+    tick: () => void;
+    advance: (increment: number) => void;
+    travelTo: (laterTime: number | string) => void;
+    reset: () => void;
 }
 
 export const GlobalClock = process.env.NODE_ENV === 'test' ? createTestClock() : SystemClock;

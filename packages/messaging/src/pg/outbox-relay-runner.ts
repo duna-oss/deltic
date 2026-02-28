@@ -150,6 +150,7 @@ export class OutboxRelayRunner<Stream extends StreamDefinition> {
         }
 
         this.pendingWork.add();
+        // eslint-disable-next-line no-useless-assignment
         let relayed = 0;
 
         try {

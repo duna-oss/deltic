@@ -1,4 +1,4 @@
-import type {AnyInputForService, Service, ServiceStructure} from './index.js';
+import type {AnyInputForService, InputForServiceOfType, Service, ServiceStructure} from './index.js';
 import {deepEqual} from 'fast-equals';
 
 type StagedResponse<Definition extends ServiceStructure<Definition>> = {
@@ -40,10 +40,8 @@ export class MockedService<Definition extends ServiceStructure<Definition>> impl
     private calledWith: AnyInputForService<Definition>[] = [];
 
     public async handle<T extends keyof Definition>(
-        type: T,
-        payload: Definition[T]['payload'],
+        input: InputForServiceOfType<Definition, T>,
     ): Promise<Definition[T]['response']> {
-        const input: AnyInputForService<Definition> = {type, payload};
         this.calledWith.push(input);
 
         for (let i = 0; i < this.stagedResponses.length; i++) {

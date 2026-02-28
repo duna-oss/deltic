@@ -21,7 +21,7 @@ describe('mocked service bus', () => {
             response: 'pong',
         });
 
-        const response = await service.handle('ping', 'ping');
+        const response = await service.handle({type: 'ping', payload: 'ping'});
 
         expect(response).toEqual('pong');
     });
@@ -35,7 +35,7 @@ describe('mocked service bus', () => {
             error,
         });
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(error);
+        await expect(service.handle({type: 'ping', payload: 'ping'})).rejects.toThrow(error);
     });
 
     test('it can mock responses by only matching the command', async () => {
@@ -45,7 +45,7 @@ describe('mocked service bus', () => {
             response: 'pong',
         });
 
-        const response = await service.handle('ping', 'ping');
+        const response = await service.handle({type: 'ping', payload: 'ping'});
 
         expect(response).toEqual('pong');
     });
@@ -57,9 +57,9 @@ describe('mocked service bus', () => {
             response: 'pong',
         });
 
-        await service.handle('ping', 'ping');
+        await service.handle({type: 'ping', payload: 'ping'});
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+        await expect(service.handle({type: 'ping', payload: 'ping'})).rejects.toThrow(
             errorForMissingMockedResponseForInput({
                 type: 'ping',
                 payload: 'ping',
@@ -78,9 +78,9 @@ describe('mocked service bus', () => {
             response: 'pong',
         });
 
-        await service.handle('ping', 'ping');
+        await service.handle({type: 'ping', payload: 'ping'});
 
-        const response = await service.handle('ping', 'ping');
+        const response = await service.handle({type: 'ping', payload: 'ping'});
 
         expect(response).toEqual('pong');
     });
@@ -91,7 +91,7 @@ describe('mocked service bus', () => {
 
         expect(service.wasCalled()).toEqual(false);
 
-        await service.handle('ping', 'ping');
+        await service.handle({type: 'ping', payload: 'ping'});
 
         expect(service.wasCalled()).toEqual(true);
     });
@@ -102,7 +102,7 @@ describe('mocked service bus', () => {
 
         service.reset();
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+        await expect(service.handle({type: 'ping', payload: 'ping'})).rejects.toThrow(
             errorForMissingMockedResponseForInput({
                 type: 'ping',
                 payload: 'ping',
@@ -113,7 +113,7 @@ describe('mocked service bus', () => {
     test('calls are removed when reset', async () => {
         const service = new MockedService<MockedServiceDefinition>();
         service.stageResponse({type: 'ping', response: 'pong'});
-        await service.handle('ping', 'ping');
+        await service.handle({type: 'ping', payload: 'ping'});
 
         expect(service.wasCalled()).toEqual(true);
 
@@ -145,9 +145,9 @@ describe('mocked service bus', () => {
                 response: 'pong',
             });
 
-            await service.handle('ping', 'ping');
+            await service.handle({type: 'ping', payload: 'ping'});
 
-            await service.handle('ping', 'ping');
+            await service.handle({type: 'ping', payload: 'ping'});
 
             expect(service.wasCalledWith(inputCheck, times)).toEqual(expectToBeCalled);
             expect(service.timesCalled()).toEqual(2);
@@ -158,7 +158,7 @@ describe('mocked service bus', () => {
     test('it errors when no mock response is prepared for an input', async () => {
         const service = new MockedService<MockedServiceDefinition>();
 
-        await expect(service.handle('ping', 'ping')).rejects.toThrow(
+        await expect(service.handle({type: 'ping', payload: 'ping'})).rejects.toThrow(
             errorForMissingMockedResponseForInput({
                 type: 'ping',
                 payload: 'ping',
@@ -191,7 +191,7 @@ describe('mocked service bus', () => {
 
             service.stageResponse(stagedResponse);
 
-            await expect(service.handle('ping', 'ping')).rejects.toThrow(
+            await expect(service.handle({type: 'ping', payload: 'ping'})).rejects.toThrow(
                 errorForMissingMockedResponseForInput({
                     type: 'ping',
                     payload: 'ping',

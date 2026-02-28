@@ -16,24 +16,24 @@ export interface AggregateStream<Stream extends AggregateStream<Stream>> extends
 }
 
 export interface AggregateRoot<Stream extends AggregateStream<Stream>> {
-    releaseEvents(): MessagesFrom<Stream>;
-    peekEvents(): MessagesFrom<Stream>;
-    hasUnreleasedEvents(): boolean;
-    aggregateRootVersion(): number;
+    releaseEvents: () => MessagesFrom<Stream>;
+    peekEvents: () => MessagesFrom<Stream>;
+    hasUnreleasedEvents: () => boolean;
+    aggregateRootVersion: () => number;
     readonly aggregateRootId: Stream['aggregateRootId'];
 }
 
 export interface AggregateRootFactory<Stream extends AggregateStream<Stream>> {
-    reconstituteFromEvents(
+    reconstituteFromEvents: (
         id: Stream['aggregateRootId'],
         events: AsyncGenerator<AnyMessageFrom<Stream>>,
-    ): Promise<Stream['aggregateRoot']>;
+    ) => Promise<Stream['aggregateRoot']>;
 }
 
 export interface AggregateRepository<Stream extends AggregateStream<Stream>> {
-    retrieve(id: Stream['aggregateRootId']): Promise<Stream['aggregateRoot']>;
-    retrieveAtVersion(id: Stream['aggregateRootId'], version: number): Promise<Stream['aggregateRoot']>;
-    persist(aggregateRoot: Stream['aggregateRoot']): Promise<void>;
+    retrieve: (id: Stream['aggregateRootId']) => Promise<Stream['aggregateRoot']>;
+    retrieveAtVersion: (id: Stream['aggregateRootId'], version: number) => Promise<Stream['aggregateRoot']>;
+    persist: (aggregateRoot: Stream['aggregateRoot']) => Promise<void>;
 }
 
 export class EventSourcedAggregateRepository<

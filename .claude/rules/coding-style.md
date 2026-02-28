@@ -21,3 +21,8 @@ When testing repositories or other infrastructural implementations, use contract
 to ensure behavior is consistent across implementations. Do not repeat the same tests for
 each implementation, but use a `describe.each` approach, where each test case provides
 the implementation and is tested against a common set of test cases.
+
+# Documentation
+When making changes to source code, always update corresponding documentation files
+(in `docs/` directories) to reflect the new API, behavior, or configuration options.
+Check all doc files that reference the changed code, not just the most obvious one.

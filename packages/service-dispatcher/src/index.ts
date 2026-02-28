@@ -2,23 +2,22 @@ export type ServiceStructure<D> = {
     [K in keyof D]: {payload: any; response: any};
 };
 
-export type AnyInputForService<Service extends ServiceStructure<Service>> = {
+type InputForServicePerType<Service extends ServiceStructure<Service>> = {
     [Type in keyof Service]: {
         readonly type: Type;
         readonly payload: Service[Type]['payload'];
     };
-}[keyof Service];
+}
+
+export type AnyInputForService<Service extends ServiceStructure<Service>> = InputForServicePerType<Service>[keyof Service];
+export type InputForServiceOfType<Service extends ServiceStructure<Service>, Type extends keyof Service> = InputForServicePerType<Service>[Type];
 
 export interface ServiceMiddleware<Service extends ServiceStructure<Service>> {
-    <T extends keyof Service>(
-        type: T,
-        payload: Service[T]['payload'],
-        next: NextFunction<Service>,
-    ): Promise<Service[T]['response']>;
+    <T extends keyof Service>(input: InputForServiceOfType<Service, T>, next: NextFunction<Service>): Promise<Service[T]['response']>;
 }
 
 export interface NextFunction<Service extends ServiceStructure<Service>> {
-    <T extends keyof Service>(type: T, payload: Service[T]['payload']): Promise<Service[T]['response']>;
+    <T extends keyof Service>(input: InputForServiceOfType<Service, T>): Promise<Service[T]['response']>;
 }
 
 export type ServiceHandlers<Service extends ServiceStructure<Service>> = {
@@ -28,53 +27,45 @@ export type ServiceHandlers<Service extends ServiceStructure<Service>> = {
 export class InputNotSupported extends Error {}
 
 export interface Service<Structure extends ServiceStructure<Structure>> {
-    handle<T extends keyof Structure>(
-        type: T,
-        payload: Structure[T]['payload'],
-    ): Promise<Structure[T]['response']> | Structure[T]['response'];
+    handle: <T extends keyof Structure>(input: InputForServiceOfType<Structure, T>) => Promise<Structure[T]['response']> | Structure[T]['response'];
 }
 
 interface ChainHandler<Service extends ServiceStructure<Service>> {
     <T extends keyof Service>(
-        type: T,
-        payload: Service[T]['payload'],
+        input: InputForServiceOfType<Service, T>,
     ): Promise<Service[T]['response']> | Service[T]['response'];
 }
 
-export class ServiceDispatcher<Definition extends ServiceStructure<Definition>> implements Service<Definition> {
-    private readonly chain: ChainHandler<Definition>;
+export class ServiceDispatcher<S extends ServiceStructure<S>> implements Service<S> {
+    private readonly chain: ChainHandler<S>;
     constructor(
-        private readonly handlers: ServiceHandlers<Definition>,
-        private readonly middlewares: ServiceMiddleware<Definition>[] = [],
+        private readonly handlers: ServiceHandlers<S>,
+        private readonly middlewares: ServiceMiddleware<S>[] = [],
     ) {
-        let next: ChainHandler<Definition> = async (type, payload) => await this.process(type, payload);
+        let next: ChainHandler<S> = async (input) => await this.process(input);
 
         for (let index = this.middlewares.length - 1; index >= 0; index -= 1) {
             const m = this.middlewares[index];
             const n = next;
-            next = async (type, input) => await m(type, input, n);
+            next = async (input) => await m(input, n);
         }
 
         this.chain = next;
     }
 
-    public handle<T extends keyof Definition>(
-        type: T,
-        payload: Definition[T]['payload'],
-    ): Promise<Definition[T]['response']> {
-        return this.chain(type, payload);
+    public handle<T extends keyof S>(input: InputForServiceOfType<S, T>): Promise<S[T]['response']> {
+        return this.chain(input);
     }
 
-    private async process<T extends keyof Definition>(
-        type: T,
-        payload: Definition[T]['payload'],
-    ): Promise<Definition[T]['response']> {
-        const handler = this.handlers[type];
+    private async process<T extends keyof S>(
+        input: InputForServiceOfType<S, T>,
+    ): Promise<S[T]['response']> {
+        const handler = this.handlers[input.type];
 
         if (!handler) {
-            throw new InputNotSupported(`Unable to handle input of type: ${type.toString()}`);
+            throw new InputNotSupported(`Unable to handle input of type: ${input.type.toString()}`);
         }
 
-        return await handler(payload);
+        return await handler(input.payload);
     }
 }

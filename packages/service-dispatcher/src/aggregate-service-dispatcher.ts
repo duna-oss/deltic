@@ -1,4 +1,4 @@
-import type {Service, ServiceStructure} from './index.js';
+import type {InputForServiceOfType, Service, ServiceStructure} from './index.js';
 import type {AggregateRepository, AggregateStream} from '@deltic/event-sourcing';
 
 export * from './index.js';
@@ -30,14 +30,13 @@ export class AggregateServiceDispatcher<
     ) {}
 
     async handle<T extends keyof Definition>(
-        type: T,
-        payload: Definition[T]['payload'],
+        input: InputForServiceOfType<Definition, T>
     ): Promise<Definition[T]['response']> {
-        const handler = this.handlers[type];
-        const aggregate = await this.repository.retrieve(this.findAggregateId(payload));
+        const handler = this.handlers[input.type];
+        const aggregate = await this.repository.retrieve(this.findAggregateId(input.payload));
 
         try {
-            return await handler(aggregate as any, payload);
+            return await handler(aggregate, input.payload);
         } finally {
             if (aggregate.hasUnreleasedEvents()) {
                 await this.repository.persist(aggregate);

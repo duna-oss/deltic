@@ -3,11 +3,11 @@ export interface Processor<Task> {
 }
 
 export interface ProcessQueue<Task> {
-    isProcessing(): boolean;
-    purge(): Promise<void>;
-    start(): void;
-    push(task: Task): Promise<Task>;
-    stop(): Promise<void>;
+    isProcessing: () => boolean;
+    purge: () => Promise<void>;
+    start: () => void;
+    push: (task: Task) => Promise<Task>;
+    stop: () => Promise<void>;
 }
 
 export type ErrorContext<Task> = {

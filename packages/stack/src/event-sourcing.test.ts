@@ -7,6 +7,7 @@ import {MessageDispatcherChain} from '@deltic/messaging/message-dispatcher-chain
 
 import {setupEventSourcing} from './event-sourcing.js';
 import {InfrastructureProviderUsingMemory} from './memory.js';
+import type {InfrastructureProvider} from './infrastructure-provider.js';
 import {
     TestAggregateRoot,
     TestAggregateRootFactory,
@@ -22,9 +23,13 @@ import {
     collect,
     type ProviderTestSetup,
 } from './test-utilities.js';
-import type {InfrastructureProvider} from './infrastructure-provider.js';
-
 const generateId = () => uuid.v7();
+
+function registerMemoryProvider(container: DependencyContainer) {
+    return container.register(`test:provider:${Date.now()}:${Math.random()}`, {
+        factory: () => new InfrastructureProviderUsingMemory(),
+    });
+}
 
 // ============ Tests that don't need describe.each (memory-only, configuration tests) ============
 
@@ -32,7 +37,8 @@ describe('setupEventSourcing', () => {
     describe('service key generation', () => {
         test('generates default service keys when none provided', () => {
             const container = new DependencyContainer();
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -45,9 +51,27 @@ describe('setupEventSourcing', () => {
             expect(services.messageDecorator).toContain('event-sourcing:');
         });
 
+        test('uses custom prefix for auto-generated keys', () => {
+            const container = new DependencyContainer();
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
+                eventTable: 'events',
+                outboxTable: 'outbox',
+                factory: () => new TestAggregateRootFactory(),
+                prefix: 'orders',
+            });
+
+            expect(services.aggregateRepository).toContain('orders:');
+            expect(services.messageRepository).toContain('orders:');
+            expect(services.outboxRepository).toContain('orders:');
+            expect(services.messageDispatcher).toContain('orders:');
+            expect(services.messageDecorator).toContain('orders:');
+        });
+
         test('uses provided service keys when specified', () => {
             const container = new DependencyContainer();
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -67,7 +91,8 @@ describe('setupEventSourcing', () => {
     describe('dispatcher configuration', () => {
         test('without consumers, dispatcher is OutboxMessageDispatcher', () => {
             const container = new DependencyContainer();
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -79,11 +104,12 @@ describe('setupEventSourcing', () => {
 
         test('with consumers, dispatcher is MessageDispatcherChain', () => {
             const container = new DependencyContainer();
+            const providerKey = registerMemoryProvider(container);
             const consumerKey = container.register('consumer', {
                 factory: () => ({consume: async () => {}}),
             });
 
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -96,7 +122,8 @@ describe('setupEventSourcing', () => {
 
         test('with empty consumers array, dispatcher is OutboxMessageDispatcher', () => {
             const container = new DependencyContainer();
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -111,7 +138,8 @@ describe('setupEventSourcing', () => {
     describe('snapshotting configuration', () => {
         test('without snapshotting, repository is EventSourcedAggregateRepository', () => {
             const container = new DependencyContainer();
-            const services = setupEventSourcing<TestStream>(container, new InfrastructureProviderUsingMemory(), {
+            const providerKey = registerMemoryProvider(container);
+            const services = setupEventSourcing<TestStream>(container, providerKey, {
                 eventTable: 'events',
                 outboxTable: 'outbox',
                 factory: () => new TestAggregateRootFactory(),
@@ -123,9 +151,10 @@ describe('setupEventSourcing', () => {
 
         test('with snapshotting, repository is AggregateRootRepositoryWithSnapshotting', () => {
             const container = new DependencyContainer();
+            const providerKey = registerMemoryProvider(container);
             const services = setupEventSourcing<TestSnapshotStream>(
                 container,
-                new InfrastructureProviderUsingMemory(),
+                providerKey,
                 {
                     eventTable: 'events',
                     outboxTable: 'outbox',

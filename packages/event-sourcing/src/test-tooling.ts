@@ -1,5 +1,5 @@
 import {GlobalClock, type TestClock} from '@deltic/clock';
-import type {Service, ServiceStructure} from '@deltic/service-dispatcher';
+import type {AnyInputForService, InputForServiceOfType, Service, ServiceStructure} from '@deltic/service-dispatcher';
 import {NoopTransactionManager} from '@deltic/transaction-manager';
 import {
     type AggregateRepository,
@@ -97,16 +97,29 @@ export function createTestTooling<
         messageRepository.clearLastCommit();
     };
 
-    const when = async <T extends keyof ServiceDefinition>(
-        type: T,
-        payload: ServiceDefinition[T]['payload'],
-    ): Promise<ServiceDefinition[T]['response']> => {
+    type When<T extends keyof ServiceDefinition = keyof ServiceDefinition> =
+        | ((
+            input: InputForServiceOfType<ServiceDefinition, T>
+        ) =>  Promise<ServiceDefinition[T]['response']>)
+        | ((
+            type: T,
+            payload: ServiceDefinition[T]['payload'],
+        ) =>  Promise<ServiceDefinition[T]['response']>)
+
+    const when: When = async (
+        type,
+        payload
+    ) => {
+        const input = typeof type === 'string'
+            ? {type, payload}
+            : type as unknown as AnyInputForService<ServiceDefinition>;
+
         if (!bus) {
             throw new Error('Invalid tools setup, using when without setting up a service.');
         }
 
         try {
-            const result = await bus.handle(type, payload);
+            const result = await bus.handle(input);
 
             if (expectedError !== undefined) {
                 const unthrownError = expectedError;
