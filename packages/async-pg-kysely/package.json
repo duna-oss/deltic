@@ -30,11 +30,19 @@
   },
   "peerDependencies": {
     "@deltic/async-pg-pool": "workspace:^",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "pg-cursor": "^2.18.0"
+  },
+  "peerDependenciesMeta": {
+    "pg-cursor": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "pg": "^8.16.3",
-    "@types/pg": "^8.15.6"
+    "pg-cursor": "^2.18.0",
+    "@types/pg": "^8.15.6",
+    "@types/pg-cursor": "^2.7.2"
   },
   "repository": {
     "type": "git",

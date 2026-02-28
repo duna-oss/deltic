@@ -1,4 +1,5 @@
 import {Pool} from 'pg';
+import Cursor from 'pg-cursor';
 import {AsyncPgPool, type TransactionContext} from '@deltic/async-pg-pool';
 import {AsyncKyselyConnectionProvider, KyselyTransactionsNotSupported} from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
@@ -703,6 +704,101 @@ describe('AsyncKyselyConnectionProvider', () => {
                 .executeTakeFirstOrThrow();
 
             expect(result.numDeletedRows).toBe(1n);
+        });
+    });
+
+    // -- Streaming queries --
+
+    describe('streaming queries', () => {
+        test('streamQuery throws when cursor is not configured', async () => {
+            await expect(async () => {
+                for await (const _chunk of provider.connection()
+                    .selectFrom('async_kysely_test')
+                    .selectAll()
+                    .stream(10)) {
+                    // should not reach here
+                }
+            }).rejects.toThrow("'cursor' is not present");
+        });
+
+        describe('with cursor configured', () => {
+            let streamProvider: AsyncKyselyConnectionProvider<DB>;
+
+            beforeAll(() => {
+                streamProvider = new AsyncKyselyConnectionProvider<DB>(asyncPool, {
+                    cursor: Cursor,
+                });
+            });
+
+            afterAll(async () => {
+                await streamProvider.destroy();
+            });
+
+            test('streams all rows', async () => {
+                await streamProvider.connection()
+                    .insertInto('async_kysely_test')
+                    .values([
+                        {name: 'Alice'},
+                        {name: 'Bob'},
+                        {name: 'Charlie'},
+                    ])
+                    .execute();
+
+                const names: string[] = [];
+
+                for await (const row of streamProvider.connection()
+                    .selectFrom('async_kysely_test')
+                    .select(['name'])
+                    .orderBy('name', 'asc')
+                    .stream(10)) {
+                    names.push(row.name);
+                }
+
+                expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
+            });
+
+            test('streaming works inside a transaction', async () => {
+                const trx = await streamProvider.begin();
+
+                await trx.insertInto('async_kysely_test')
+                    .values([{name: 'Frank'}, {name: 'Grace'}])
+                    .execute();
+
+                const names: string[] = [];
+                for await (const row of trx
+                    .selectFrom('async_kysely_test')
+                    .select(['name'])
+                    .orderBy('name', 'asc')
+                    .stream(10)) {
+                    names.push(row.name);
+                }
+
+                expect(names).toEqual(['Frank', 'Grace']);
+
+                await streamProvider.rollback(trx);
+            });
+
+            test('chunkSize of zero throws', async () => {
+                await expect(async () => {
+                    for await (const _chunk of streamProvider.connection()
+                        .selectFrom('async_kysely_test')
+                        .selectAll()
+                        .stream(0)) {
+                        // noop
+                    }
+                }).rejects.toThrow('chunkSize must be a positive integer');
+            });
+
+            test('non-integer chunkSize throws', async () => {
+                await expect(async () => {
+                    for await (const _chunk of streamProvider.connection()
+                        .selectFrom('async_kysely_test')
+                        .selectAll()
+                        .stream(1.5)) {
+                        // noop
+                    }
+                }).rejects.toThrow('chunkSize must be a positive integer');
+            });
         });
     });
 });

@@ -5,12 +5,24 @@ import {
     type DatabaseIntrospector,
     type DialectAdapter,
     type QueryCompiler,
+    type PostgresCursorConstructor,
     PostgresAdapter,
     PostgresIntrospector,
     PostgresQueryCompiler,
 } from 'kysely';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
 import {AsyncPgDriver} from './driver.js';
+
+/**
+ * Options for creating an AsyncPgDialect.
+ */
+export interface AsyncPgDialectOptions {
+    /**
+     * A pg-cursor constructor, passed through to the driver
+     * for streaming query support.
+     */
+    cursor?: PostgresCursorConstructor;
+}
 
 /**
  * A Kysely Dialect that uses AsyncPgPool for connection management.
@@ -20,10 +32,13 @@ import {AsyncPgDriver} from './driver.js';
  * driver backed by AsyncPgPool.
  */
 export class AsyncPgDialect implements Dialect {
-    constructor(private readonly pool: AsyncPgPool) {}
+    constructor(
+        private readonly pool: AsyncPgPool,
+        private readonly options: AsyncPgDialectOptions = {},
+    ) {}
 
     createDriver(): Driver {
-        return new AsyncPgDriver(this.pool);
+        return new AsyncPgDriver(this.pool, {cursor: this.options.cursor});
     }
 
     createQueryCompiler(): QueryCompiler {

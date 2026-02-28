@@ -44,6 +44,12 @@ await provider.runInTransaction(async () => {
 npm install @deltic/async-pg-kysely @deltic/async-pg-pool kysely pg
 ```
 
+For streaming query support, also install `pg-cursor`:
+
+```bash
+npm install pg-cursor
+```
+
 ## Quick Start
 
 ```typescript
@@ -121,6 +127,30 @@ const result = await sql<{name: string; age: number}>`
     SELECT name, age FROM users WHERE age > ${21}
 `.execute(provider.connection());
 ```
+
+### Streaming Queries
+
+For large result sets, you can stream rows instead of loading everything into memory. This requires `pg-cursor`:
+
+```typescript
+import Cursor from 'pg-cursor';
+
+const provider = new AsyncKyselyConnectionProvider<DB>(asyncPool, {
+    cursor: Cursor,
+});
+
+for await (const row of provider.connection()
+    .selectFrom('events')
+    .selectAll()
+    .where('created_at', '>', cutoffDate)
+    .stream(100)) {
+    processEvent(row);
+}
+```
+
+The `chunkSize` argument (100 above) controls how many rows are fetched from the database at a time via PostgreSQL cursors. Kysely's `.stream()` yields individual rows regardless of chunk size.
+
+If `cursor` is not configured and `.stream()` is called, a clear error is thrown.
 
 ### Transactions
 
@@ -236,10 +266,13 @@ await asyncPool.runInTransaction(async () => {
 new AsyncKyselyConnectionProvider<DB>(pool: AsyncPgPool, options?: {
     plugins?: KyselyPlugin[];
     log?: LogConfig;
+    cursor?: PostgresCursorConstructor;
 })
 ```
 
-The `plugins` option installs Kysely plugins (e.g., `CamelCasePlugin`). The `log` option configures Kysely's query logging.
+- `plugins` — Kysely plugins to install (e.g., `CamelCasePlugin`)
+- `log` — Kysely's query logging configuration
+- `cursor` — A `pg-cursor` constructor to enable streaming queries via `.stream()`
 
 #### Methods
 

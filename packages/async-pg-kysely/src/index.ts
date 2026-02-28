@@ -6,6 +6,7 @@ import {
     type KyselyConfig,
     type KyselyPlugin,
     type LogConfig,
+    type PostgresCursorConstructor,
 } from 'kysely';
 import type {AsyncPgPool, Connection as PgConnection} from '@deltic/async-pg-pool';
 import {AsyncPgDialect} from './dialect.js';
@@ -15,6 +16,7 @@ import {KyselyTransactionsNotSupported} from './errors.js';
 export {AsyncPgDialect} from './dialect.js';
 export {AsyncPgDriver} from './driver.js';
 export {AsyncPgConnection, pgConnectionSymbol} from './connection.js';
+export type {AsyncPgConnectionOptions} from './connection.js';
 export {KyselyTransactionsNotSupported} from './errors.js';
 
 /**
@@ -30,6 +32,23 @@ export interface AsyncKyselyConnectionProviderOptions {
      * Logging configuration.
      */
     log?: LogConfig;
+
+    /**
+     * A pg-cursor constructor for streaming query support.
+     *
+     * Install `pg-cursor` and pass the default export to enable
+     * streaming queries via Kysely's `.stream()` API.
+     *
+     * @example
+     * ```typescript
+     * import Cursor from 'pg-cursor';
+     *
+     * const provider = new AsyncKyselyConnectionProvider<DB>(pool, {
+     *     cursor: Cursor,
+     * });
+     * ```
+     */
+    cursor?: PostgresCursorConstructor;
 }
 
 /**
@@ -99,7 +118,7 @@ export class AsyncKyselyConnectionProvider<DB> {
     ) {
         this.db = this.blockTransactions(
             new Kysely<DB>({
-                dialect: new AsyncPgDialect(pool),
+                dialect: new AsyncPgDialect(pool, {cursor: options.cursor}),
                 plugins: options.plugins,
                 log: options.log,
             }),
@@ -259,7 +278,7 @@ export class AsyncKyselyConnectionProvider<DB> {
      * Used for transaction instances that must use a dedicated connection.
      */
     private createBoundInstance(pgConnection: PgConnection): Kysely<DB> {
-        const connectionWrapper = new AsyncPgConnection(pgConnection);
+        const connectionWrapper = new AsyncPgConnection(pgConnection, {cursor: this.options.cursor});
 
         const dialect: KyselyConfig['dialect'] = {
             createDriver: () => ({

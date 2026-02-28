@@ -1,7 +1,19 @@
 import type {DatabaseConnection, Driver, TransactionSettings} from 'kysely';
+import type {PostgresCursorConstructor} from 'kysely';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
 import {AsyncPgConnection, pgConnectionSymbol} from './connection.js';
 import {KyselyTransactionsNotSupported} from './errors.js';
+
+/**
+ * Options for creating an AsyncPgDriver.
+ */
+export interface AsyncPgDriverOptions {
+    /**
+     * A pg-cursor constructor, passed through to AsyncPgConnection
+     * for streaming query support.
+     */
+    cursor?: PostgresCursorConstructor;
+}
 
 /**
  * A Kysely Driver backed by AsyncPgPool.
@@ -16,7 +28,10 @@ import {KyselyTransactionsNotSupported} from './errors.js';
  * lifecycle management must go through AsyncPgPool or the provider.
  */
 export class AsyncPgDriver implements Driver {
-    constructor(private readonly pool: AsyncPgPool) {}
+    constructor(
+        private readonly pool: AsyncPgPool,
+        private readonly options: AsyncPgDriverOptions = {},
+    ) {}
 
     async init(): Promise<void> {
         // No-op — AsyncPgPool is already initialized.
@@ -24,7 +39,7 @@ export class AsyncPgDriver implements Driver {
 
     async acquireConnection(): Promise<DatabaseConnection> {
         const pgConnection = await this.pool.primary();
-        return new AsyncPgConnection(pgConnection);
+        return new AsyncPgConnection(pgConnection, {cursor: this.options.cursor});
     }
 
     async beginTransaction(_connection: DatabaseConnection, _settings: TransactionSettings): Promise<void> {
