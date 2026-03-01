@@ -179,6 +179,7 @@ export class OutboxRelayRunner<Stream extends StreamDefinition> {
 
         try {
             const connection = await this.pool.claimFresh();
+            let releaseError: unknown;
 
             try {
                 connection.on('notification', () => {
@@ -188,8 +189,14 @@ export class OutboxRelayRunner<Stream extends StreamDefinition> {
                 await connection.query(`LISTEN ${this.options.channelName}`);
                 await this.shutdownSignal!.promise;
             } finally {
-                await connection.query(`UNLISTEN ${this.options.channelName}`);
-                await this.pool.release(connection);
+                try {
+                    await connection.query(`UNLISTEN ${this.options.channelName}`);
+                } catch (err) {
+                    releaseError = err;
+                }
+
+                connection.removeAllListeners('notification');
+                await this.pool.release(connection, releaseError);
             }
         } finally {
             this.pendingWork.done();

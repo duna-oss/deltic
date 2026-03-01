@@ -29,10 +29,12 @@ export class ContextStoreUsingMemory<C extends ContextData<C>> implements Contex
     async run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R> {
         const previous = this.context;
         this.context = store;
-        const response = await callback();
-        this.context = previous;
 
-        return response;
+        try {
+            return await callback();
+        } finally {
+            this.context = previous;
+        }
     }
 }
 

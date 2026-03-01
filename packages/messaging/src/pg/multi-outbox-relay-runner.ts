@@ -207,6 +207,7 @@ export class MultiOutboxRelayRunner {
 
         try {
             const connection = await this.pool.claimFresh();
+            let releaseError: unknown;
 
             try {
                 connection.on('notification', (notification) => {
@@ -220,8 +221,14 @@ export class MultiOutboxRelayRunner {
                 await connection.query(`LISTEN ${this.channelName}`);
                 await this.shutdownSignal!.promise;
             } finally {
-                await connection.query(`UNLISTEN ${this.channelName}`);
-                await this.pool.release(connection);
+                try {
+                    await connection.query(`UNLISTEN ${this.channelName}`);
+                } catch (err) {
+                    releaseError = err;
+                }
+
+                connection.removeAllListeners('notification');
+                await this.pool.release(connection, releaseError);
             }
         } finally {
             this.pendingWork.done();
