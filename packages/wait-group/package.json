@@ -25,7 +25,7 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/duna-oss/deltic.git",
+    "url": "git+https://github.com/deltic-oss/deltic.git",
     "directory": "packages/wait-group"
   }
 }
