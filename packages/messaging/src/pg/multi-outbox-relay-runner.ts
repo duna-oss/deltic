@@ -220,6 +220,7 @@ export class MultiOutboxRelayRunner {
                 await connection.query(`LISTEN ${this.channelName}`);
                 await this.shutdownSignal!.promise;
             } finally {
+                await connection.query(`UNLISTEN ${this.channelName}`);
                 await this.pool.release(connection);
             }
         } finally {

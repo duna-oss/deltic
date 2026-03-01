@@ -75,19 +75,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-    const interval = setInterval(() => {
-        console.log({
-            idle: pgPool.idleCount,
-            waiting: pgPool.waitingCount,
-            total: pgPool.totalCount,
-            expired: pgPool.expiredCount,
-        });
-    }, 500).unref();
-    try {
-        await pgPool.end();
-    } finally {
-        clearInterval(interval);
-    }
+    await pgPool.end();
 });
 
 describe('OutboxRelayRunner', () => {

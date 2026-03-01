@@ -188,6 +188,7 @@ export class OutboxRelayRunner<Stream extends StreamDefinition> {
                 await connection.query(`LISTEN ${this.options.channelName}`);
                 await this.shutdownSignal!.promise;
             } finally {
+                await connection.query(`UNLISTEN ${this.options.channelName}`);
                 await this.pool.release(connection);
             }
         } finally {
