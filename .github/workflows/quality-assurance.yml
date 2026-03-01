@@ -39,6 +39,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
+      - name: Linting
+        run: pnpm run lint
       - name: Run tests
         run: pnpm run test
         env:
