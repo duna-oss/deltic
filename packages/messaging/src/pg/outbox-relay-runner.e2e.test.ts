@@ -34,7 +34,6 @@ function staticMutexFrom<LockID extends LockValue>(mutex: DynamicMutex<LockID>, 
 }
 
 let pgPool: Pool;
-let testPool: AsyncPgPool;
 let runner: OutboxRelayRunner<ExampleStream> | undefined;
 let runner2: OutboxRelayRunner<ExampleStream> | undefined;
 let runnerPool: AsyncPgPool | undefined;
@@ -56,10 +55,6 @@ beforeAll(async () => {
     `);
 });
 
-beforeEach(() => {
-    testPool = new AsyncPgPool(pgPool);
-});
-
 afterEach(async () => {
     await runner?.stop();
     await runner2?.stop();
@@ -70,13 +65,26 @@ afterEach(async () => {
     runnerPool = undefined;
     runnerPool2 = undefined;
 
+    const testPool = new AsyncPgPool(pgPool);
     const testOutbox = new OutboxRepositoryUsingPg<ExampleStream>(testPool, tableName);
     await testOutbox.truncate();
     await testPool.flushSharedContext();
 });
 
 afterAll(async () => {
-    await pgPool.end();
+    const interval = setInterval(() => {
+        console.log({
+            idle: pgPool.idleCount,
+            waiting: pgPool.waitingCount,
+            total: pgPool.totalCount,
+            expired: pgPool.expiredCount,
+        });
+    }, 500).unref();
+    try {
+        await pgPool.end();
+    } finally {
+        clearInterval(interval);
+    }
 });
 
 describe('OutboxRelayRunner', () => {

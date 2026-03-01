@@ -340,6 +340,7 @@ export class AsyncPgPool {
             }
         }
 
+        // Forward to the original release function.
         ((connection as any)[originalRelease] as PoolClient['release'])(
             err === undefined ? err : err instanceof Error ? err : new Error(String(err)),
         );
