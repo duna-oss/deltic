@@ -29,13 +29,13 @@ export class OutboxMessageDispatcher<Stream extends StreamDefinition> implements
 }
 
 export interface OutboxRepository<Stream extends StreamDefinition> {
-    persist: (messages: MessagesFrom<Stream>) => Promise<void>;
-    retrieveBatch: (size: number) => AsyncGenerator<AnyMessageFrom<Stream>>;
-    markConsumed: (messages: MessagesFrom<Stream>) => Promise<void>;
-    cleanupConsumedMessages: (limit: number) => Promise<number>;
-    truncate: () => Promise<void>;
-    numberOfPendingMessages: () => Promise<number>;
-    numberOfConsumedMessages: () => Promise<number>;
+    persist(messages: MessagesFrom<Stream>): Promise<void>;
+    retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>>;
+    markConsumed(messages: MessagesFrom<Stream>): Promise<void>;
+    cleanupConsumedMessages(limit: number): Promise<number>;
+    truncate(): Promise<void>;
+    numberOfPendingMessages(): Promise<number>;
+    numberOfConsumedMessages(): Promise<number>;
 }
 
 /**

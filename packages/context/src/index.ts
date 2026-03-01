@@ -15,8 +15,8 @@ export type ContextData<C> = {
  * can be scoped to HTTP requests and the processing of messages.
  */
 export interface ContextStore<C extends ContextData<C>> {
-    getStore: () => Partial<C> | undefined;
-    run: <R>(store: Partial<C>, callback: () => Promise<R>) => Promise<R>;
+    getStore(): Partial<C> | undefined;
+    run<R>(store: Partial<C>, callback: () => Promise<R>): Promise<R>;
 }
 
 export class ContextStoreUsingMemory<C extends ContextData<C>> implements ContextStore<C> {
@@ -82,14 +82,14 @@ export class Context<C extends ContextData<C>> {
 }
 
 export interface ValueReader<Value> {
-    resolve: () => Value | undefined;
-    mustResolve: () => Value;
-    preventMismatch: (value: Value) => void;
+    resolve(): Value | undefined;
+    mustResolve(): Value;
+    preventMismatch(value: Value): void;
 }
 
 export interface ValueReadWriter<Value> extends ValueReader<Value> {
-    use: (context?: Value) => void;
-    forget: () => void;
+    use(context?: Value): void;
+    forget(): void;
 }
 
 export class ValueReadWriterUsingMemory<Value extends string | number> implements ValueReadWriter<Value> {
@@ -199,7 +199,7 @@ export class ContextMismatchDetected extends StandardError {
  */
 export interface ContextSlot<Key extends string, Value> {
     readonly key: Key;
-    readonly defaultValue?: () => Value;
+    defaultValue?(): Value;
     readonly inherited: boolean;
 }
 
@@ -213,7 +213,7 @@ export interface ContextSlot<Key extends string, Value> {
  */
 export function defineContextSlot<const Key extends string, Value>(options: {
     key: Key;
-    defaultValue?: () => Value;
+    defaultValue?(): Value;
     inherited?: boolean;
 }): ContextSlot<Key, Value> {
     return {key: options.key, defaultValue: options.defaultValue, inherited: options.inherited ?? true};

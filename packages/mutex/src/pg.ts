@@ -11,7 +11,7 @@ export interface ConnectionStorage {
 }
 
 export interface ConnectionStorageProvider {
-    resolve: () => ConnectionStorage;
+    resolve(): ConnectionStorage;
 }
 
 export class StaticConnectionStorageProvider implements ConnectionStorageProvider {
@@ -139,7 +139,7 @@ export class MutexUsingPostgres<LockID extends LockValue> implements DynamicMute
 }
 
 export interface LockIdConverter<LockID> {
-    convert: (id: LockID) => number;
+    convert(id: LockID): number;
 }
 
 export type LockRange = {

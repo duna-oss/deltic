@@ -1,9 +1,9 @@
 export interface TransactionManager {
-    begin: () => Promise<void>;
-    inTransaction: () => boolean;
-    runInTransaction: <R>(fn: () => Promise<R>) => Promise<R>;
-    commit: () => Promise<void>;
-    rollback: (error?: unknown) => Promise<void>;
+    begin(): Promise<void>;
+    inTransaction(): boolean;
+    runInTransaction<R>(fn: () => Promise<R>): Promise<R>;
+    commit(): Promise<void>;
+    rollback(error?: unknown): Promise<void>;
 }
 
 export class NoopTransactionManager implements TransactionManager {

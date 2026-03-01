@@ -70,7 +70,7 @@ export interface SnapshotConfig<Stream extends AggregateStreamWithSnapshotting<S
      * Factory function that creates an aggregate root factory with snapshot support.
      * This overrides the main factory when snapshotting is enabled.
      */
-    factory: (container: DependencyContainer) => AggregateRootWithFactorySnapshotting<Stream>;
+    factory(container: DependencyContainer): AggregateRootWithFactorySnapshotting<Stream>;
 }
 
 /**
@@ -91,7 +91,7 @@ export interface EventSourcingConfigBase<Stream extends AggregateStream<Stream>>
      * Factory function that creates the aggregate root factory.
      * Receives the dependency container for resolving dependencies.
      */
-    factory: (container: DependencyContainer) => AggregateRootFactory<Stream>;
+    factory(container: DependencyContainer): AggregateRootFactory<Stream>;
 
     /**
      * Optional service keys for the registered services.
@@ -248,7 +248,7 @@ export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
             snapshotTable: string;
             snapshotVersion: number;
             authoritativeSnapshots?: boolean;
-            factory: (container: DependencyContainer) => unknown;
+            factory(container: DependencyContainer): unknown;
         };
     };
 
@@ -262,9 +262,10 @@ export function setupEventSourcing<Stream extends AggregateStream<Stream>>(
             // Wrap with upcasting if configured
             if (hasUpcasters(configWithOptionals)) {
                 return new UpcastingMessageRepository(
-                    configWithOptionals.upcasters as any,
+                    configWithOptionals.upcasters,
                     baseRepo as any,
                 ) as unknown as MessageRepository<Stream>;
+                // Casting
             }
 
             return baseRepo;

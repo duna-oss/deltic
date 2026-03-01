@@ -27,7 +27,7 @@ export type ServiceHandlers<Service extends ServiceStructure<Service>> = {
 export class InputNotSupported extends Error {}
 
 export interface Service<Structure extends ServiceStructure<Structure>> {
-    handle: <T extends keyof Structure>(input: InputForServiceOfType<Structure, T>) => Promise<Structure[T]['response']> | Structure[T]['response'];
+    handle<T extends keyof Structure>(input: InputForServiceOfType<Structure, T>): Promise<Structure[T]['response']> | Structure[T]['response'];
 }
 
 interface ChainHandler<Service extends ServiceStructure<Service>> {

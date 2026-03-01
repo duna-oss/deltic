@@ -13,14 +13,14 @@ type ColumnAndToDatabaseFn<Columns extends ObjectType> = {
     [Key in keyof Columns]: {
         payloadKey: Key;
         columnName?: string; // optionally name the column something else
-        toDatabaseValue?: (value: Columns[Key]) => PropertyType;
+        toDatabaseValue?(value: Columns[Key]): PropertyType;
     };
 }[keyof Columns];
 type ResolvedColumnAndToDatabaseFn<Columns extends ObjectType> = {
     [Key in keyof Columns]: {
         payloadKey: Key;
         columnName: string;
-        toDatabaseValue?: (value: Columns[Key]) => PropertyType;
+        toDatabaseValue?(value: Columns[Key]): PropertyType;
     };
 }[keyof Columns];
 type Column<Columns extends ObjectType> = keyof Columns | ColumnAndToDatabaseFn<Columns>;

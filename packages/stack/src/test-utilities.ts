@@ -21,10 +21,10 @@ function uniqueProviderKey(): string {
 
 export interface ProviderTestSetup {
     name: string;
-    createProvider: (container: DependencyContainer) => InfrastructureProvider;
-    beforeAllFn?: () => Promise<void>;
-    afterAllFn?: () => Promise<void>;
-    afterEachFn?: () => Promise<void>;
+    createProvider(container: DependencyContainer): InfrastructureProvider;
+    beforeAllFn?(): Promise<void>;
+    afterAllFn?(): Promise<void>;
+    afterEachFn?(): Promise<void>;
 }
 
 // ============ Shared PostgreSQL State ============

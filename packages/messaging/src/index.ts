@@ -65,7 +65,7 @@ export interface MessageConsumerFunc<Stream extends StreamDefinition> {
 }
 
 export interface MessageConsumer<Stream extends StreamDefinition> {
-    consume: (message: AnyMessageFrom<Stream>) => Promise<void>;
+    consume(message: AnyMessageFrom<Stream>): Promise<void>;
 }
 
 export interface MessageDispatcherFunc<Stream extends StreamDefinition> {
@@ -73,11 +73,11 @@ export interface MessageDispatcherFunc<Stream extends StreamDefinition> {
 }
 
 export interface MessageDispatcher<Stream extends StreamDefinition> {
-    send: (...messages: MessagesFrom<Stream>) => Promise<void>;
+    send(...messages: MessagesFrom<Stream>): Promise<void>;
 }
 
 export interface MessageDecorator<Stream extends StreamDefinition> {
-    decorate: (messages: MessagesFrom<Stream>) => MessagesFrom<Stream>;
+    decorate(messages: MessagesFrom<Stream>): MessagesFrom<Stream>;
 }
 
 export interface MessageDecoratorFunc<Stream extends StreamDefinition> {
@@ -97,19 +97,19 @@ export interface IdPaginationOptions<Stream extends StreamDefinition> {
 }
 
 export interface MessageRepository<Stream extends StreamDefinition> {
-    persist: (id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>) => Promise<void>;
+    persist(id: Stream['aggregateRootId'], messages: MessagesFrom<Stream>): Promise<void>;
 
-    retrieveAllForAggregate: (id: Stream['aggregateRootId']) => AsyncGenerator<AnyMessageFrom<Stream>>;
+    retrieveAllForAggregate(id: Stream['aggregateRootId']): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveAllAfterVersion: (id: Stream['aggregateRootId'], version: number) => AsyncGenerator<AnyMessageFrom<Stream>>;
+    retrieveAllAfterVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveAllUntilVersion: (id: Stream['aggregateRootId'], version: number) => AsyncGenerator<AnyMessageFrom<Stream>>;
+    retrieveAllUntilVersion(id: Stream['aggregateRootId'], version: number): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    retrieveBetweenVersions: (
+    retrieveBetweenVersions(
         id: Stream['aggregateRootId'],
         after: number,
         before: number,
-    ) => AsyncGenerator<AnyMessageFrom<Stream>>;
+    ): AsyncGenerator<AnyMessageFrom<Stream>>;
 
-    paginateIds: (options: IdPaginationOptions<Stream>) => AsyncGenerator<AggregateIdWithStreamOffset<Stream>>;
+    paginateIds(options: IdPaginationOptions<Stream>): AsyncGenerator<AggregateIdWithStreamOffset<Stream>>;
 }

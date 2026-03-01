@@ -18,10 +18,10 @@ import type {InfrastructureProvider} from './infrastructure-provider.js';
 
 interface ProviderExpectations {
     name: string;
-    setup: () => {provider: InfrastructureProvider; container: DependencyContainer};
-    beforeAllFn?: () => Promise<void>;
-    afterAllFn?: () => Promise<void>;
-    afterEachFn?: () => Promise<void>;
+    setup(): {provider: InfrastructureProvider; container: DependencyContainer};
+    beforeAllFn?(): Promise<void>;
+    afterAllFn?(): Promise<void>;
+    afterEachFn?(): Promise<void>;
     expectations: {
         messageRepository: new (...args: any[]) => any;
         outboxRepository: new (...args: any[]) => any;

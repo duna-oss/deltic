@@ -11,7 +11,7 @@ export default tseslint.config(
         files: ['./packages/**/*.ts', './*.config.*'],
         ignores: ['docs/**/*'],
         rules: {
-            '@typescript-eslint/method-signature-style': 'error',
+            '@typescript-eslint/method-signature-style': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
             '@typescript-eslint/no-empty-object-type': 'off',
             '@typescript-eslint/no-explicit-any': 'off',

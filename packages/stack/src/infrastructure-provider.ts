@@ -18,20 +18,20 @@ export interface SnapshotRepositoryOptions {
 }
 
 export interface InfrastructureProvider {
-    createMessageRepository: <Stream extends StreamDefinition>(
+    createMessageRepository<Stream extends StreamDefinition>(
         container: DependencyContainer,
         options: MessageRepositoryOptions,
-    ) => MessageRepository<Stream>;
+    ): MessageRepository<Stream>;
 
-    createOutboxRepository: <Stream extends StreamDefinition>(
+    createOutboxRepository<Stream extends StreamDefinition>(
         container: DependencyContainer,
         options: OutboxRepositoryOptions,
-    ) => OutboxRepository<Stream>;
+    ): OutboxRepository<Stream>;
 
-    createTransactionManager: (container: DependencyContainer) => TransactionManager;
+    createTransactionManager(container: DependencyContainer): TransactionManager;
 
-    createSnapshotRepository: <Stream extends AggregateStreamWithSnapshotting<Stream>>(
+    createSnapshotRepository<Stream extends AggregateStreamWithSnapshotting<Stream>>(
         container: DependencyContainer,
         options: SnapshotRepositoryOptions,
-    ) => SnapshotRepository<Stream>;
+    ): SnapshotRepository<Stream>;
 }

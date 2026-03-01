@@ -8,7 +8,7 @@ import {Context, ContextStoreUsingMemory, composeContextSlots, defineContextSlot
 const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
 
 export interface Connection extends Omit<PoolClient, 'release'> {
-    [Symbol.asyncDispose]: () => Promise<void>;
+    [Symbol.asyncDispose](): Promise<void>;
 }
 
 export interface TransactionContext {
@@ -36,7 +36,7 @@ function createDefaultTransactionContext(): Context<TransactionContextData> {
         pg_transaction: transactionContextSlot.defaultValue!(),
     });
 
-    return composeContextSlots([transactionContextSlot], store) as unknown as Context<TransactionContextData>;
+    return composeContextSlots([transactionContextSlot], store);
 }
 
 export type OnReleaseCallback = (client: Connection, err?: unknown) => Promise<any> | any;

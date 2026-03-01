@@ -1,17 +1,17 @@
 import {StandardError} from '@deltic/error-standard';
 
 export interface StaticMutex {
-    tryLock: () => Promise<boolean>;
-    lock: (timeout?: number) => Promise<void>;
-    unlock: () => Promise<void>;
+    tryLock(): Promise<boolean>;
+    lock(timeout?: number): Promise<void>;
+    unlock(): Promise<void>;
 }
 
 export type LockValue = string | number | boolean;
 
 export interface DynamicMutex<LockID extends LockValue> {
-    tryLock: (id: LockID) => Promise<boolean>;
-    lock: (id: LockID, timeout?: number) => Promise<void>;
-    unlock: (id: LockID) => Promise<void>;
+    tryLock(id: LockID): Promise<boolean>;
+    lock(id: LockID, timeout?: number): Promise<void>;
+    unlock(id: LockID): Promise<void>;
 }
 
 function hasErrorMessage(error: unknown): error is {message: string} {

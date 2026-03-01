@@ -1,5 +1,5 @@
 export interface MessageDeliveryCounter<Key> {
-    increment: (key: Key) => Promise<number>;
+    increment(key: Key): Promise<number>;
 }
 
 export class MessageDeliveryCounterUsingMemory<Key> implements MessageDeliveryCounter<Key> {
