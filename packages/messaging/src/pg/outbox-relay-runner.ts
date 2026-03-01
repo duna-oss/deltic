@@ -83,6 +83,11 @@ export class OutboxRelayRunner<Stream extends StreamDefinition> {
                 }
 
                 if (!this.shouldContinue) {
+                    if (this.hasLock) {
+                        await this.mutex.unlock();
+                        this.hasLock = false;
+                    }
+
                     return;
                 }
 

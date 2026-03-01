@@ -86,6 +86,11 @@ export class MultiOutboxRelayRunner {
                 }
 
                 if (!this.shouldContinue) {
+                    if (this.hasLock) {
+                        await this.mutex.unlock();
+                        this.hasLock = false;
+                    }
+
                     return;
                 }
 

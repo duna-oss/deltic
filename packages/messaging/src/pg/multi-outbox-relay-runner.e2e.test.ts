@@ -79,7 +79,6 @@ let runnerPool2: AsyncPgPool | undefined;
 
 beforeAll(async () => {
     pgPool = new Pool(pgTestCredentials);
-
     await pgPool.query(createOutboxTable(tableA));
     await pgPool.query(createOutboxTable(tableB));
 });
@@ -93,6 +92,7 @@ afterEach(async () => {
     await runner2?.stop();
     await runnerPool?.flushSharedContext();
     await runnerPool2?.flushSharedContext();
+
     runner = undefined;
     runner2 = undefined;
     runnerPool = undefined;
