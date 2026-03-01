@@ -82,7 +82,13 @@ export class AsyncPgPool {
     }
 
     async run<R>(fn: () => Promise<R>): Promise<R> {
-        return this.context.run(fn);
+        return this.context.run(async () => {
+            try {
+                return await fn();
+            } finally {
+                await this.flushSharedContext();
+            }
+        });
     }
 
     async primary(): Promise<Connection> {
