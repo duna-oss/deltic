@@ -2,6 +2,7 @@ import {Pool} from 'pg';
 import {AsyncPgPool} from '@deltic/async-pg-pool';
 import {pgTestCredentials} from '../../../pg-credentials.js';
 import {OutboxRepositoryUsingPg} from './outbox-repository.js';
+import {NotifyingOutboxDecoratorUsingPg} from './notifying-outbox-decorator.js';
 import {OutboxRelay} from '@deltic/messaging/outbox';
 import {OutboxRelayRunner} from './outbox-relay-runner.js';
 import {createMessageConsumer, messageFactory, withoutHeaders} from '@deltic/messaging/helpers';
@@ -24,6 +25,15 @@ interface ExampleStream {
 const tableName = 'test_outbox_relay_runner';
 const channelName = `outbox_publish__${tableName}`;
 const createMessage = messageFactory<ExampleStream>();
+
+function createNotifyingOutbox(pool: AsyncPgPool): NotifyingOutboxDecoratorUsingPg<ExampleStream> {
+    return new NotifyingOutboxDecoratorUsingPg<ExampleStream>(
+        pool,
+        new OutboxRepositoryUsingPg<ExampleStream>(pool, tableName),
+        tableName,
+        {style: 'channel'},
+    );
+}
 
 function staticMutexFrom<LockID extends LockValue>(mutex: DynamicMutex<LockID>, id: LockID): StaticMutex {
     return {
@@ -100,7 +110,7 @@ describe('OutboxRelayRunner', () => {
 
         // act
         waitGroup.add(2);
-        const testOutbox = new OutboxRepositoryUsingPg<ExampleStream>(testPool, tableName);
+        const testOutbox = createNotifyingOutbox(testPool);
         await testOutbox.persist([
             createMessage('ping', 1),
             createMessage('pong', 2),
@@ -192,7 +202,7 @@ describe('OutboxRelayRunner', () => {
         await wait(500);
 
         // act
-        const testOutbox = new OutboxRepositoryUsingPg<ExampleStream>(testPool, tableName);
+        const testOutbox = createNotifyingOutbox(testPool);
         await testOutbox.persist([createMessage('ping', 1)]);
 
         // assert
@@ -243,7 +253,7 @@ describe('OutboxRelayRunner', () => {
 
         // act
         waitGroup.add(2);
-        const testOutbox = new OutboxRepositoryUsingPg<ExampleStream>(testPool, tableName);
+        const testOutbox = createNotifyingOutbox(testPool);
         await testOutbox.persist([
             createMessage('ping', 1),
             createMessage('pong', 2),

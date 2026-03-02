@@ -8,6 +8,11 @@ import {
     type OutboxRepository,
 } from '@deltic/messaging/outbox';
 
+export interface OutboxNotifyConfiguration {
+    style: 'both' | 'channel' | 'central' | 'none';
+    channelName?: string;
+}
+
 interface OutboxRecordUsingPg<Stream extends StreamDefinition> {
     id: number;
     consumed: boolean;
@@ -18,6 +23,7 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
     constructor(
         private readonly pool: AsyncPgPool,
         private readonly tableName: string,
+        private readonly notifyConfiguration: OutboxNotifyConfiguration = {style: 'none'},
     ) {}
 
     async cleanupConsumedMessages(limit: number): Promise<number> {
@@ -69,9 +75,6 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
             return;
         }
 
-        const inTransaction = this.pool.inTransaction();
-        const transaction = inTransaction ? this.pool.withTransaction() : await this.pool.begin();
-
         const values: any[] = [false];
         const references: string[] = [];
         let index: number = 1;
@@ -81,23 +84,24 @@ export class OutboxRepositoryUsingPg<Stream extends StreamDefinition> implements
             values.push(message);
         }
 
-        try {
-            await transaction.query(
+        const {style, channelName = 'outbox_publish'} = this.notifyConfiguration;
+
+        await this.pool.runInTransaction(async () => {
+            const connection = this.pool.withTransaction();
+
+            await connection.query(
                 `INSERT INTO ${this.tableName} (consumed, payload) VALUES (${references.join('), (')});`,
                 values,
             );
-            await transaction.query(`NOTIFY outbox_publish__${this.tableName}`);
-            await transaction.query(`NOTIFY outbox_publish, '${this.tableName}'`);
 
-            if (!inTransaction) {
-                await this.pool.commit(transaction);
+            if (style !== 'none' && style !== 'central') {
+                await connection.query(`NOTIFY ${channelName}__${this.tableName}`);
             }
-        } catch (e) {
-            if (!inTransaction) {
-                await this.pool.rollback(transaction);
+
+            if (style !== 'none' && style !== 'channel') {
+                await connection.query(`NOTIFY ${channelName}, '${this.tableName}'`);
             }
-            throw e;
-        }
+        });
     }
 
     async *retrieveBatch(size: number): AsyncGenerator<AnyMessageFrom<Stream>> {
