@@ -1,5 +1,11 @@
 # @deltic/wait-group
 
+## 0.1.2
+
+### Patch Changes
+
+- e0b32f8: Code formatting and style consistency fixes.
+
 ## 0.1.1
 
 ### Patch Changes

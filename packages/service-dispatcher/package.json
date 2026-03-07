@@ -1,7 +1,7 @@
 {
   "name": "@deltic/service-dispatcher",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A contract-based service abstraction",
   "exports": {
     ".": {
@@ -35,7 +35,12 @@
       "types": "./dist/locking-decorator.d.ts"
     }
   },
-  "keywords": ["service", "dispatcher", "command", "middleware"],
+  "keywords": [
+    "service",
+    "dispatcher",
+    "command",
+    "middleware"
+  ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

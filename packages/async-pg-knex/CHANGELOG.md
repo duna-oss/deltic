@@ -1,0 +1,15 @@
+# @deltic/async-pg-knex
+
+## 0.1.0
+
+### Minor Changes
+
+- e0b32f8: Initial release. Provides Knex query builder integration with `AsyncPgPool` for connection management:
+
+  - `AsyncKnexConnectionProvider` with lazy connections that only acquire a database connection when a query is awaited.
+  - Transaction support with `begin()`, `commit()`, `rollback()`, and `runInTransaction()`.
+
+### Patch Changes
+
+- Updated dependencies [e0b32f8]
+  - @deltic/async-pg-pool@0.1.0

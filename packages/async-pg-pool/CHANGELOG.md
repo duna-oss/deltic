@@ -1,5 +1,30 @@
 # @deltic/async-pg-pool
 
+## 0.2.0
+
+### Minor Changes
+
+- e0b32f8: Add transaction lifecycle helpers and remove HTTP middleware.
+
+  **Breaking:**
+
+  - Removed `httpMiddleware()` method. HTTP middleware should be implemented externally.
+
+  **Added:**
+
+  - `inTransaction()` to check if currently inside a transaction.
+  - `withTransaction()` to retrieve the active transaction connection (throws if none active).
+  - `runInTransaction(fn)` to run a function inside a transaction with automatic commit/rollback.
+  - `TransactionManagerUsingPg` class implementing the `TransactionManager` interface.
+  - `UnableToProvideActiveTransaction` error class.
+
+### Patch Changes
+
+- Updated dependencies [e0b32f8]
+- Updated dependencies [e0b32f8]
+  - @deltic/transaction-manager@0.1.0
+  - @deltic/mutex@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

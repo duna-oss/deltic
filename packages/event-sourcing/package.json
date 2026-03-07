@@ -1,7 +1,7 @@
 {
   "name": "@deltic/event-sourcing",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A rich event-sourcing implementation",
   "exports": {
     ".": {
@@ -59,7 +59,13 @@
       "types": "./dist/using-reducer-map.d.ts"
     }
   },
-  "keywords": ["event-sourcing", "aggregate", "cqrs", "domain-events", "snapshotting"],
+  "keywords": [
+    "event-sourcing",
+    "aggregate",
+    "cqrs",
+    "domain-events",
+    "snapshotting"
+  ],
   "scripts": {},
   "author": "Frank de Jonge (https://frankdejonge.nl)",
   "license": "ISC",

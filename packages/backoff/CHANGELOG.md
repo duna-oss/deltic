@@ -1,5 +1,13 @@
 # @deltic/backoff
 
+## 0.1.1
+
+### Patch Changes
+
+- e0b32f8: Code formatting and style consistency fixes.
+- Updated dependencies [e0b32f8]
+  - @deltic/error-standard@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

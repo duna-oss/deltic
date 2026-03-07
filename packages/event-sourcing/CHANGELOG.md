@@ -1,0 +1,28 @@
+# @deltic/event-sourcing
+
+## 0.1.0
+
+### Minor Changes
+
+- e0b32f8: Initial release. Provides a full event sourcing framework including:
+
+  - `AggregateRoot` base class with event recording and replay.
+  - `EventSourcedAggregateRepository` for persisting and retrieving aggregates from event streams.
+  - `AggregateRootUsingReflectMetadata` for decorator-based event handler registration.
+  - Snapshotting support via `AggregateRootRepositoryWithSnapshotting` and `SnapshotRepository`.
+  - Test tooling with `createTestTooling()` for given/when/then-style aggregate testing.
+
+### Patch Changes
+
+- Updated dependencies [e0b32f8]
+- Updated dependencies [e0b32f8]
+- Updated dependencies [be70e50]
+- Updated dependencies [e0b32f8]
+- Updated dependencies [e0b32f8]
+- Updated dependencies [e0b32f8]
+  - @deltic/async-pg-pool@0.2.0
+  - @deltic/clock@0.1.1
+  - @deltic/service-dispatcher@0.1.0
+  - @deltic/messaging@0.1.0
+  - @deltic/transaction-manager@0.1.0
+  - @deltic/uid@0.1.0
