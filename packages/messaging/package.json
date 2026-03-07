@@ -183,6 +183,36 @@
       "require": "./dist/run-message-consumer-in-context.cjs",
       "module-sync": "./dist/run-message-consumer-in-context.js",
       "types": "./dist/run-message-consumer-in-context.d.ts"
+    },
+    "./decorator-for-event-ids": {
+      "import": "./dist/decorator-for-event-ids.js",
+      "require": "./dist/decorator-for-event-ids.cjs",
+      "module-sync": "./dist/decorator-for-event-ids.js",
+      "types": "./dist/decorator-for-event-ids.d.ts"
+    },
+    "./reducing-message-consumer": {
+      "import": "./dist/reducing-message-consumer.js",
+      "require": "./dist/reducing-message-consumer.cjs",
+      "module-sync": "./dist/reducing-message-consumer.js",
+      "types": "./dist/reducing-message-consumer.d.ts"
+    },
+    "./sequential-message-consumer": {
+      "import": "./dist/sequential-message-consumer.js",
+      "require": "./dist/sequential-message-consumer.cjs",
+      "module-sync": "./dist/sequential-message-consumer.js",
+      "types": "./dist/sequential-message-consumer.d.ts"
+    },
+    "./tenant-id-decorator": {
+      "import": "./dist/tenant-id-decorator.js",
+      "require": "./dist/tenant-id-decorator.cjs",
+      "module-sync": "./dist/tenant-id-decorator.js",
+      "types": "./dist/tenant-id-decorator.d.ts"
+    },
+    "./tenant-scoping-message-consumer": {
+      "import": "./dist/tenant-scoping-message-consumer.js",
+      "require": "./dist/tenant-scoping-message-consumer.cjs",
+      "module-sync": "./dist/tenant-scoping-message-consumer.js",
+      "types": "./dist/tenant-scoping-message-consumer.d.ts"
     }
   },
   "keywords": [

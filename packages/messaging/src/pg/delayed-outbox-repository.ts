@@ -1,14 +1,14 @@
 import type {BackOffStrategy} from '@deltic/backoff';
 import {type Clock, SystemClock} from '@deltic/clock';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import type {AnyMessageFrom, MessagesFrom, StreamDefinition} from '@deltic/messaging';
-import {messageWithHeaders} from '@deltic/messaging/helpers';
+import type {AnyMessageFrom, MessagesFrom, StreamDefinition} from '../index.js';
+import {messageWithHeaders} from '../helpers.js';
 import {
     OUTBOX_CONSUMED_HEADER_KEY,
     OUTBOX_ID_HEADER_KEY,
     OUTBOX_TABLE_HEADER_KEY,
     type OutboxRepository,
-} from '@deltic/messaging/outbox';
+} from '../outbox.js';
 
 interface DelayedOutboxRecord<Stream extends StreamDefinition> {
     id: number;

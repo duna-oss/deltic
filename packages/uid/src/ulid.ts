@@ -1,4 +1,4 @@
-import {type IdConversion, type IdValidator, PrefixedBrandedIdGenerator} from '@deltic/uid';
+import {type IdConversion, type IdValidator, PrefixedBrandedIdGenerator} from './index.js';
 import {ulid, isValid, type ULID, type UUID, ulidToUUID, uuidToULID} from 'ulid';
 
 export function ulidPrefixedBrandedIdGenerator<Prefix extends string>(

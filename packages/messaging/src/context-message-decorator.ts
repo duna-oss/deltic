@@ -1,6 +1,6 @@
 import type {ContextData, Context} from '@deltic/context';
-import type {MessageDecorator, MessageHeaders, MessagesFrom, StreamDefinition} from '@deltic/messaging';
-import {messageWithHeaders} from '@deltic/messaging/helpers';
+import type {MessageDecorator, MessageHeaders, MessagesFrom, StreamDefinition} from './index.js';
+import {messageWithHeaders} from './helpers.js';
 
 export class ContextMessageDecorator<
     Stream extends StreamDefinition,

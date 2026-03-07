@@ -1,6 +1,6 @@
-import type {AnyMessageFrom, MessagesFrom, StreamDefinition} from '@deltic/messaging';
+import type {AnyMessageFrom, MessagesFrom, StreamDefinition} from '../index.js';
 import type {AsyncPgPool} from '@deltic/async-pg-pool';
-import type {OutboxRepository} from '@deltic/messaging/outbox';
+import type {OutboxRepository} from '../outbox.js';
 
 export type NotificationConfiguration = {
     channelName?: string;

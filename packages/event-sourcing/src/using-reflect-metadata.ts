@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import type {AnyMessageFrom, StreamDefinition} from '@deltic/messaging';
-import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from './index.js';
 
 const metaKey = Symbol.for('deltic:event-sourcing:apply-func');
 

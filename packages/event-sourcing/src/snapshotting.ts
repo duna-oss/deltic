@@ -3,7 +3,7 @@ import {
     type AggregateRootFactory,
     type AggregateStream,
     EventSourcedAggregateRepository,
-} from '@deltic/event-sourcing';
+} from './index.js';
 import type {AnyMessageFrom, MessageDecorator, MessageDispatcher, MessageRepository} from '@deltic/messaging';
 import {NoopTransactionManager, type TransactionManager} from '@deltic/transaction-manager';
 

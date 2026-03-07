@@ -1,8 +1,8 @@
-import {type DynamicMutex, type LockValue, UnableToAcquireLock, UnableToReleaseLock} from '@deltic/mutex';
+import {type DynamicMutex, type LockValue, UnableToAcquireLock, UnableToReleaseLock} from './index.js';
 import {AsyncPgPool, type Connection} from '@deltic/async-pg-pool';
 import {AsyncLocalStorage} from 'node:async_hooks';
-import {MultiMutex} from '@deltic/mutex/multi';
-import {MutexUsingMemory} from '@deltic/mutex/memory';
+import {MultiMutex} from './multi.js';
+import {MutexUsingMemory} from './memory.js';
 
 export type PostgresMutexMode = 'fresh' | 'primary';
 

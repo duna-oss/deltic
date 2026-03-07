@@ -1,4 +1,4 @@
-import type {InputForServiceOfType, NextFunction, ServiceStructure} from '@deltic/service-dispatcher';
+import type {InputForServiceOfType, NextFunction, ServiceStructure} from './index.js';
 import type {DynamicMutex, LockValue} from '@deltic/mutex';
 import type {LockIDResolver, LockSkipDetector} from './shared-for-locking.js';
 

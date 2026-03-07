@@ -1,4 +1,4 @@
-import type {AnyInputForService, ServiceStructure} from '@deltic/service-dispatcher';
+import type {AnyInputForService, ServiceStructure} from './index.js';
 import type {DynamicMutex, LockValue} from '@deltic/mutex';
 
 export interface LockIDResolver<Service extends ServiceStructure<Service>, LockID> {

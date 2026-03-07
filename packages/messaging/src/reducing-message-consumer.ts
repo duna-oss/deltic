@@ -1,4 +1,4 @@
-import type {AnyMessageFrom, Message, MessageConsumer, StreamDefinition} from '@deltic/messaging';
+import type {AnyMessageFrom, Message, MessageConsumer, StreamDefinition} from './index.js';
 import type {KeyValueStore} from '@deltic/key-value';
 
 export type Reducer<State, Payload> = (state: State, payload: Payload) => State | Promise<State>;

@@ -1,4 +1,4 @@
-import type {InputForServiceOfType, Service, ServiceStructure} from '@deltic/service-dispatcher';
+import type {InputForServiceOfType, Service, ServiceStructure} from './index.js';
 import type {DynamicMutex, LockValue} from '@deltic/mutex';
 import {
     defaultLockTimeoutMs,

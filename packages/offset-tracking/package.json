@@ -15,6 +15,12 @@
       "require": "./dist/pg.cjs",
       "module-sync": "./dist/pg.js",
       "types": "./dist/pg.d.ts"
+    },
+    "./memory": {
+      "import": "./dist/memory.js",
+      "require": "./dist/memory.cjs",
+      "module-sync": "./dist/memory.js",
+      "types": "./dist/memory.d.ts"
     }
   },
   "keywords": [

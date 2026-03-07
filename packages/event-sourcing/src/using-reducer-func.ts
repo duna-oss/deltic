@@ -1,5 +1,5 @@
 import type {AnyMessageFrom} from '@deltic/messaging';
-import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from './index.js';
 
 export abstract class AggregateRootUsingReducerFunc<
     Stream extends AggregateStream<Stream>,

@@ -1,5 +1,5 @@
 import type {AnyMessageFrom, MessageHeaders, SpecificPayloadFrom} from '@deltic/messaging';
-import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from '@deltic/event-sourcing';
+import {AggregateRootBehavior, type AggregateRootOptions, type AggregateStream} from './index.js';
 
 type HandlerFunc<Stream extends AggregateStream<Stream>, Event extends keyof Stream['messages']> = (
     this: Stream['aggregateRoot'],

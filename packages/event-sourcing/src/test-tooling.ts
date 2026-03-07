@@ -6,7 +6,7 @@ import {
     type AggregateRootFactory,
     type AggregateStream,
     EventSourcedAggregateRepository,
-} from '@deltic/event-sourcing';
+} from './index.js';
 import {MessageRepositoryUsingMemory} from '@deltic/messaging/message-repository-using-memory';
 import {MessageDecoratorChain} from '@deltic/messaging/message-decorator-chain';
 import {createMessageDecorator, messageWithHeaders} from '@deltic/messaging/helpers';

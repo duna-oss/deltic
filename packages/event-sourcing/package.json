@@ -39,6 +39,24 @@
       "require": "./dist/pg/snapshot-repository.cjs",
       "module-sync": "./dist/pg/snapshot-repository.js",
       "types": "./dist/pg/snapshot-repository.d.ts"
+    },
+    "./using-handler-map": {
+      "import": "./dist/using-handler-map.js",
+      "require": "./dist/using-handler-map.cjs",
+      "module-sync": "./dist/using-handler-map.js",
+      "types": "./dist/using-handler-map.d.ts"
+    },
+    "./using-reducer-func": {
+      "import": "./dist/using-reducer-func.js",
+      "require": "./dist/using-reducer-func.cjs",
+      "module-sync": "./dist/using-reducer-func.js",
+      "types": "./dist/using-reducer-func.d.ts"
+    },
+    "./using-reducer-map": {
+      "import": "./dist/using-reducer-map.js",
+      "require": "./dist/using-reducer-map.cjs",
+      "module-sync": "./dist/using-reducer-map.js",
+      "types": "./dist/using-reducer-map.d.ts"
     }
   },
   "keywords": ["event-sourcing", "aggregate", "cqrs", "domain-events", "snapshotting"],
