@@ -1,4 +1,6 @@
-export const pgTestCredentials = {
+import type {PoolConfig} from 'pg';
+
+export const pgTestCredentials: PoolConfig = {
     host: 'localhost',
     user: 'duna',
     password: 'duna',
@@ -7,4 +9,6 @@ export const pgTestCredentials = {
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
     maxLifetimeSeconds: 60,
-} as const;
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+};
