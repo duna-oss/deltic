@@ -1,5 +1,5 @@
 import objectHash from 'object-hash';
-import type {KeyType, KeyValueStore, ValueType} from '@deltic/key-value';
+import type {KeyType, KeyValueStore, ValueType} from './index.js';
 
 export class KeyValueStoreUsingMemory<Key extends KeyType, Value extends ValueType> implements KeyValueStore<
     Key,

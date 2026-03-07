@@ -9,6 +9,24 @@
       "require": "./dist/index.cjs",
       "module-sync": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./memory": {
+      "import": "./dist/memory.js",
+      "require": "./dist/memory.cjs",
+      "module-sync": "./dist/memory.js",
+      "types": "./dist/memory.d.ts"
+    },
+    "./pg": {
+      "import": "./dist/pg.js",
+      "require": "./dist/pg.cjs",
+      "module-sync": "./dist/pg.js",
+      "types": "./dist/pg.d.ts"
+    },
+    "./pg-with-columns": {
+      "import": "./dist/pg-with-columns.js",
+      "require": "./dist/pg-with-columns.cjs",
+      "module-sync": "./dist/pg-with-columns.js",
+      "types": "./dist/pg-with-columns.d.ts"
     }
   },
   "keywords": [
