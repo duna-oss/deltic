@@ -1,4 +1,4 @@
-import type {Context, ContextData} from '@deltic/context';
+import type {ContextData, ContextRunner} from '@deltic/context';
 import type {AnyMessageFrom, MessageConsumer, StreamDefinition} from './index.js';
 
 export type ContextResolver<Stream extends StreamDefinition, C extends ContextData<C>> = (
@@ -11,7 +11,7 @@ export class RunMessageConsumerInContext<
 > implements MessageConsumer<Stream> {
     constructor(
         private readonly consumer: MessageConsumer<Stream>,
-        private readonly context: Context<C>,
+        private readonly context: ContextRunner<C>,
         private readonly resolveContext: ContextResolver<Stream, C>,
     ) {}
 

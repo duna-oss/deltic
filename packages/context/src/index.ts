@@ -50,7 +50,11 @@ function defaultContextValueCreator<C>(inherited: Partial<C>, provided: Partial<
     return {...inherited, ...provided};
 }
 
-export class Context<C extends ContextData<C>> {
+export interface ContextRunner<C extends ContextData<C>> {
+    run<R>(fn: () => Promise<R>, context?: Partial<C>): Promise<R>;
+}
+
+export class Context<C extends ContextData<C>> implements ContextRunner<C> {
     constructor(
         private readonly storage: ContextStore<Partial<C>>,
         private readonly createContextValue: ContextValueCreator<C> = defaultContextValueCreator,

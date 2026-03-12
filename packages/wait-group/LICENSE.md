@@ -1,7 +1,7 @@
 ISC License
 
-Copyright (c) 2025 Frank de Jonge
-Copyright (c) 2025 Duna B.V.
+Copyright (c) 2025-2026 Frank de Jonge
+Copyright (c) 2025-2026 Duna B.V.
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
