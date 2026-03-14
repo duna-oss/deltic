@@ -239,7 +239,7 @@ describe('AsyncPgPool', () => {
 
         let innerInTransaction = false;
 
-        await provider.run(async () => {
+        await provider.runInIsolation(async () => {
             await provider.runInTransaction(async () => {
                 innerInTransaction = provider.inTransaction();
             });

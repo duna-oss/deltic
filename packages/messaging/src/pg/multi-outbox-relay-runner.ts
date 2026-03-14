@@ -73,7 +73,7 @@ export class MultiOutboxRelayRunner {
         this.shutdownSignal = Promise.withResolvers();
 
         try {
-            await this.pool.run(async () => {
+            await this.pool.runInIsolation(async () => {
                 while (this.shouldContinue) {
                     if (await this.mutex.tryLock()) {
                         this.hasLock = true;

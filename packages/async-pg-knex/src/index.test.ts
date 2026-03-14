@@ -1,11 +1,11 @@
 import {Pool} from 'pg';
-import {AsyncPgPool, type TransactionContext} from '@deltic/async-pg-pool';
+import {AsyncPgPool, type AsyncPoolContext} from '@deltic/async-pg-pool';
 import {AsyncKnexConnectionProvider} from './index.js';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StaticMutexUsingMemory} from '@deltic/mutex/static-memory';
 import {pgTestCredentials} from '../../pg-credentials.js';
 
-const asyncLocalStorage = new AsyncLocalStorage<TransactionContext>();
+const asyncLocalStorage = new AsyncLocalStorage<AsyncPoolContext>();
 const setupContext = () => asyncLocalStorage.enterWith({exclusiveAccess: new StaticMutexUsingMemory(), free: []});
 
 describe('AsyncKnexConnectionProvider', () => {

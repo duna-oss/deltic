@@ -8,7 +8,6 @@ import {
     ContextStoreUsingMemory,
     composeContextSlots,
     defineContextSlot,
-    type ContextRunner,
 } from '@deltic/context';
 
 const originalRelease = Symbol.for('@deltic/async-pg-pool/release');
@@ -17,29 +16,32 @@ export interface Connection extends Omit<PoolClient, 'release'> {
     [Symbol.asyncDispose](): Promise<void>;
 }
 
-export interface TransactionContext {
+export interface AsyncPoolContext {
     exclusiveAccess: StaticMutex;
     sharedTransaction?: Connection | undefined;
     primaryConnection?: Connection | undefined;
     free: Array<[Connection, undefined | ReturnType<typeof setTimeout>]>;
 }
 
-export type TransactionContextData = {pg_transaction: TransactionContext};
+export type AsyncPgPoolContextData = {async_pg_pool: AsyncPoolContext};
 
-export const transactionContextSlot = defineContextSlot({
-    key: 'pg_transaction',
-    defaultValue: (): TransactionContext => ({
+export function asyncPoolContext(): AsyncPoolContext {
+    return {
         exclusiveAccess: new StaticMutexUsingMemory(),
         sharedTransaction: undefined,
         primaryConnection: undefined,
         free: [],
-    }),
-    inherited: false,
+    };
+}
+
+export const transactionContextSlot = defineContextSlot({
+    key: 'async_pg_pool',
+    defaultValue: (): AsyncPoolContext => asyncPoolContext(),
 });
 
-function createDefaultTransactionContext(): Context<TransactionContextData> {
-    const store = new ContextStoreUsingMemory<TransactionContextData>({
-        pg_transaction: transactionContextSlot.defaultValue!(),
+function createDefaultTransactionContext(): Context<AsyncPgPoolContextData> {
+    const store = new ContextStoreUsingMemory<AsyncPgPoolContextData>({
+        async_pg_pool: transactionContextSlot.defaultValue!(),
     });
 
     return composeContextSlots([transactionContextSlot], store);
@@ -57,7 +59,7 @@ export interface AsyncPgPoolOptions {
     beginQuery?: string;
 }
 
-export class AsyncPgPool implements ContextRunner<TransactionContextData> {
+export class AsyncPgPool {
     private readonly keepConnections: number;
     private readonly maxIdleMs: number;
     private readonly freshResetQuery?: string;
@@ -67,7 +69,7 @@ export class AsyncPgPool implements ContextRunner<TransactionContextData> {
     constructor(
         private readonly pool: Pool,
         private readonly options: AsyncPgPoolOptions = {},
-        private readonly context: Context<TransactionContextData> = createDefaultTransactionContext(),
+        private readonly context: Context<AsyncPgPoolContextData> = createDefaultTransactionContext(),
     ) {
         this.keepConnections = options.keepConnections ?? 0;
         this.maxIdleMs = options.maxIdleMs ?? 1000;
@@ -77,8 +79,8 @@ export class AsyncPgPool implements ContextRunner<TransactionContextData> {
         this.beginQuery = options.beginQuery ?? 'BEGIN';
     }
 
-    private resolveTransactionContext(): TransactionContext {
-        const ctx = this.context.get('pg_transaction');
+    private resolveTransactionContext(): AsyncPoolContext {
+        const ctx = this.context.get('async_pg_pool');
 
         if (ctx === undefined) {
             throw new Error('No transaction context available. Did you forget to call context.run()?');
@@ -87,13 +89,15 @@ export class AsyncPgPool implements ContextRunner<TransactionContextData> {
         return ctx;
     }
 
-    async run<R>(fn: () => Promise<R>): Promise<R> {
+    async runInIsolation<R>(fn: () => Promise<R>): Promise<R> {
         return this.context.run(async () => {
             try {
                 return await fn();
             } finally {
                 await this.flushSharedContext();
             }
+        }, {
+            async_pg_pool: asyncPoolContext(),
         });
     }
 
@@ -406,6 +410,10 @@ export class TransactionManagerUsingPg implements TransactionManager {
 
     inTransaction(): boolean {
         return this.pool.inTransaction();
+    }
+
+    runInIsolation<R>(fn: () => Promise<R>): Promise<R> {
+        return this.pool.runInIsolation(fn);
     }
 
     runInTransaction<R>(fn: () => Promise<R>): Promise<R> {
